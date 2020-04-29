@@ -1,0 +1,33 @@
+version: "3.7"
+
+services:
+  python: &python
+    image: vanities/bitchan
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/bitchan
+    env_file:
+      - env.dev
+    restart: on-failure
+    depends_on:
+      - postgres
+
+  django:
+    <<: *python
+    command: bash -c "./manage.py migrate && ./manage.py runserver 0.0.0.0:8000"
+    ports:
+      - 8000:8000
+
+  postgres:
+    image: postgres:12
+    environment: 
+      - POSTGRES_USER=postgres_user
+      - POSTGRES_PASSWORD=postgres_password
+      - POSTGRES_DB=postgres_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
