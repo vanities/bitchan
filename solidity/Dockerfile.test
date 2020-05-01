@@ -1,0 +1,3 @@
+FROM node:latest
+
+RUN npm -g install remix-tests --unsafe-perm=true --allow-root

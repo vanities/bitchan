@@ -1,0 +1,27 @@
+version: "3"
+
+services:
+  solc:
+    image: ethereum/solc:stable
+    volumes:
+      - .:/sources 
+    restart: on-failure
+
+  node:
+    build:
+      context: ./
+      dockerfile: ./Dockerfile.test
+    volumes:
+      - .:/sources 
+    restart: on-failure
+
+
+  ethereum_local:
+    image: trufflesuite/ganache-cli
+    ports:
+      - 8548:8545
+    command: >
+      ganache-cli \
+      --account="0x2264248e750146323373851aec1f3f700f6d9ed0ebdc934137c9e007a047197f,1000000000000000000" \
+                                                              --unlock "0x96afb074FBF48A2b12e31D5f1aB2112d7643801B"
+    restart: on-failure

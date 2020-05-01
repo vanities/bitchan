@@ -6,3 +6,4 @@ django-cors-headers==3.2.1
 django-extensions==2.2.9
 whitenoise==5.0.1
 psycopg2==2.8.5
+rlp==1.2.0 

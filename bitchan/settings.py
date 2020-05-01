@@ -76,9 +76,9 @@ DJANGO_APPS = [
     "django.forms",
 ]
 
-THIRD_PARTY_APPS = ["whitenoise.runserver_nostatic"]
+THIRD_PARTY_APPS = ["whitenoise.runserver_nostatic", "web3auth.apps.Web3AuthConfig"]
 
-LOCAL_APPS = ["bitchan"]
+LOCAL_APPS = ["bitchan", "bitchan.user"]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
@@ -162,6 +162,14 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
+# AUTHENTICATION
+# ------------------------------------------------------------------------------
+
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",
+    "web3auth.backend.Web3Backend",
+]
+
 # GENERAL CONFIGURATION
 # ------------------------------------------------------------------------------
 # Local time zone for this installation. Choices can be found here:
@@ -221,6 +229,22 @@ LOGGING = {
     },
 }
 logging.config.dictConfig(LOGGING)
+
+
+AUTH_USER_MODEL = "user.User"
+
+
+# Web3
+# ------------------------------------------------------------------------------
+#
+
+WEB3AUTH_SIGNUP_ENABLED = True
+WEB3AUTH_USER_ADDRESS_FIELD = "address"
+WEB3AUTH_USER_SIGNUP_FIELDS = []
+
+# Prints
+# ------------------------------------------------------------------------------
+#
 
 print("ENVIRONMENT is", ENVIRONMENT)
 print("CORS_ORIGIN_ALLOW_ALL is", CORS_ORIGIN_ALLOW_ALL)
