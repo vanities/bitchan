@@ -7,13 +7,13 @@ pragma solidity >=0.4.22 <0.7.0;
  */
 contract User {
     uint256 public userCount = 0;
-    address private owner;
-
     struct UserProfile {
         uint id;
-        address owner;
+        address addr;
         string username;
     }
+    
+    UserProfile public owner;
     
     // This declares a state variable that
     // stores a `Voter` struct for each possible address.
@@ -21,15 +21,19 @@ contract User {
     
     // modifier to check if caller is owner
     modifier isOwner() {
-        require(msg.sender == owner, "Caller is not owner");
+        require(msg.sender == owner.addr, "Caller is not owner");
         _;
+    }
+    
+    function getOwner() public view returns (uint, address, string memory) {
+        return retrieve(0);
     }
     
     /**
      * @dev Set contract deployer as owner
      */
     constructor() public {
-        owner = msg.sender;
+        create("vanities");
     }
 
     /**
@@ -37,7 +41,7 @@ contract User {
      * @return User tuple
      */
     function retrieve(uint _id) public view returns (uint, address, string memory) {
-        return (users[_id].id, users[_id].owner, users[_id].username);
+        return (users[_id].id, users[_id].addr, users[_id].username);
     }
 
     /**
@@ -45,9 +49,9 @@ contract User {
      * @return User tuple
      */
     function create(string memory _username) public returns(uint, address, string memory) {
-        users[userCount] = UserProfile(userCount, owner, _username);
+        users[userCount] = UserProfile(userCount, msg.sender, _username);
         incrementUserCount();
-        return (users[userCount].id, users[userCount].owner, users[userCount].username);
+        return (users[userCount].id, users[userCount].addr, users[userCount].username);
 
     }
 

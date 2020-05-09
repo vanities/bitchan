@@ -1,5 +1,4 @@
 FROM node:current
 
-
 RUN npm update \
     && npm -g install remix-tests --unsafe-perm=true

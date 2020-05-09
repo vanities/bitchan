@@ -1,0 +1,10 @@
+version: "3.7"
+
+services:
+   bitchan:
+    build:
+      context: .
+      dockerfile: ./Dockerfile.prod
+    image: nodejs
+    container_name: nodejs
+    restart: unless-stopped

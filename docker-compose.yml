@@ -1,33 +1,20 @@
-version: "3.7"
+version: '3.7'
 
 services:
-  python: &python
-    image: vanities/bitchan
+
+  bitchan-dev:
+    container_name: bitchan-dev
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: ./Dockerfile
     volumes:
-      - .:/bitchan
-    env_file:
-      - env.dev
-    restart: on-failure
-    depends_on:
-      - postgres
-
-  django:
-    <<: *python
-    command: bash -c "./manage.py migrate && ./manage.py runserver 0.0.0.0:8000"
+      - ./js:/bitchan
+      - node_modules:/bitchan/node_modules
     ports:
-      - 8000:8000
-
-  postgres:
-    image: postgres:12
-    environment: 
-      - POSTGRES_USER=postgres_user
-      - POSTGRES_PASSWORD=postgres_password
-      - POSTGRES_DB=postgres_db
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - 3001:3000
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+    tty: true
 
 volumes:
-  postgres_data:
+  node_modules:  

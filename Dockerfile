@@ -1,17 +1,25 @@
-FROM python:3.8
+FROM node:current
 
-ENV PYTHONPATH /bitchan
-ENV PYTHONUNBUFFERED 1
+#RUN apk update && apk upgrade && \
+#    apk add --no-cache git
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-        postgresql-client \
+        git \
     && rm -rf /var/lib/apt/lists/*
 
+# set working directory
 WORKDIR /bitchan
 
-ADD requirements.txt /
-RUN pip install -r /requirements.txt \
-    && rm -rf /requirements.txt
+# add `/app/node_modules/.bin` to $PATH
+ENV PATH /bitchan/node_modules/.bin:$PATH
 
-ADD . /bitchan
+# install app dependencies
+COPY ./js/package.json ./
+RUN npm install --unsafe-perm=true --save
+
+# add app
+COPY ./js ./
+
+# start app
+CMD ["npm", "start"]
