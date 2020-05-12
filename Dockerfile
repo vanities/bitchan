@@ -16,7 +16,7 @@ ENV PATH /bitchan/node_modules/.bin:$PATH
 
 # install app dependencies
 COPY ./js/package.json ./
-RUN npm install --unsafe-perm=true --save
+RUN yarn install --emoji true
 
 # add app
 COPY ./js ./

@@ -1,9 +1,0 @@
-#!/bin/bash -e
-
-echo "==> making migrations database..."
-
-yes | ./manage.py makemigrations
-yes | ./manage.py makemigrations bitchan user
-./manage.py migrate
-
-echo "==> done!"
