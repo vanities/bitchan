@@ -4,7 +4,6 @@ import "remix_tests.sol"; // injected by remix-tests
 import "../contracts/User.sol";
 
 contract UserTests is User{
-    User owner;
     address acc0;
     address acc1;
     address acc2;

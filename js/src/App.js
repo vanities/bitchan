@@ -7,7 +7,7 @@ import {
 import TopNav from './Nav';
 
 function Home() {
-  return <h3>Home</h3>;
+  return <h3>Number of users: this.state.num_users</h3>;
 }
 
 function Board() {
