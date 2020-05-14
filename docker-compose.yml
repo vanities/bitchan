@@ -5,14 +5,14 @@ services:
   bitchan-dev:
     container_name: bitchan-dev
     build:
-      context: .
+      context: ./js
       dockerfile: ./Dockerfile
     volumes:
-      - ./js:/bitchan
-      - node_modules:/bitchan/node_modules
+      - ./js/src:/bitchan/src
     ports:
       - 3001:3000
     environment:
+      - NODE_ENV=development
       - CHOKIDAR_USEPOLLING=true
     tty: true
 

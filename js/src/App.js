@@ -1,43 +1,43 @@
-import React, { Component } from 'react'
-import { View, Text } from 'react-native'
-import Web3 from 'web3'
-import { Navbar, Nav } from 'react-bootstrap';
+import React from 'react';
+import {
+  BrowserRouter as Router,
+  Switch,
+  Route,
+} from "react-router-dom";
+import TopNav from './Nav';
 
-// https://www.dappuniversity.com/articles/ethereum-dapp-react-tutorial
-
-class App extends Component {
-  componentWillMount() {
-    this.loadBlockchainData()
-  }
-
-  async loadBlockchainData() {
-    const web3 = new Web3(Web3.givenProvider || "http://localhost:8545")
-    const accounts = await web3.eth.getAccounts()
-    const network = await web3.eth.net.getNetworkType()
-    this.setState({ account: accounts[0], network })
-  }
-
-  constructor(props) {
-    super(props)
-    this.state = { account: "", network: "" }
-  }
-
-  render() {
-    return (
-      <Navbar bg="dark" variant="dark">
-        <Navbar.Brand href="#home">bitchan</Navbar.Brand>
-        <Navbar.Toggle aria-controls="basic-navbar-nav" />
-        <Navbar.Collapse id="basic-navbar-nav">
-          <Nav className="mr-auto">
-          </Nav>
-          <View>
-            <Text>Account: {this.state.account}</Text>
-            <Text>{this.state.network}</Text>
-          </View>
-        </Navbar.Collapse>
-      </Navbar>
-    );
-  }
+function Home() {
+  return <h3>Home</h3>;
 }
 
-export default App;
+function Board() {
+  return <h3>Board</h3>;
+}
+
+export default class App extends React.Component {
+
+    constructor(props) {
+      super(props)
+      this.state = { account: "", network: "" }
+    }
+
+    render() {    
+      return (
+        <div className="App">
+          <Router>
+            <div>
+              <TopNav />
+              <Switch>
+                <Route exact path="/">
+                  <Home />
+                </Route>
+                <Route exact path="/board">
+                  <Board />
+                </Route>
+              </Switch>
+            </div>
+          </Router>
+        </div>
+      );
+    }
+  }
