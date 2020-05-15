@@ -1,0 +1,114 @@
+{
+  "contractName": "Bitchan",
+  "abi": [],
+  "metadata": "{\"compiler\":{\"version\":\"0.5.16+commit.9c3226ce\"},\"language\":\"Solidity\",\"output\":{\"abi\":[],\"devdoc\":{\"author\":\"vanities\",\"details\":\"Simple message board\",\"methods\":{},\"title\":\"Bitchan\"},\"userdoc\":{\"methods\":{},\"notice\":\"cool\"}},\"settings\":{\"compilationTarget\":{\"/sources/contracts/Bitchan.sol\":\"Bitchan\"},\"evmVersion\":\"byzantium\",\"libraries\":{},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"/sources/contracts/Bitchan.sol\":{\"keccak256\":\"0x034749f14114e4a11517f1229c9461069fe92e0ab5ff5fe70d3253d3fe032e50\",\"urls\":[\"bzz-raw://a04583d2085f66b3bce7f8a3c23b2fb25803ebbac352f03dd0f9f506e038f6d1\",\"dweb:/ipfs/QmRByaaCpzwmrvrcaHCEMWpT8MJCo3cwPRCQBVouQLRTY1\"]}},\"version\":1}",
+  "bytecode": "0x6080604052348015600f57600080fd5b50603e80601d6000396000f3fe6080604052600080fdfea265627a7a7231582042bab7d70ba4a49959e260446050fade2b55ea0f990529526af4df7a5eff1dc164736f6c63430005100032",
+  "deployedBytecode": "0x6080604052600080fdfea265627a7a7231582042bab7d70ba4a49959e260446050fade2b55ea0f990529526af4df7a5eff1dc164736f6c63430005100032",
+  "sourceMap": "126:21:0:-;;;;8:9:-1;5:2;;;30:1;27;20:12;5:2;126:21:0;;;;;;;",
+  "deployedSourceMap": "126:21:0:-;;;;;",
+  "source": "pragma solidity >=0.4.22 <0.7.0;\n\n/**\n * @title Bitchan\n * @dev Simple message board\n * @author vanities\n * @notice cool\n */\n contract Bitchan {\n\n}\n",
+  "sourcePath": "/sources/contracts/Bitchan.sol",
+  "ast": {
+    "absolutePath": "/sources/contracts/Bitchan.sol",
+    "exportedSymbols": {
+      "Bitchan": [
+        2
+      ]
+    },
+    "id": 3,
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 1,
+        "literals": [
+          "solidity",
+          ">=",
+          "0.4",
+          ".22",
+          "<",
+          "0.7",
+          ".0"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "0:32:0"
+      },
+      {
+        "baseContracts": [],
+        "contractDependencies": [],
+        "contractKind": "contract",
+        "documentation": "@title Bitchan\n@dev Simple message board\n@author vanities\n@notice cool",
+        "fullyImplemented": true,
+        "id": 2,
+        "linearizedBaseContracts": [
+          2
+        ],
+        "name": "Bitchan",
+        "nodeType": "ContractDefinition",
+        "nodes": [],
+        "scope": 3,
+        "src": "126:21:0"
+      }
+    ],
+    "src": "0:148:0"
+  },
+  "legacyAST": {
+    "absolutePath": "/sources/contracts/Bitchan.sol",
+    "exportedSymbols": {
+      "Bitchan": [
+        2
+      ]
+    },
+    "id": 3,
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 1,
+        "literals": [
+          "solidity",
+          ">=",
+          "0.4",
+          ".22",
+          "<",
+          "0.7",
+          ".0"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "0:32:0"
+      },
+      {
+        "baseContracts": [],
+        "contractDependencies": [],
+        "contractKind": "contract",
+        "documentation": "@title Bitchan\n@dev Simple message board\n@author vanities\n@notice cool",
+        "fullyImplemented": true,
+        "id": 2,
+        "linearizedBaseContracts": [
+          2
+        ],
+        "name": "Bitchan",
+        "nodeType": "ContractDefinition",
+        "nodes": [],
+        "scope": 3,
+        "src": "126:21:0"
+      }
+    ],
+    "src": "0:148:0"
+  },
+  "compiler": {
+    "name": "solc",
+    "version": "0.5.16+commit.9c3226ce.Emscripten.clang"
+  },
+  "networks": {},
+  "schemaVersion": "3.1.0",
+  "updatedAt": "2020-05-15T02:53:59.547Z",
+  "devdoc": {
+    "author": "vanities",
+    "details": "Simple message board",
+    "methods": {},
+    "title": "Bitchan"
+  },
+  "userdoc": {
+    "methods": {},
+    "notice": "cool"
+  }
+}

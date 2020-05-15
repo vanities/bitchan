@@ -28,6 +28,11 @@ contract User {
     function getOwner() public view returns (uint, address, string memory) {
         return retrieve(0);
     }
+
+    function getNumUsers() public view returns (uint) {
+        return userCount;
+    }
+    
     
     /**
      * @dev Set contract deployer as owner
