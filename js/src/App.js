@@ -12,6 +12,7 @@ export default class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = { numUsers: 0 };
+    this.Home = this.Home.bind(this);
   }
 
   componentWillMount() {
@@ -20,14 +21,14 @@ export default class App extends React.Component {
 
   async loadBlockchainData() {
     const web3 = new Web3(Web3.givenProvider || 'http://localhost:8545');
-    const contractAddress = '0x0C42Db7ae6230c778B1F6e05AfDF278216EA1B8B';
+    const contractAddress = '0x695f57efefbf06623ea23bffc43909b2e268c5f4';
     const UserContract = new web3.eth.Contract(userAbi, contractAddress);
     const numUsers = await UserContract.methods.getNumUsers().call();
     this.state = { numUsers: numUsers };
   }
 
   Home() {
-    return <h3>Number of users: {() => this.state.numUsers}</h3>;
+    return <h3>Number of users: {this.state.numUsers}</h3>;
   }
 
   render() {
