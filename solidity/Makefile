@@ -1,14 +1,26 @@
-.PHONY: compile test
+.PHONY: compile test migrate
 
 compile:
-	docker-compose run --rm solc -o /sources/output --abi --bin /sources/Bitchan.sol
+	#docker-compose run --rm solidity -o /sources/output --abi --bin /sources/Bitchan.sol
+	docker-compose run --rm truffle truffle compile
 
-migrate:
-	truffle create migration deploy_user
-	truffle migrate
+down: 
+	docker-compose down --remove-orphans
 
-build_test:
-	docker-compose build node
+build_truffle:
+	docker-compose build truffle
 
-test: build_test
-	docker-compose run --rm node remix-tests /sources/tests/user_test.sol
+test: build_truffle
+	docker-compose run --rm truffle truffle test --stacktrace
+
+migrate-new: build_truffle
+	docker-compose run --rm truffle truffle create migration deploy_user
+
+migrate: build_truffle
+	docker-compose run --rm truffle truffle migrate
+
+migrate-reset: build_truffle
+	docker-compose run --rm truffle truffle migrate --reset
+
+deploy: build_truffle
+	docker-compose run --rm truffle truffle deploy
