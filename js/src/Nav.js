@@ -8,25 +8,18 @@ import {
   NavLink,
   NavbarText,
 } from 'reactstrap';
+import PropTypes from 'prop-types';
 
 // https://www.dappuniversity.com/articles/ethereum-dapp-react-tutorial
 //
 
 class TopNav extends Component {
-  componentWillMount() {
-    this.loadBlockchainData();
-  }
-
-  async loadBlockchainData() {
-    const web3 = new Web3(Web3.givenProvider || 'http://localhost:8545');
-    const accounts = await web3.eth.getAccounts();
-    const network = await web3.eth.net.getNetworkType();
-    this.setState({ account: accounts[0], network: network });
-  }
-
-  constructor(props) {
-    super(props);
-    this.state = { account: '', network: '' };
+  constructor(props, context) {
+    super(props, context);
+    this.state = {
+      account: context.web3.selectedAccount,
+      network: context.web3.network,
+    };
   }
 
   render() {
@@ -47,5 +40,9 @@ class TopNav extends Component {
     );
   }
 }
+
+TopNav.contextTypes = {
+  web3: PropTypes.object,
+};
 
 export default TopNav;

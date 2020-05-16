@@ -3,10 +3,17 @@ import ReactDOM from 'react-dom';
 import App from './App';
 import * as serviceWorker from './serviceWorker';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import { Web3Provider } from 'react-web3';
+import { Web3Unavailable } from './Web3Unavailable';
 
 ReactDOM.render(
   <React.StrictMode>
-    <App />
+    <Web3Provider
+      web3UnavailableScreen={Web3Unavailable}
+      accountUnavailableScreen={Web3Unavailable}
+    >
+      <App />
+    </Web3Provider>
   </React.StrictMode>,
   document.getElementById('root')
 );

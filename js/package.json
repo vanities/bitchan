@@ -21,7 +21,12 @@
     "web3-react": "^5.0.5",
     "bootstrap": "^4.4.1",
     "typescript":"3.8.3",
-    "styled-components": "5.1.0"
+    "styled-components": "5.1.0",
+    "react-web3": "1.2.0",
+    "drizzle": "1.4.0",
+    "@drizzle/react-components": "1.5.1",
+    "@drizzle/react-plugin": "1.5.1",
+    "@drizzle/store": "1.5.1"
   },
   "scripts": {
     "start": "react-scripts start",
