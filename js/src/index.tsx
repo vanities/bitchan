@@ -2,9 +2,10 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import App from './App';
 import * as serviceWorker from './serviceWorker';
-import 'bootstrap/dist/css/bootstrap.min.css';
 import { Web3Provider } from 'react-web3';
 import { Web3Unavailable } from './Web3Unavailable';
+
+
 
 ReactDOM.render(
   <React.StrictMode>

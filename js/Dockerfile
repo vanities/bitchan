@@ -1,4 +1,4 @@
-FROM node:current
+FROM node:latest
 
 #RUN apk update && apk upgrade && \
 #    apk add --no-cache git
@@ -15,12 +15,10 @@ WORKDIR /bitchan
 ENV PATH /bitchan/node_modules/.bin:$PATH
 
 # install app dependencies
-COPY package*.json ./
-RUN npm i -qy
+COPY package*.json .
+RUN npm install --global
 
 COPY . .
-
-EXPOSE 8080
 
 # start app
 CMD ["npm", "start"]
