@@ -9,6 +9,7 @@ services:
       dockerfile: ./Dockerfile
     volumes:
       - ./js:/bitchan
+      - ./solidity/build/contracts:/bitchan/src/contracts
       - node_modules:/bitchan/node_modules
     ports:
       - 3001:3000
