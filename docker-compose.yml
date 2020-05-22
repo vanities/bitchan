@@ -8,7 +8,8 @@ services:
       context: ./js
       dockerfile: ./Dockerfile
     volumes:
-      - ./js/src:/bitchan/src
+      - ./js:/bitchan
+      - node_modules:/bitchan/node_modules
     ports:
       - 3001:3000
     environment:
@@ -17,6 +18,7 @@ services:
     tty: true
     depends_on:
       - ganache
+    restart: on-failure
 
   solidity:
     image: ethereum/solc:stable
@@ -32,6 +34,7 @@ services:
       - ./solidity:/sources 
     depends_on:
       - ganache
+    restart: on-failure
 
   ganache:
     image: trufflesuite/ganache-cli:next
@@ -44,4 +47,4 @@ services:
     restart: on-failure
 
 volumes:
-  node_modules:  
+  node_modules:
