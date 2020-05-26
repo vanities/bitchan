@@ -15,7 +15,7 @@ WORKDIR /bitchan
 ENV PATH /bitchan/node_modules/.bin:$PATH
 
 # install app dependencies
-COPY package*.json .
+COPY package*.json ./
 RUN npm install --global
 
 COPY . .

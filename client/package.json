@@ -8,7 +8,12 @@
     "@testing-library/user-event": "^10.3.3",
     "@types/jest": "^25.2.3",
     "@types/react-test-renderer": "^16.9.2",
-    "@web3-react/types": "^6.0.7",
+    "@types/node": "^14.0.4",
+    "@types/react": "^16.9.0",
+    "@types/react-dom": "^16.9.0",
+    "@drizzle/react-components": "^1.5.1",
+    "@drizzle/react-plugin": "^1.5.1",
+    "@drizzle/store": "^1.5.1",
     "bootstrap": "^4.4.1",
     "drizzle": "^1.4.0",
     "react": "^16.13.1",
@@ -16,20 +21,10 @@
     "react-dom": "^16.13.1",
     "react-router-dom": "^5.2.0",
     "react-scripts": "^3.4.1",
-    "react-web3": "^1.2.0",
     "reactstrap": "^8.4.1",
     "styled-components": "^5.1.0",
     "typescript": "^3.8.0",
-    "web3": "^1.2.7",
-    "web3-react": "^5.0.5"
-  },
-  "devDependencies": {
-    "@types/node": "^14.0.4",
-    "@drizzle/react-components": "^1.5.1",
-    "@drizzle/react-plugin": "^1.5.1",
-    "@drizzle/store": "^1.5.1",
-    "@types/react": "^16.9.0",
-    "@types/react-dom": "^16.9.0"
+    "web3": "^1.2.7"
   },
   "scripts": {
     "start": "react-scripts start",

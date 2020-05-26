@@ -5,11 +5,11 @@ services:
   react:
     container_name: react
     build:
-      context: ./js
+      context: ./client
       dockerfile: ./Dockerfile
     volumes:
-      - ./js:/bitchan
-      - ./solidity/build/contracts:/bitchan/src/contracts
+      - ./client:/bitchan
+      - ./contracts/build/contracts:/bitchan/src/contracts
       - node_modules:/bitchan/node_modules
     ports:
       - 3001:3000
@@ -24,15 +24,15 @@ services:
   solidity:
     image: ethereum/solc:stable
     volumes:
-      - ./solidity:/sources 
+      - ./contracts:/sources 
 
   truffle:
     build:
-      context: ./solidity
+      context: ./contracts
       dockerfile: ./Dockerfile.truffle
-    working_dir: /sources/solidity
+    working_dir: /sources/contracts
     volumes:
-      - ./solidity:/sources 
+      - ./contracts:/sources 
     depends_on:
       - ganache
     restart: on-failure
@@ -40,7 +40,7 @@ services:
   ganache:
     image: trufflesuite/ganache-cli:next
     ports:
-      - 9545:8545
+      - 8545:8545
     command: >
       ganache-cli \
       --account="0x2264248e750146323373851aec1f3f700f6d9ed0ebdc934137c9e007a047197f,1000000000000000000" \

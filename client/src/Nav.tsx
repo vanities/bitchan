@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { Component } from "react";
 //import Web3 from 'web3';
 import {
   Navbar,
@@ -7,21 +7,21 @@ import {
   NavItem,
   NavLink,
   NavbarText,
-} from 'reactstrap';
-import PropTypes from 'prop-types';
+} from "reactstrap";
+
+import { drizzleReactHooks } from '@drizzle/react-plugin'
+import PropTypes from "prop-types";
 
 // https://www.dappuniversity.com/articles/ethereum-dapp-react-tutorial
 //
 
-class TopNav extends Component {
+export default class TopNav extends Component {
   constructor(props, context) {
     super(props, context);
-    this.state = {
-      account: context.web3.selectedAccount,
-      network: context.web3.network,
-    };
+    this.drizzleState = drizzleReactHooks.useDrizzleState((drizzleState) => ({
+      account: drizzleState.accounts[0],
+    }));
   }
-
   render() {
     return (
       <div>
@@ -33,7 +33,7 @@ class TopNav extends Component {
             </NavItem>
           </Nav>
           <NavbarText>
-            {this.state.account} on {this.state.network}
+            {this.drizzleState.account} on {this.drizzleState.network}
           </NavbarText>
         </Navbar>
       </div>
@@ -44,5 +44,3 @@ class TopNav extends Component {
 TopNav.contextTypes = {
   web3: PropTypes.object,
 };
-
-export default TopNav;
