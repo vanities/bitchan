@@ -18,7 +18,7 @@ services:
       - CHOKIDAR_USEPOLLING=true
     tty: true
     depends_on:
-      - ganache
+      - truffle
     restart: on-failure
 
   solidity:
@@ -35,6 +35,7 @@ services:
       - ./contracts:/sources 
     depends_on:
       - ganache
+    command: truffle deploy
     restart: on-failure
 
   ganache:
