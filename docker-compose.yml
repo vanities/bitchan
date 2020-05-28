@@ -24,7 +24,7 @@ services:
   solidity:
     image: ethereum/solc:stable
     volumes:
-      - ./contracts:/sources 
+      - ./contracts:/sources
 
   truffle:
     build:
@@ -32,7 +32,7 @@ services:
       dockerfile: ./Dockerfile.truffle
     working_dir: /sources/contracts
     volumes:
-      - ./contracts:/sources 
+      - ./contracts:/sources
     depends_on:
       - ganache
     command: truffle deploy

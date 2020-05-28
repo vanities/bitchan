@@ -1,12 +1,8 @@
 {
   "compileOnSave": true,
   "compilerOptions": {
-    "target": "es5",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
+    "target": "es6",
+    "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
@@ -18,22 +14,9 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "jsx": "react"
+    "jsx": "react",
+    "removeComments": true
   },
-  "exclude": [
-    "target",
-    "dist",
-    "node_modules",
-    "__tests__"
-  ],
-  "types": [
-    "node",
-    "react",
-    "react-dom",
-    "react-web3",
-    "reactstrap"
-  ],
-  "include": [
-    "**/*.ts"
-  ]
+  "exclude": ["target", "dist", "node_modules", "__tests__"],
+  "include": ["**/*.ts"]
 }

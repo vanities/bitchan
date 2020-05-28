@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-//import Web3 from 'web3';
+import { Link } from "react-router-dom";
 import {
   Navbar,
   NavbarBrand,
@@ -9,38 +9,38 @@ import {
   NavbarText,
 } from "reactstrap";
 
-import { drizzleReactHooks } from '@drizzle/react-plugin'
-import PropTypes from "prop-types";
+import { newContextComponents } from "@drizzle/react-components";
+const { AccountData } = newContextComponents;
 
-// https://www.dappuniversity.com/articles/ethereum-dapp-react-tutorial
-//
-
-export default class TopNav extends Component {
-  constructor(props, context) {
-    super(props, context);
-    this.drizzleState = drizzleReactHooks.useDrizzleState((drizzleState) => ({
-      account: drizzleState.accounts[0],
-    }));
-  }
-  render() {
-    return (
-      <div>
-        <Navbar color="dark" dark expand="md">
-          <NavbarBrand href="/">bitchan</NavbarBrand>
-          <Nav className="mr-auto" navbar>
-            <NavItem>
-              <NavLink href="/board">Board</NavLink>
-            </NavItem>
-          </Nav>
-          <NavbarText>
-            {this.drizzleState.account} on {this.drizzleState.network}
-          </NavbarText>
-        </Navbar>
-      </div>
-    );
-  }
-}
-
-TopNav.contextTypes = {
-  web3: PropTypes.object,
+export const TopNav = (props, context) => {
+  return (
+    <div>
+      <Navbar color="dark" dark expand="md">
+        <NavbarBrand tag={Link} to={"/"}>
+          bitchan
+        </NavbarBrand>
+        <Nav className="mr-auto" navbar>
+          <NavItem>
+            <NavLink href="/board">Board</NavLink>
+          </NavItem>
+        </Nav>
+        <NavbarText>
+          <AccountData
+            drizzle={props.drizzle}
+            drizzleState={props.drizzleState}
+            accountIndex={0}
+            units="ether"
+            precision={3}
+            render={({ address, balance, units }) => (
+              <div>
+                <div>
+                  Address: <span style={{ color: "white" }}>{address}</span>
+                </div>
+              </div>
+            )}
+          />
+        </NavbarText>
+      </Navbar>
+    </div>
+  );
 };

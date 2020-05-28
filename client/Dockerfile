@@ -1,7 +1,4 @@
-FROM node:latest
-
-#RUN apk update && apk upgrade && \
-#    apk add --no-cache git
+FROM node:slim
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -16,7 +13,7 @@ ENV PATH /bitchan/node_modules/.bin:$PATH
 
 # install app dependencies
 COPY package*.json ./
-RUN npm install --global
+RUN npm install --global --save
 
 COPY . .
 

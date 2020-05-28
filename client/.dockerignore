@@ -3,3 +3,5 @@ npm-debug.log*
 Dockerfile
 Dockerfile.prod
 README.md
+.gitignore
+.dockerignore

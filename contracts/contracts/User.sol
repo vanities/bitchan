@@ -1,5 +1,4 @@
 pragma solidity >=0.4.22 <0.7.0;
-
 /**
  * @title User
  * @dev a CRUD for a user
@@ -12,19 +11,19 @@ contract User {
         address addr;
         string username;
     }
-    
+
     UserProfile public owner;
-    
+
     // This declares a state variable that
     // stores a `Voter` struct for each possible address.
     mapping(uint => UserProfile) public users;
-    
+
     // modifier to check if caller is owner
     modifier isOwner() {
         require(msg.sender == owner.addr, "Caller is not owner");
         _;
     }
-    
+
     function getOwner() public view returns (uint, address, string memory) {
         return retrieve(0);
     }
@@ -32,8 +31,8 @@ contract User {
     function getNumUsers() public view returns (uint) {
         return userCount;
     }
-    
-    
+
+
     /**
      * @dev Set contract deployer as owner
      */
