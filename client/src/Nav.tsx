@@ -21,7 +21,9 @@ export const TopNav = (props, context) => {
         </NavbarBrand>
         <Nav className="mr-auto" navbar>
           <NavItem>
-            <NavLink href="/board">Board</NavLink>
+            <NavLink tag={Link} to="/board">
+              Board
+            </NavLink>
           </NavItem>
         </Nav>
         <NavbarText>

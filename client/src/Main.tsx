@@ -4,6 +4,10 @@ import { DrizzleContext } from "@drizzle/react-plugin";
 import { TopNav } from "./Nav";
 import { Home } from "./Home";
 
+const Board = (props, context) => {
+  return "hi";
+};
+
 export default () => (
   <DrizzleContext.Consumer>
     {(drizzleContext) => {
@@ -17,6 +21,7 @@ export default () => (
           <Router>
             <TopNav drizzle={drizzle} drizzleState={drizzleState} />
             <Route path="/" component={Home} />
+            <Route path="/board" component={Board} />
           </Router>
         </div>
       );
