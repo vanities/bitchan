@@ -2,6 +2,10 @@
 Bitchan is an ethereum a message board republic.
 
 
+## Governance
+
+
+
 ## Dev
 
 ### Quick install & Run
