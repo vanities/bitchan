@@ -1,5 +1,5 @@
 # bitchan
-Bitchan is an ethereum a message board republic.
+Bitchan is an ethereum message board republic.
 
 
 ## Governance
@@ -33,7 +33,7 @@ This includes tests!
 - [ ] Submit vote for leadership
 
 
-## Dev
+## Development
 
 ### Quick install & Run
 See the [Makefile](https://github.com/vanities/bitchan/blob/master/Makefile) for more simple commands
