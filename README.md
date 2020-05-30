@@ -5,7 +5,7 @@ Bitchan is an ethereum a message board republic.
 ## Dev
 
 ### Quick install & Run
-See the `Makefile` for more simple commands
+See the [Makefile](https://github.com/vanities/bitchan/blob/master/Makefile) for more simple commands
 
 1. Download and Install [docker](https://docs.docker.com/get-docker/)
 2. Download and Install [docker-compose](https://docs.docker.com/compose/install/)
