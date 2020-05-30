@@ -1,4 +1,6 @@
 pragma solidity >=0.4.22 <0.7.0;
+import "truffle/Assert.sol";
+import "truffle/DeployedAddresses.sol";
 import "../contracts/Bitchan.sol";
 
 contract TestBitchan is Bitchan{
@@ -6,7 +8,8 @@ contract TestBitchan is Bitchan{
     uint id0;
     string username0;
     string ownerUsername;
-    uint256 feeOriginalPost, feeReplyPost;
+    uint256 feeOriginalPost;
+    uint256 feeReplyPost;
     Bitchan bitchan;
 
     function beforeAll() public {
@@ -16,6 +19,7 @@ contract TestBitchan is Bitchan{
     }
 
     function testCreateThreadCreatesOriginalPost() public {
+        Assert.equal(0, bitchan.originalPostCount, "0 posts originally");
     }
 
 }

@@ -43,8 +43,34 @@ See the [Makefile](https://github.com/vanities/bitchan/blob/master/Makefile) for
 3. `$ git clone https://github.com/vanities/bitchan.git`
 4. `$ make up`
 
+
+### Structure
+
+The development backend and frontend interact using the truffle stack.
+
+#### Backend
+
+The backend is written in [solidity contracts](https://solidity.readthedocs.io/en/latest/introduction-to-smart-contracts.html) using [Ethereum](https://ethereum.org/).
+
+
+#### Frontend
+
+The frontend is written in javascript/typescript and react.
+
+
 ### Testing
-`$ make test`
+
+#### Backend
+
+Testing the backend contracts can be done [here](https://github.com/vanities/bitchan/tree/master/contracts/test) and is written in solidity and typescript using [truffle](https://www.trufflesuite.com/docs/truffle/testing/testing-your-contracts).
+
+`$ make test_contracts`
+
+#### Frontend
+
+Testing the frontend can be done [here](https://github.com/vanities/bitchan/tree/master/client/tests) and is written in typescript.
+
+`$ make test_client`
 
 ### Stop
 `$ make down`
