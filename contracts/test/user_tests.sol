@@ -28,9 +28,9 @@ contract TestUser is User{
         Assert.equal(ownerUsername, username0, "get owner returns the username of the owner");
         Assert.equal(acc0, acc0, "ensures the user is the owner");
     }
-    
+
     function testGetUserGetsUserDetails() public {
-        (id0, acc0, username0) = user.retrieve(0); 
+        (id0, acc0, username0) = user.retrieve(0);
         Assert.equal(0, id0, "get owner returns the id of the owner");
         Assert.equal(acc0, acc0, "get owner returns the address of the owner");
         Assert.equal(ownerUsername, username0, "get owner returns the username of the owner");
@@ -41,8 +41,8 @@ contract TestUser is User{
         Assert.equal(id1, uint(0), "get owner returns the id of the user");
         Assert.equal(acc1, acc1, "get owner returns the address of the user");
         Assert.equal(username1, string(""), "get owner returns the username of the user");
-        
-        
+
+
         (id2, acc2, username2) = user.create("some-username");
         Assert.equal(id1, uint(0), "get owner returns the id of the user");
         Assert.equal(acc2, acc2, "get owner returns the address of the user");
@@ -55,8 +55,8 @@ contract TestUser is User{
         Assert.equal(id1, uint(0), "get owner returns the id of the user");
         Assert.equal(acc1, acc1, "get owner returns the address of the user");
         Assert.equal(username1, string(""), "get owner returns the username of the user");
-        
-        
+
+
         (id2, acc2, username2) = user.create("some-username");
         Assert.equal(id1, uint(0), "get owner returns the id of the user");
         Assert.equal(acc2, acc2, "get owner returns the address of the user");
