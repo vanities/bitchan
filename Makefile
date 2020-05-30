@@ -4,6 +4,12 @@
 build:
 	docker-compose build
 
+build_client:
+	docker-compose build react
+
+build_truffle:
+	docker-compose build truffle
+
 up: build
 	docker-compose up react ganache
 
@@ -17,10 +23,10 @@ compile:
 	#docker-compose run --rm solidity -o /sources/output --abi --bin /sources/Bitchan.sol
 	docker-compose run --rm truffle truffle compile
 
-build_truffle:
-	docker-compose build truffle
+test_contracts: build_truffle
+	docker-compose run --rm truffle truffle test --stacktrace
 
-test: build_truffle
+test_client: build_react
 	docker-compose run --rm truffle truffle test --stacktrace
 
 migrate-new: build_truffle

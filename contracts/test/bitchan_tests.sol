@@ -1,7 +1,27 @@
 pragma solidity >=0.4.22 <0.7.0;
+import "../contracts/Bitchan.sol";
+
+contract TestBitchan is Bitchan{
+    address acc0;
+    uint id0;
+    string username0;
+    string ownerUsername;
+    uint256 feeOriginalPost, feeReplyPost;
+    Bitchan bitchan;
+
+    function beforeAll() public {
+        feeOriginalPost = 0;
+        feeReplyPost = 0;
+        bitchan = new Bitchan(feeOriginalPost, feeReplyPost);
+    }
+
+    function testCreateThreadCreatesOriginalPost() public {
+    }
+
+}
+/*
 import "truffle/Assert.sol";
 import "truffle/DeployedAddresses.sol";
-import "../contracts/Bitchan.sol";
 
 contract TestBitchan is Bitchan{
     address acc0;
@@ -25,3 +45,4 @@ contract TestBitchan is Bitchan{
     }
 
 }
+*/
