@@ -61,7 +61,7 @@ contract Bitchan {
 	}
 
 	// modifying the fees
-	function SetFees(uint256 _feeOriginalPost, uint256 _feeReplyPost) public {
+	function setFees(uint256 _feeOriginalPost, uint256 _feeReplyPost) public {
 		require(owner == msg.sender);
 		feeOriginalPost = _feeOriginalPost;
 		feeReplyPost = _feeReplyPost;

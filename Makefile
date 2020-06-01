@@ -26,8 +26,8 @@ compile:
 test_contracts: build_truffle
 	docker-compose run --rm truffle truffle test --stacktrace
 
-test_client: build_react
-	docker-compose run --rm truffle truffle test --stacktrace
+test_client: build_client
+	docker-compose run --rm react npm test test -- --watchAll=false
 
 migrate-new: build_truffle
 	docker-compose run --rm truffle truffle create migration deploy_user

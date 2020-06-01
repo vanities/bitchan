@@ -15,7 +15,6 @@ services:
     environment:
       - NODE_ENV=development
       - CHOKIDAR_USEPOLLING=true
-    tty: true
     depends_on:
       - truffle
     restart: on-failure
