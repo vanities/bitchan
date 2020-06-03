@@ -31,6 +31,7 @@ This includes tests!
 - [ ] Basic Board
 - [ ] Basic Admin control
 - [ ] Governance
+- [ ] Personal Messaging
 
 ### Frontend client to interpret the backend state
 
@@ -39,6 +40,7 @@ This includes tests!
 - [ ] Hide Post filters
 - [ ] Submit application for leadership
 - [ ] Submit vote for leadership
+- [ ] Personal Messaging
 
 
 ## Development
@@ -58,7 +60,7 @@ The development backend and frontend interact using the truffle stack.
 
 #### Backend
 
-The backend is written in [solidity contracts](https://solidity.readthedocs.io/en/latest/introduction-to-smart-contracts.html) using [Ethereum](https://ethereum.org/).
+The backend is written in [solidity contracts](https://solidity.readthedocs.io/en/latest/introduction-to-smart-contracts.html) using [Ethereum](https://ethereum.org/). The Contracts used right now are User for user creation and and Bitchan for the basic messaging board component.
 
 
 #### Frontend
