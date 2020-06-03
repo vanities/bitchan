@@ -7,10 +7,13 @@ Bitchan is an ethereum message board republic.
 This is a missing link of democracy in the public forum. 
 
 ### Destruction from outside forces
+Having an immutable backend means not having to deal with [government thugs](https://kiwifarms.net/threads/battle-for-section-230.70375/). If you want to spin a front end up your own, the goal would be to have an easily accessible api.
 
 ### Destruction from within
-Typically Benevolent Dictators For Life (BDFL), rule a website without transparency and destroy the community from within with extremely shady moderation. Strategies like [shadowbanning](https://en.wikipedia.org/wiki/Shadow_banning), [editing posts](https://web.archive.org/web/20200419171435/https://www.reddit.com/r/announcements/comments/5frg1n/tifu_by_editing_some_comments_and_creating_an/),  Moderators, Janitors, and privileged users will be voted on to represent the registered users in a democratic vote among registered users of the age of 6 months (this time will be up to debate and vote), should there be an upper cap for a user account to vote?
+Typically Benevolent Dictators For Life (BDFL), rule a website without transparency and destroy the community from within with extremely shady moderation. Strategies like [shadowbanning](https://en.wikipedia.org/wiki/Shadow_banning), [editing posts](https://web.archive.org/web/20200419171435/https://www.reddit.com/r/announcements/comments/5frg1n/tifu_by_editing_some_comments_and_creating_an/) will not be allowed.
 
+### Vote for leaders
+Moderators, Janitors, and privileged users will be voted on to represent the registered users in a democratic vote among registered users of the age of 6 months (this time will be up to debate and vote.) 
 
 ## MVP
 
@@ -28,6 +31,7 @@ This includes tests!
 - [ ] Basic Board
 - [ ] Basic Admin control
 - [ ] Governance
+- [ ] Personal Messaging
 
 ### Frontend client to interpret the backend state
 
@@ -36,6 +40,7 @@ This includes tests!
 - [ ] Hide Post filters
 - [ ] Submit application for leadership
 - [ ] Submit vote for leadership
+- [ ] Personal Messaging
 
 
 ## Development
@@ -55,7 +60,7 @@ The development backend and frontend interact using the truffle stack.
 
 #### Backend
 
-The backend is written in [solidity contracts](https://solidity.readthedocs.io/en/latest/introduction-to-smart-contracts.html) using [Ethereum](https://ethereum.org/).
+The backend is written in [solidity contracts](https://solidity.readthedocs.io/en/latest/introduction-to-smart-contracts.html) using [Ethereum](https://ethereum.org/). The Contracts used right now are User for user creation and and Bitchan for the basic messaging board component.
 
 
 #### Frontend
