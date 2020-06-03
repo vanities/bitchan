@@ -40,7 +40,8 @@ contract Bitchan {
 
 	// last 20 active threads
 	uint256[20] public lastThreads;
-	uint256 public indexLastThreads = 0; // the index of the thread that was added last in lastThreads
+    // the index of the thread that was added last in lastThreads
+	uint256 public indexLastThreads = 0;
 
 	//
 	// Events

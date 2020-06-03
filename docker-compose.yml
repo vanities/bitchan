@@ -1,6 +1,26 @@
 version: "3.7"
 
 services:
+services:
+  react-prod:
+    container_name: react-prod
+    build:
+      context: ./client
+      dockerfile: ./Dockerfile.prod
+    volumes:
+      - ./client:/bitchan
+      - ./contracts/build/contracts:/bitchan/src/contracts
+      - node_modules:/bitchan/node_modules
+    ports:
+      - 80:80
+    environment:
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=true
+    depends_on:
+      - truffle
+    restart: on-failure
+    tty: true
+
   react:
     container_name: react
     build:
@@ -18,6 +38,7 @@ services:
     depends_on:
       - truffle
     restart: on-failure
+    tty: true
 
   solidity:
     image: ethereum/solc:stable

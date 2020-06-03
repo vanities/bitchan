@@ -11,7 +11,7 @@ build_truffle:
 	docker-compose build truffle
 
 up: build
-	docker-compose up react ganache
+	docker-compose up react truffle ganache
 
 down:
 	docker-compose down --remove-orphans
@@ -20,7 +20,6 @@ clean: down
 	docker-compose rm
 
 compile:
-	#docker-compose run --rm solidity -o /sources/output --abi --bin /sources/Bitchan.sol
 	docker-compose run --rm truffle truffle compile
 
 test_contracts: build_truffle
