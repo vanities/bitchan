@@ -10,8 +10,11 @@ build_client:
 build_truffle:
 	docker-compose build truffle
 
-up: build
+up: build_client
 	docker-compose up react truffle ganache
+
+up-prod: build_client
+	docker-compose up react-prod truffle ganache
 
 down:
 	docker-compose down --remove-orphans

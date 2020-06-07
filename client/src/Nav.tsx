@@ -1,5 +1,5 @@
-import React, { Component } from "react";
-import { Link } from "react-router-dom";
+import * as React from "react";
+import {Link} from "react-router-dom";
 import {
   Navbar,
   NavbarBrand,
@@ -9,10 +9,10 @@ import {
   NavbarText,
 } from "reactstrap";
 
-import { newContextComponents } from "@drizzle/react-components";
-const { AccountData } = newContextComponents;
+import {newContextComponents} from "@drizzle/react-components";
+const {AccountData} = newContextComponents;
 
-export const TopNav = (props, context) => {
+export function TopNav(props, context) {
   return (
     <div>
       <Navbar color="dark" dark expand="md">
@@ -33,10 +33,10 @@ export const TopNav = (props, context) => {
             accountIndex={0}
             units="ether"
             precision={3}
-            render={({ address, balance, units }) => (
+            render={({address, balance, units}) => (
               <div>
                 <div>
-                  Address: <span style={{ color: "white" }}>{address}</span>
+                  Address: <span style={{color: "white"}}>{address}</span>
                 </div>
               </div>
             )}
@@ -45,4 +45,4 @@ export const TopNav = (props, context) => {
       </Navbar>
     </div>
   );
-};
+}
