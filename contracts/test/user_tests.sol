@@ -48,18 +48,4 @@ contract TestUser{
         Assert.equal(acc2, acc2, "get owner returns the address of the user");
         Assert.equal(username2, string(""), "get owner returns the username of the user");
     }
-
-    function testGetNumUsersReturnsUserCount() public {
-        Assert.equal(user.getNumUsers(), uint(3), "gets correct number of users");
-        (id1, acc1, username1) = user.create("some-username");
-        Assert.equal(id1, uint(0), "get owner returns the id of the user");
-        Assert.equal(acc1, acc1, "get owner returns the address of the user");
-        Assert.equal(username1, string(""), "get owner returns the username of the user");
-
-
-        (id2, acc2, username2) = user.create("some-username");
-        Assert.equal(id1, uint(0), "get owner returns the id of the user");
-        Assert.equal(acc2, acc2, "get owner returns the address of the user");
-        Assert.equal(username2, string(""), "get owner returns the username of the user");
-    }
 }

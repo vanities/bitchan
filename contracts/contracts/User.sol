@@ -28,8 +28,8 @@ contract User {
         return retrieve(0);
     }
 
-    function getNumUsers() public view returns (uint) {
-        return userCount;
+    function getInfo() public view returns (uint256, address, string memory){
+      return (userCount, owner.addr, owner.username);
     }
 
 
