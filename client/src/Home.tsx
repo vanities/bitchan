@@ -1,4 +1,5 @@
 import * as React from "react";
+import {drizzleReactHooks} from "@drizzle/react-plugin";
 import {Badge, Table} from "reactstrap";
 
 interface HomeProps {
@@ -7,12 +8,15 @@ interface HomeProps {
 }
 
 interface HomeState {
-  0?: string; // num users
-  1?: string; // owner address
-  2?: string; // owner username
+  userInfo?: any;
+  ownerAddress: string;
 }
 
-function UserTable(...info: any) {
+function UserTable(
+  numUsers: string,
+  ownerAddress: string,
+  ownerUsername: string
+) {
   return (
     <div>
       <h3>
@@ -21,16 +25,16 @@ function UserTable(...info: any) {
       <Table bordered>
         <thead>
           <tr>
-            <th>User Count</th>
+            <th>Number of users</th>
             <th>Owner address</th>
             <th>Owner username</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td>{info[0]}</td>
-            <td>{info[1]}</td>
-            <td>{info[2]}</td>
+            <td>{numUsers}</td>
+            <td>{ownerAddress}</td>
+            <td>{ownerUsername}</td>
           </tr>
         </tbody>
       </Table>
@@ -38,25 +42,12 @@ function UserTable(...info: any) {
   );
 }
 
-export class Home extends React.Component<HomeProps, HomeState> {
-  state = {0: null, 1: null, 2: null};
+export function Home() {
+  const {useCacheCall} = drizzleReactHooks.useDrizzle();
+  const state = useCacheCall("User", "getState");
+  const numUsers = state ? state[0] : "loading";
+  const ownerAddress = state ? state[1] : "loading";
+  const ownerUsername = state ? state[2] : "loading";
 
-  componentDidMount() {
-    const {drizzle} = this.props;
-    const user = drizzle.contracts.User;
-
-    // get and save the key for the variable we are interested in
-    const userInfo = user.methods.getInfo.cacheCall();
-    this.setState({...userInfo});
-  }
-
-  render() {
-    const {User} = this.props.drizzleState.contracts;
-    console.log("state", this.state);
-    const storedData = User.getInfo[0];
-    console.log("stored data", storedData);
-    const userInfo = storedData ? storedData.value : "No user info";
-    //console.log("user info", userInfo);
-    return UserTable(...userInfo);
-  }
+  return UserTable(numUsers, ownerAddress, ownerUsername);
 }

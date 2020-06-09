@@ -1,7 +1,6 @@
-import { Drizzle, generateStore } from "@drizzle/store";
+import {Drizzle, generateStore} from "@drizzle/store";
 
-import { options } from "./drizzleOptions";
-
+import {options} from "./options";
 
 export const setupDrizzle = () => {
   console.log("setticng up drizzle");

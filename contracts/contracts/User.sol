@@ -15,7 +15,7 @@ contract User {
     UserProfile public owner;
 
     // This declares a state variable that
-    // stores a `Voter` struct for each possible address.
+    // stores a `User` struct for each possible address.
     mapping(uint => UserProfile) public users;
 
     // modifier to check if caller is owner
@@ -24,11 +24,7 @@ contract User {
         _;
     }
 
-    function getOwner() public view returns (uint, address, string memory) {
-        return retrieve(0);
-    }
-
-    function getInfo() public view returns (uint256, address, string memory){
+    function getState() public view returns (uint256, address, string memory){
       return (userCount, owner.addr, owner.username);
     }
 

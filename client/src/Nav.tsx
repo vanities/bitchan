@@ -9,10 +9,14 @@ import {
   NavbarText,
 } from "reactstrap";
 
+import {drizzleReactHooks} from "@drizzle/react-plugin";
 import {newContextComponents} from "@drizzle/react-components";
 const {AccountData} = newContextComponents;
 
 export function TopNav(props, context) {
+  const drizzleState = drizzleReactHooks.useDrizzleState((drizzleState) => ({
+    account: drizzleState.accounts[0],
+  }));
   return (
     <div>
       <Navbar color="dark" dark expand="md">
@@ -25,23 +29,13 @@ export function TopNav(props, context) {
               Board
             </NavLink>
           </NavItem>
+          <NavItem>
+            <NavLink tag={Link} to="/signup">
+              Sign Up
+            </NavLink>
+          </NavItem>
         </Nav>
-        <NavbarText>
-          <AccountData
-            drizzle={props.drizzle}
-            drizzleState={props.drizzleState}
-            accountIndex={0}
-            units="ether"
-            precision={3}
-            render={({address, balance, units}) => (
-              <div>
-                <div>
-                  Address: <span style={{color: "white"}}>{address}</span>
-                </div>
-              </div>
-            )}
-          />
-        </NavbarText>
+        <NavbarText>{drizzleState.account}</NavbarText>
       </Navbar>
     </div>
   );

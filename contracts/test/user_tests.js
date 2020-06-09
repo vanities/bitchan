@@ -3,7 +3,7 @@ const User = artifacts.require("User");
 contract("User test get num of users", async (accounts) => {
   it("should get the initial num of users", async () => {
     const instance = await User.deployed();
-    const info = await instance.getInfo.call();
+    const info = await instance.getState.call();
     console.log(count);
     assert.equal(
       {
