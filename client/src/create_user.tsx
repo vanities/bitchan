@@ -1,14 +1,30 @@
 import * as React from 'react';
-import { Button, Form, FormGroup, Label, Input, FormText } from 'reactstrap';
+import { Container, Col, Button, Form, FormGroup, Label, Input  } from 'reactstrap';
 import {drizzleReactHooks} from "@drizzle/react-plugin";
+import "./signup.css"
 
 function signUp(){
-    return (<Form>
+
+  const handleSubmit = event => {
+    alert("ok")
+    event.preventDefault()
+  }
+    return (
+ <Container className="app">
+    <Form onSubmit={handleSubmit}>
+      <h3>sign up
+      </h3>
+  <Col>
       <FormGroup>
-        <Label for="exampleEmail">Email</Label>
+        <Label for="username">username</Label>
         <Input type="text" name="username" id="username" placeholder="enter" />
       </FormGroup>
-    </Form>)
+  </Col>
+<Button>Submit</Button>
+    </Form>
+ </Container>
+
+        )
 }
 
 export function createUser(props) {

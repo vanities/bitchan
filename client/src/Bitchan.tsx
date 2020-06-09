@@ -23,13 +23,9 @@ export function Bitchan() {
   return (
     <div className="Bitchan">
       <Router>
-        <TopNav drizzle={drizzle} drizzleState={drizzleState} />
-        <Route
-          path="/"
-          render={(props) => (
-            <Home drizzle={drizzle} drizzleState={drizzleState} />
-          )}
-        />
+        <TopNav />
+        <Route path="/" />
+        <Route path="/home" component={Home} />
         <Route path="/board" component={Board} />
         <Route path="/signup" component={createUser} />
       </Router>

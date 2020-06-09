@@ -25,6 +25,11 @@ export function TopNav(props, context) {
         </NavbarBrand>
         <Nav className="mr-auto" navbar>
           <NavItem>
+            <NavLink tag={Link} to="/home">
+              Home
+            </NavLink>
+          </NavItem>
+          <NavItem>
             <NavLink tag={Link} to="/board">
               Board
             </NavLink>
