@@ -2,6 +2,9 @@ name: Build and Test Client
 on:
   pull_request:
     branches: [master]
+  push:
+    branches:
+      - master
 
 defaults:
   run:
