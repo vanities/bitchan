@@ -24,6 +24,10 @@ contract User {
         _;
     }
 
+    function getOwner() public view returns (uint, address, string memory) {
+        return retrieve(0);
+    }
+
     function getState() public view returns (uint256, address, string memory){
       return (userCount, owner.addr, owner.username);
     }

@@ -1,0 +1,21 @@
+name: Build and Test Client
+on:
+  pull_request:
+    branches: [master]
+
+defaults:
+  run:
+    shell: bash
+    working-directory: client
+
+jobs:
+  build:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@master
+      - name: Build Client
+        run: docker-compose build react
+      - name: Run Test
+        run: docker-compose run --rm react npm test test -- --watchAll=false
