@@ -16,6 +16,6 @@ jobs:
       - name: Checkout Repo
         uses: actions/checkout@master
       - name: Build Client
-        run: make build_truffle
+        run: docker-compose build truffle
       - name: Run Test
-        run: make test_contracts
+        run: docker-compose run --rm truffle truffle test --stacktrace
