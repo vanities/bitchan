@@ -1,0 +1,21 @@
+name: Build and Test Contracts
+on:
+  pull_request:
+    branches: [master]
+
+defaults:
+  run:
+    shell: bash
+    working-directory: client
+
+jobs:
+  build:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@master
+      - name: Build Client
+        run: make build_truffle
+      - name: Run Test
+        run: make test_contracts
