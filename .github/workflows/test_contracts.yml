@@ -10,12 +10,12 @@ defaults:
 
 jobs:
   build:
-    name: Build and Test
+    name: Build and Test Contracts
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repo
         uses: actions/checkout@master
-      - name: Build Client
+      - name: Build Contracts
         run: docker-compose build truffle
       - name: Run Test
         run: docker-compose run --rm truffle truffle test --stacktrace

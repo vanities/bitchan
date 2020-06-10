@@ -16,6 +16,6 @@ jobs:
       - name: Checkout Repo
         uses: actions/checkout@master
       - name: Build Client
-        run: make build_client
+        run: docker-compose build react
       - name: Run Test
-        run: make test_client
+        run: docker-compose run --rm react npm test test -- --watchAll=false
