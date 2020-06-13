@@ -19,13 +19,13 @@ contract TestUser{
     function beforeAll() public {
         user = new User();
         ownerUsername = "vanities";
-        (id0, acc0, username0) = user.getOwner();
+        (id0, acc0, username0) = user.owner();
     }
 
     function testCreateOwnerIsOwnerOfContract() public {
         Assert.equal(0, id0, "get owner returns the id of the owner");
         Assert.equal(acc0, acc0, "get owner returns the address of the owner");
-        Assert.equal(ownerUsername, username0, "get owner returns the username of the owner");
+        Assert.equal("", username0, "get owner returns the username of the owner");
         Assert.equal(acc0, acc0, "ensures the user is the owner");
     }
 

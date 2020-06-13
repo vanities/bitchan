@@ -1,13 +1,13 @@
-import * as React from "react";
-import {drizzleReactHooks} from "@drizzle/react-plugin";
+import * as React from 'react'
+import { drizzleReactHooks } from '@drizzle/react-plugin'
 
-import {setupDrizzle} from "./drizzle/setup";
-import {Bitchan} from "./bitchan";
+import { setupDrizzle } from './drizzle/setup'
+import { Bitchan } from './bitchan'
 
-const drizzle = setupDrizzle();
+const drizzle = setupDrizzle()
 
 export default class App extends React.Component {
-  render() {
+  render () {
     return (
       <drizzleReactHooks.DrizzleProvider drizzle={drizzle}>
         <drizzleReactHooks.Initializer
@@ -21,6 +21,6 @@ export default class App extends React.Component {
           <Bitchan />
         </drizzleReactHooks.Initializer>
       </drizzleReactHooks.DrizzleProvider>
-    );
+    )
   }
 }

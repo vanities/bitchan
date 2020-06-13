@@ -3,18 +3,18 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@testing-library/jest-dom": "^5.8.0",
-    "@testing-library/react": "^10.0.4",
-    "@testing-library/user-event": "^10.3.3",
-    "@types/jest": "^25.2.3",
-    "@types/react-test-renderer": "^16.9.2",
-    "@types/node": "^14.0.4",
-    "@types/react": "^16.9.0",
-    "@types/react-dom": "^16.9.0",
     "@drizzle/react-components": "^1.5.1",
     "@drizzle/react-plugin": "^1.5.1",
     "@drizzle/store": "^1.5.1",
-    "bootstrap": "^4.4.1",
+    "@testing-library/jest-dom": "^5.9.0",
+    "@testing-library/react": "^10.2.1",
+    "@testing-library/user-event": "^11.4.1",
+    "@types/jest": "^26.0.0",
+    "@types/node": "^14.0.13",
+    "@types/react": "^16.9.36",
+    "@types/react-dom": "^16.9.8",
+    "@types/react-test-renderer": "^16.9.2",
+    "bootstrap": "^4.5.0",
     "drizzle": "^1.4.0",
     "react": "^16.13.1",
     "react-art": "^16.13.1",
@@ -22,9 +22,9 @@
     "react-router-dom": "^5.2.0",
     "react-scripts": "^3.4.1",
     "reactstrap": "^8.4.1",
-    "styled-components": "^5.1.0",
-    "typescript": "^3.8.0",
-    "web3": "^1.2.7"
+    "styled-components": "^5.1.1",
+    "typescript": "^3.9.5",
+    "web3": "^1.2.9"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -46,5 +46,16 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^3.2.0",
+    "@typescript-eslint/parser": "^3.2.0",
+    "eslint": "^7.2.0",
+    "eslint-config-standard": "^14.1.1",
+    "eslint-plugin-import": "^2.21.2",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^4.2.1",
+    "eslint-plugin-react": "^7.20.0",
+    "eslint-plugin-standard": "^4.0.1"
   }
 }

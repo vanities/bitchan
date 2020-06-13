@@ -1,21 +1,21 @@
 import * as React from "react";
-import {Link} from "react-router-dom";
+import { Link } from "react-router-dom";
 import {
   Navbar,
   NavbarBrand,
   Nav,
   NavItem,
   NavLink,
-  NavbarText,
+  NavbarText
 } from "reactstrap";
 
-import {drizzleReactHooks} from "@drizzle/react-plugin";
-import {newContextComponents} from "@drizzle/react-components";
-const {AccountData} = newContextComponents;
+import { drizzleReactHooks } from "@drizzle/react-plugin";
+import { newContextComponents } from "@drizzle/react-components";
+const { AccountData } = newContextComponents;
 
-export function TopNav(props, context) {
+export function TopNav (props, context) {
   const drizzleState = drizzleReactHooks.useDrizzleState((drizzleState) => ({
-    account: drizzleState.accounts[0],
+    account: drizzleState.accounts[0]
   }));
   return (
     <div>

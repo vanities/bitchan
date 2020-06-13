@@ -61,10 +61,7 @@ services:
     image: trufflesuite/ganache-cli:next
     ports:
       - 8545:8545
-    command: >
-      ganache-cli \
-      --account="0x2264248e750146323373851aec1f3f700f6d9ed0ebdc934137c9e007a047197f,1000000000000000000" \
-      --unlock "0x96afb074FBF48A2b12e31D5f1aB2112d7643801B"
+    command: --account="0x2264248e750146323373851aec1f3f700f6d9ed0ebdc934137c9e007a047197f,1000000000000000000" --unlock "0x96afb074FBF48A2b12e31D5f1aB2112d7643801B"
     restart: on-failure
 
 volumes:

@@ -1,6 +1,6 @@
 import * as React from "react";
-import {drizzleReactHooks} from "@drizzle/react-plugin";
-import {Badge, Table} from "reactstrap";
+import { drizzleReactHooks } from "@drizzle/react-plugin";
+import { Badge, Table } from "reactstrap";
 
 interface HomeProps {
   drizzle: any;
@@ -12,7 +12,7 @@ interface HomeState {
   ownerAddress: string;
 }
 
-function UserTable(
+function UserTable (
   numUsers: string,
   ownerAddress: string,
   ownerUsername: string
@@ -42,8 +42,8 @@ function UserTable(
   );
 }
 
-export function Home() {
-  const {useCacheCall} = drizzleReactHooks.useDrizzle();
+export function Home () {
+  const { useCacheCall } = drizzleReactHooks.useDrizzle();
   const state = useCacheCall("User", "getState");
   const numUsers = state ? state[0] : "loading";
   const ownerAddress = state ? state[1] : "loading";
