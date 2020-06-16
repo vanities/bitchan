@@ -74,6 +74,13 @@ The frontend is written in javascript/typescript and react.
 
 ### Testing
 
+#### Local
+
+- `$ make up` to turn on the local
+- Go to [http://127.0.0.1:3001](http://127.0.0.1:3001) in your browser
+- enter `0x2264248e750146323373851aec1f3f700f6d9ed0ebdc934137c9e007a047197f` into metamask as a private key, it has 1 ETH.
+
+
 #### Backend
 
 Testing the backend contracts can be done [here](https://github.com/vanities/bitchan/tree/master/contracts/test) and is written in solidity and typescript using [truffle](https://www.trufflesuite.com/docs/truffle/testing/testing-your-contracts).

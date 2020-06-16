@@ -16,6 +16,7 @@ contract User {
 
     // This declares a state variable that
     // stores a `Voter` struct for each possible address.
+    // use address
     mapping(uint => UserProfile) public users;
 
     // modifier to check if caller is owner
@@ -53,6 +54,12 @@ contract User {
         return (users[userCount].id, users[userCount].addr, users[userCount].username);
 
     }
+
+    /*
+    function contains internal returns(bool){
+      return bool(retrieve(
+    }
+    */
 
     function incrementUserCount() internal {
         userCount++;
