@@ -1,21 +1,13 @@
 import * as React from "react";
 import { useState } from "react";
-import {
-  Container,
-  Col,
-  Button,
-  Form,
-  FormGroup,
-  Label,
-  Input
-} from "reactstrap";
+import { Container, Col, Button, Form, FormGroup, Input } from "reactstrap";
 import { drizzleReactHooks } from "@drizzle/react-plugin";
 
 import "./signup.css";
 
 export function CreateUser () {
   const { useCacheSend } = drizzleReactHooks.useDrizzle();
-  const { send, tx } = useCacheSend("User", "create");
+  const { send } = useCacheSend("User", "create");
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -34,11 +26,10 @@ export function CreateUser () {
         <h3>sign up</h3>
         <Col>
           <FormGroup>
-            <Label for="username">username</Label>
             <Input
               type="text"
               name="username"
-              placeholder="optional, enter a username or one will be generated for you"
+              placeholder="username, optional"
               onChange={handleInputChange}
               value={values.username}
             />

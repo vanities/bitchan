@@ -1,5 +1,6 @@
 const Migrations = artifacts.require("Migrations");
 
-module.exports = function(deployer) {
+// https://www.trufflesuite.com/docs/truffle/getting-started/running-migrations
+module.exports = function (deployer) {
   deployer.deploy(Migrations);
 };

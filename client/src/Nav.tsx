@@ -10,8 +10,6 @@ import {
 } from "reactstrap";
 
 import { drizzleReactHooks } from "@drizzle/react-plugin";
-import { newContextComponents } from "@drizzle/react-components";
-const { AccountData } = newContextComponents;
 
 export function TopNav (props, context) {
   const drizzleState = drizzleReactHooks.useDrizzleState((drizzleState) => ({
