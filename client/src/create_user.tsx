@@ -21,7 +21,7 @@ export function CreateUser () {
   const [values, setValues] = useState({ username: "" });
 
   return (
-    <Container className="app">
+    <Container className="signup">
       <Form onSubmit={handleSubmit}>
         <h3>sign up</h3>
         <Col>

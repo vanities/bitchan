@@ -11,10 +11,11 @@ contract Bitchan {
 
 	address payable private owner;
 
-	uint256 public feeOriginalPost;
+	uint256 public feeCreateThread;
 	uint256 public feeReplyPost;
 
 	struct thread {
+        string subject;
 		string text;
 		string imageUrl;
 
@@ -24,7 +25,7 @@ contract Bitchan {
 		uint256 timestamp;
 	}
 	mapping (uint256 => thread) public threads;
-	uint256 public originalPostCount = 0;
+	uint256 public threadCount = 0;
 
 	struct reply {
 		string text;
@@ -47,7 +48,7 @@ contract Bitchan {
 	// Events
 	//
 
-	event originalPostEvent(uint256 threadId, string text, string imageUrl, uint256 timestamp);
+	event createThreadEvent(uint256 threadId, string subject, string text, string imageUrl, uint256 timestamp);
 
 	event newReplyEvent(uint256 replyId, uint256 replyTo, string text, string imageUrl, uint256 timestamp);
 
@@ -55,16 +56,16 @@ contract Bitchan {
 	// Meta
 	//
 
-	constructor(uint256 _feeOriginalPost, uint256 _feeReplyPost) public {
+	constructor(uint256 _feeCreateThread, uint256 _feeReplyPost) public {
 		owner = msg.sender;
-		feeOriginalPost = _feeOriginalPost;
+		feeCreateThread = _feeCreateThread;
 		feeReplyPost = _feeReplyPost;
 	}
 
 	// modifying the fees
-	function setFees(uint256 _feeOriginalPost, uint256 _feeReplyPost) public {
+	function setFees(uint256 _feeCreateThread, uint256 _feeReplyPost) public {
 		require(owner == msg.sender);
-		feeOriginalPost = _feeOriginalPost;
+		feeCreateThread = _feeCreateThread;
 		feeReplyPost = _feeReplyPost;
 	}
 
@@ -78,18 +79,18 @@ contract Bitchan {
 	//
 
 	// To create a Thread
-	function createThread(string memory _text, string memory _imageUrl) payable public {
+	function createThread(string memory subject, string memory text, string memory imageUrl) payable public {
 		// collect the fees
-		require(msg.value >= feeOriginalPost);
+		require(msg.value >= feeCreateThread);
 		// calculate a new thread ID and post
-		threads[originalPostCount] = thread(_text, _imageUrl, 0, 0, now);
+		threads[threadCount] = thread(subject, text, imageUrl, 0, 0, now);
 		// add it to our last active threads array
-		lastThreads[indexLastThreads] = originalPostCount;
+		lastThreads[indexLastThreads] = threadCount;
 		indexLastThreads = addmod(indexLastThreads, 1, 20); // increment index
 		// log!
-		emit originalPostEvent(originalPostCount, _text, _imageUrl, now);
+		emit createThreadEvent(threadCount, subject, text, imageUrl, now);
 		// increment index for next thread
-		originalPostCount += 1;
+		threadCount += 1;
 	}
 
 	// To reply to a thread
@@ -97,7 +98,7 @@ contract Bitchan {
 		// collect the fees
 		require(msg.value >= feeReplyPost);
 		// make sure you can't reply to an inexistant thread
-		require(_replyTo < originalPostCount && _replyTo > 0);
+		require(_replyTo < threadCount && _replyTo > 0);
 		// post the reply with nextReply = 0 (this is the last message in the chain)
 		replies[indexReplies] = reply(_text, _imageUrl, _replyTo, 0, now);
 		// update the thread
