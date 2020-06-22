@@ -8,17 +8,17 @@ contract TestBitchan{
     uint id0;
     string username0;
     string ownerUsername;
-    uint256 feeOriginalPost;
-    uint256 feeReplyPost;
+    uint256 public feeCreateThread;
+    uint256 public feeReplyPost;
     Bitchan bitchan;
 
     function beforeAll() public {
-        feeOriginalPost = 0;
+        feeCreateThread = 0;
         feeReplyPost = 0;
-        bitchan = new Bitchan(feeOriginalPost, feeReplyPost);
+        bitchan = new Bitchan(feeCreateThread, feeReplyPost);
     }
 
-    function testCreateThreadCreatesOriginalPost() public {
-        //Assert.equal(feeOriginalPost, bitchan.feeOriginalPost, "0 posts originally");
+    function testCreateThreadCreatesCreateThread() public {
+        //Assert.equal(feeCreateThread, bitchan.feeCreateThread, "0 posts originally");
     }
 }
