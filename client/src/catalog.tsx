@@ -31,14 +31,12 @@ export function Catalog (props, context) {
 
   return (
     <div>
-      Total # of Threads: {numThreads}
-      Threads:
       <Table bordered>
         <thead>
           <tr>
-            <th>User ID</th>
-            <th>Address</th>
-            <th>Username</th>
+            <th>Subject</th>
+            <th>Text</th>
+            <th>Image</th>
           </tr>
         </thead>
         {threads.map((thread) => (
