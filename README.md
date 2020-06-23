@@ -19,6 +19,29 @@ Typically Benevolent Dictators For Life (BDFL), rule a website without transpare
 ### Vote for leaders
 Moderators, Janitors, and privileged users will be voted on to represent the registered users in a democratic vote among registered users of the age of 6 months (this time will be up to debate and vote.)
 
+Contract imperitives:
+1. The contract owner shall be the president for the first year of office
+2. Registered users shall vote after the age of 6 months
+
+
+### Combating bots
+
+Having a fee to post promotes speech in the following ways:
+- No ads
+- No CAPTCHA where google makes you train their car self-driving algorithms for free and causes you to solve multiple puzzles that cost you more than 30 seconds
+- Incentivize the president to clean the board
+- No vpn/proxy spamming the board with ads, and if they do, they're paying the president
+
+### Presidential capabilites
+
+- making sticky posts
+- restricting user sign up
+- changing the create thread fee
+- changing the reply post fee
+- removing/hiding posts
+- drawing out money from created threads and posts
+
+
 ## MVP
 
 Working user signup, single board, admin access to the contract owner.
