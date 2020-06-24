@@ -1,20 +1,46 @@
 import * as React from "react";
-import { Link } from "react-router-dom";
+import {Link} from "react-router-dom";
 import {
   Navbar,
   NavbarBrand,
   Nav,
   NavItem,
   NavLink,
-  NavbarText
+  NavbarText,
 } from "reactstrap";
+import {Blockie} from "rimble-ui";
+import "./nav.css";
 
-import { drizzleReactHooks } from "@drizzle/react-plugin";
+import {drizzleReactHooks} from "@drizzle/react-plugin";
 
-export function TopNav (props, context) {
+function Address(props, context) {
   const drizzleState = drizzleReactHooks.useDrizzleState((drizzleState) => ({
-    account: drizzleState.accounts[0]
+    account: drizzleState.accounts[0],
   }));
+  const account = drizzleState.account;
+  const abbreviatedAccount = `${account.slice(0, 5)}...${account.slice(
+    -5,
+    -1
+  )}`;
+  return (
+    <div className="account">
+      <NavbarText className="address">{abbreviatedAccount}</NavbarText>
+      <Blockie
+        className="avatar"
+        opts={{
+          seed: "Bitchan",
+          color: "#dfe",
+          bgcolor: "#a71",
+          size: 7,
+          scale: 3,
+          spotcolor: "#000",
+        }}
+      />
+    </div>
+  );
+}
+
+export function TopNav(props, context) {
   return (
     <div>
       <Navbar color="dark" dark expand="md">
@@ -38,7 +64,7 @@ export function TopNav (props, context) {
             </NavLink>
           </NavItem>
         </Nav>
-        <NavbarText>{drizzleState.account}</NavbarText>
+        <Address />
       </Navbar>
     </div>
   );

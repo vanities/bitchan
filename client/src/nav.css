@@ -1,0 +1,16 @@
+.account {
+  text-align: right;
+  padding: 5px;
+  margin: 1px;
+  border: 1px solid #d3d3d3;
+  vertical-align: middle;
+  margin-left: auto;
+  margin-right: auto;
+  width: 200px;
+}
+.address {
+  padding: 1em;
+}
+.avatar {
+  padding: 1em;
+}
