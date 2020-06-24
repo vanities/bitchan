@@ -99,9 +99,12 @@ The frontend is written in javascript/typescript and react.
 
 #### Local
 
-- `$ make up` to turn on the local
-- Go to [http://127.0.0.1:3001](http://127.0.0.1:3001) in your browser
-- enter `0x2264248e750146323373851aec1f3f700f6d9ed0ebdc934137c9e007a047197f` into metamask as a private key, it has 1 ETH.
+1. [follow the Quick install & Run](https://github.com/vanities/bitchan/blob/master/README.md#quick-install--run)
+2. Go to [http://127.0.0.1:3001](http://127.0.0.1:3001) in your browser
+3. Install [Metamask](https://metamask.io/download.html) for whatever browser you're using
+4. Open Metamask <img src=https://github.com/vanities/bitchan/blob/master/docs/images/metamask1.png width=300>
+5. enter `0x2264248e750146323373851aec1f3f700f6d9ed0ebdc934137c9e007a047197f` into metamask as a private key, it has 1 ETH.
+6. Ensure you're connected to the local node <img src=https://github.com/vanities/bitchan/blob/master/docs/images/metamask2.png width=300>
 
 
 #### Backend
