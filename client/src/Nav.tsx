@@ -1,4 +1,5 @@
 import * as React from "react";
+import {useState} from "react";
 import {Link} from "react-router-dom";
 import {
   Navbar,
@@ -7,6 +8,7 @@ import {
   NavItem,
   NavLink,
   NavbarText,
+  Tooltip,
 } from "reactstrap";
 import {Blockie} from "rimble-ui";
 import "./nav.css";
@@ -22,9 +24,22 @@ function Address(props, context) {
     -5,
     -1
   )}`;
+  const [tooltipOpen, setTooltipOpen] = useState(false);
+  const toggle = () => setTooltipOpen(!tooltipOpen);
   return (
     <div className="account">
-      <NavbarText className="address">{abbreviatedAccount}</NavbarText>
+      <NavbarText id="address" className="address">
+        {abbreviatedAccount}
+      </NavbarText>
+      <Tooltip
+        placement="bottom"
+        isOpen={tooltipOpen}
+        autohide={false}
+        target="address"
+        toggle={toggle}
+      >
+        {account}
+      </Tooltip>
       <Blockie
         className="avatar"
         opts={{
