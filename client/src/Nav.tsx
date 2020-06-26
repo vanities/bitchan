@@ -10,7 +10,7 @@ import {
   NavbarText,
   Tooltip,
 } from "reactstrap";
-import {Blockie} from "rimble-ui";
+import Blockies from "react-blockies";
 import "./nav.css";
 
 import {drizzleReactHooks} from "@drizzle/react-plugin";
@@ -28,29 +28,21 @@ function Address(props, context) {
   const toggle = () => setTooltipOpen(!tooltipOpen);
   return (
     <div className="account">
-      <NavbarText id="address" className="address">
-        {abbreviatedAccount}
-      </NavbarText>
-      <Tooltip
-        placement="bottom"
-        isOpen={tooltipOpen}
-        autohide={false}
-        target="address"
-        toggle={toggle}
-      >
-        {account}
-      </Tooltip>
-      <Blockie
-        className="avatar"
-        opts={{
-          seed: "Bitchan",
-          color: "#dfe",
-          bgcolor: "#a71",
-          size: 7,
-          scale: 3,
-          spotcolor: "#000",
-        }}
-      />
+      <div className="address">
+        <NavbarText id="address">{abbreviatedAccount}</NavbarText>
+        <Tooltip
+          placement="bottom"
+          isOpen={tooltipOpen}
+          autohide={false}
+          target="address"
+          toggle={toggle}
+        >
+          {account}
+        </Tooltip>
+      </div>
+      <div className="identicon">
+        <Blockies seed={account} size={8} scale={4} />
+      </div>
     </div>
   );
 }
