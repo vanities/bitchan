@@ -5,6 +5,10 @@
 
 Bitchan is an ethereum message board republic.
 
+## Just as some people have abused their power throughout history, we now see others abusing their power in the present.
+
+Because human beings can’t handle power. We are not good at handling power over others. Nothing corrupts us quicker, nothing degrades our ethics more, than having power over others.
+
 
 ## Governance
 
@@ -17,12 +21,12 @@ Having an immutable backend means not having to deal with [government thugs](htt
 Typically Benevolent Dictators For Life (BDFL), rule a website without transparency and destroy the community from within with extremely shady moderation. Strategies like [shadowbanning](https://en.wikipedia.org/wiki/Shadow_banning), [editing posts](https://web.archive.org/web/20200419171435/https://www.reddit.com/r/announcements/comments/5frg1n/tifu_by_editing_some_comments_and_creating_an/) will not be allowed.
 
 ### Vote for leaders
-Moderators, Janitors, and privileged users will be voted on to represent the registered users in a democratic vote among registered users of the age of 6 months (this time will be up to debate and vote.)
+Moderators, Janitors, and privileged users will be voted on to represent the registered users in a democratic vote among registered users of the age of 1 year.
 
 Contract imperitives:
 1. The contract owner shall be the president for the first year of office
-2. Registered users shall vote after the age of 6 months
-
+2. Registered users shall vote after the age of 1 year of lurking
+3. The President shall recieve the funding to be the leader of the board
 
 ### Combating bots
 
