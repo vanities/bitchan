@@ -8,6 +8,9 @@ import { Address } from "./address";
 import "./address.css";
 
 export function Bar (props, context) {
+  const { useCacheCall } = drizzleReactHooks.useDrizzle();
+  //const exists = useCacheCall("User", "exists");
+
   return (
     <div>
       <Navbar color="dark" dark expand="md">

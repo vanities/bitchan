@@ -1,18 +1,16 @@
 import * as React from "react";
-import {useState} from "react";
 import {
   Card,
   CardImg,
   CardText,
   CardBody,
   CardTitle,
-  CardSubtitle,
-  Button,
-  Table,
+  CardGroup,
+  Button
 } from "reactstrap";
-import {drizzleReactHooks} from "@drizzle/react-plugin";
+import { drizzleReactHooks } from "@drizzle/react-plugin";
 
-function getThreads(call, numThreads) {
+function getThreads (call, numThreads) {
   const threads = [];
   for (var thread = 0; thread <= numThreads; thread++) {
     threads.push(call("Bitchan", "threads", thread));
@@ -20,52 +18,43 @@ function getThreads(call, numThreads) {
   return threads;
 }
 
-const Thread = (subject, text, image) => {
+const Thread = (props) => {
   return (
     <div>
-      <Card>
-        <CardImg top width="100%" src={img} alt="Card image cap" />
+      <Card body inverse style={{ backgroundColor: "#333", borderColor: "#333" }}>
+        <Button>
+          <CardImg top width="10%" src={props.image} alt="caption" />
+        </Button>
         <CardBody>
-          <CardTitle>{subject}</CardTitle>
-          <CardSubtitle>Card subtitle</CardSubtitle>
-          <CardText>{text}</CardText>
-          <Button>Button</Button>
+          <CardTitle>{props.subject}</CardTitle>
+          <CardText>{props.text}</CardText>
         </CardBody>
       </Card>
     </div>
   );
 };
 
-export function Catalog(props, context) {
+export function Catalog (props, context) {
   const numThreadsGet = 20;
-  const {useCacheCall} = drizzleReactHooks.useDrizzle();
+  const { useCacheCall } = drizzleReactHooks.useDrizzle();
   const threads = useCacheCall(["Bitchan"], (call) =>
     getThreads(call, numThreadsGet)
   );
   const threadCount = useCacheCall("Bitchan", "threadCount");
   const numThreads = threadCount ? threadCount[0] : "Loading";
-  //const catalog = d;
+  // const catalog = d;
 
   return (
     <div>
-      <Table bordered>
-        <thead>
-          <tr>
-            <th>Subject</th>
-            <th>Text</th>
-            <th>Image</th>
-          </tr>
-        </thead>
+      <CardGroup>
         {threads.map((thread) => (
-          <tbody>
-            <tr>
-              Subject: {thread ? thread[0] : "loading"}
-              {thread ? thread[1] : "loading"}
-              {thread ? thread[2] : "loading"}
-            </tr>
-          </tbody>
+          <Thread
+            subject={thread ? thread[0] : "loading"}
+            text={thread ? thread[1] : "loading"}
+            image={thread ? thread[2] : "loading"}
+          />
         ))}
-      </Table>
+      </CardGroup>
     </div>
   );
 }
