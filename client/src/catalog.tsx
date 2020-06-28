@@ -1,38 +1,11 @@
 import * as React from "react";
-import {
-  Card,
-  CardImg,
-  CardText,
-  CardBody,
-  CardTitle,
-  CardGroup,
-  Button
-} from "reactstrap";
+import { CardColumns } from "reactstrap";
+
 import { drizzleReactHooks } from "@drizzle/react-plugin";
 
-function getThreads (call, numThreads) {
-  const threads = [];
-  for (var thread = 0; thread <= numThreads; thread++) {
-    threads.push(call("Bitchan", "threads", thread));
-  }
-  return threads;
-}
-
-const Thread = (props) => {
-  return (
-    <div>
-      <Card body inverse style={{ backgroundColor: "#333", borderColor: "#333" }}>
-        <Button>
-          <CardImg top width="10%" src={props.image} alt="caption" />
-        </Button>
-        <CardBody>
-          <CardTitle>{props.subject}</CardTitle>
-          <CardText>{props.text}</CardText>
-        </CardBody>
-      </Card>
-    </div>
-  );
-};
+import "./thread/thread.css";
+import { Thread, getThreads } from "./thread/thread";
+import { CreateThreadModal } from "./thread/create_thread_modal";
 
 export function Catalog (props, context) {
   const numThreadsGet = 20;
@@ -46,7 +19,8 @@ export function Catalog (props, context) {
 
   return (
     <div>
-      <CardGroup>
+      <CreateThreadModal buttonLabel="Create Thread" />
+      <CardColumns style={{ backgroundColor: "black", borderColor: "#333" }}>
         {threads.map((thread) => (
           <Thread
             subject={thread ? thread[0] : "loading"}
@@ -54,7 +28,7 @@ export function Catalog (props, context) {
             image={thread ? thread[2] : "loading"}
           />
         ))}
-      </CardGroup>
+      </CardColumns>
     </div>
   );
 }

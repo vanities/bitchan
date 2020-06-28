@@ -6,14 +6,15 @@ import { drizzleReactHooks } from "@drizzle/react-plugin";
 
 import { Address } from "./address";
 import "./address.css";
+import "./bar.css";
 
 export function Bar (props, context) {
   const { useCacheCall } = drizzleReactHooks.useDrizzle();
-  //const exists = useCacheCall("User", "exists");
+  // const exists = useCacheCall("User", "exists");
 
   return (
     <div>
-      <Navbar color="dark" dark expand="md">
+      <Navbar dark expand="md" className="bar">
         <NavbarBrand tag={Link} to={"/"}>
           bitchan
         </NavbarBrand>

@@ -3,13 +3,10 @@ import { useState } from "react";
 import { Container, Col, Button, Form, FormGroup, Input } from "reactstrap";
 import { drizzleReactHooks } from "@drizzle/react-plugin";
 
-export function CreateThread (props, context) {
-  const { useCacheCall, useCacheSend } = drizzleReactHooks.useDrizzle();
-  // const threads = useCacheCall("Bitchan", "lastThreads");
+export const CreateThread = (props, context) => {
+  // const { handleSubmit } = props;
+  const { useCacheSend } = drizzleReactHooks.useDrizzle();
   const { send } = useCacheSend("Bitchan", "createThread");
-
-  const state = useCacheCall("Bitchan", "threadCount");
-  const numThreads = state ? state[0] : "loading";
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -19,16 +16,13 @@ export function CreateThread (props, context) {
   const handleSubmit = (event) => {
     send(values.subject, values.text, values.image);
     event.preventDefault();
-    console.log("asdaadsd");
   };
   const [values, setValues] = useState({ subject: "", text: "", image: "" });
 
   return (
     <div>
-      Total # of Threads: {numThreads}
       <Container className="createthread">
-        <Form onSubmit={handleSubmit}>
-          <h3>post a thread</h3>
+        <Form id="createthread" onSubmit={handleSubmit}>
           <Col>
             <FormGroup>
               <Input
@@ -54,9 +48,8 @@ export function CreateThread (props, context) {
               />
             </FormGroup>
           </Col>
-          <Button>Submit</Button>
         </Form>
       </Container>
     </div>
   );
-}
+};
