@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useState } from "react";
-import { Container, Col, Button, Form, FormGroup, Input } from "reactstrap";
+import { Container, Col, Form, FormGroup, Input } from "reactstrap";
 import { drizzleReactHooks } from "@drizzle/react-plugin";
 
 import "./signup.css";
@@ -22,7 +22,7 @@ export function CreateUser () {
 
   return (
     <Container className="signup">
-      <Form onSubmit={handleSubmit}>
+      <Form onSubmit={handleSubmit} id="createuser">
         <h3>sign up</h3>
         <Col>
           <FormGroup>
@@ -35,7 +35,6 @@ export function CreateUser () {
             />
           </FormGroup>
         </Col>
-        <Button>Submit</Button>
       </Form>
     </Container>
   );

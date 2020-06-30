@@ -2,16 +2,12 @@ import * as React from "react";
 import { Link } from "react-router-dom";
 
 import { Navbar, NavbarBrand, Nav, NavItem, NavLink } from "reactstrap";
-import { drizzleReactHooks } from "@drizzle/react-plugin";
 
 import { Address } from "./address";
 import "./address.css";
 import "./bar.css";
 
 export function Bar (props, context) {
-  const { useCacheCall } = drizzleReactHooks.useDrizzle();
-  // const exists = useCacheCall("User", "exists");
-
   return (
     <div>
       <Navbar dark expand="md" className="bar">

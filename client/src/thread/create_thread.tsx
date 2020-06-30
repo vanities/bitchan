@@ -1,10 +1,9 @@
 import * as React from "react";
 import { useState } from "react";
-import { Container, Col, Button, Form, FormGroup, Input } from "reactstrap";
+import { Container, Col, Form, FormGroup, Input } from "reactstrap";
 import { drizzleReactHooks } from "@drizzle/react-plugin";
 
 export const CreateThread = (props, context) => {
-  // const { handleSubmit } = props;
   const { useCacheSend } = drizzleReactHooks.useDrizzle();
   const { send } = useCacheSend("Bitchan", "createThread");
 

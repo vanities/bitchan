@@ -10,14 +10,14 @@ contract User {
         uint id;
         address addr;
         string username;
+        bool active;
+        bool canVote;
     }
 
     UserProfile public owner;
 
-    // This declares a state variable that
-    // stores a `Voter` struct for each possible address.
-    // use address
-    mapping(uint => UserProfile) public users;
+    mapping (uint => UserProfile) public users;
+    mapping (address => bool) public userMap;
 
     // modifier to check if caller is owner
     modifier isOwner() {
@@ -40,26 +40,26 @@ contract User {
      * @dev Retrieve
      * @return User tuple
      */
-    function retrieve(uint _id) public view returns (uint, address, string memory) {
-        return (users[_id].id, users[_id].addr, users[_id].username);
+    function retrieve(uint _id) public view returns (uint, address, string memory, bool, bool) {
+        return (users[_id].id, users[_id].addr, users[_id].username, users[_id].active, users[_id].canVote);
     }
 
     /**
      * @dev Create
      * @return User tuple
      */
-    function create(string memory _username) public returns(uint, address, string memory) {
-        users[userCount] = UserProfile(userCount, msg.sender, _username);
+    function create(string memory _username) public {
+        bool active = true;
+        bool canVote = true;
+        users[userCount] = UserProfile(userCount, msg.sender, _username, active, canVote);
         incrementUserCount();
-        return (users[userCount].id, users[userCount].addr, users[userCount].username);
+        userMap[msg.sender] = true;
 
     }
 
-    /*
-    function contains internal returns(bool){
-      return bool(retrieve(
+    function exists() public view returns (bool) {
+      return userMap[msg.sender];
     }
-    */
 
     function incrementUserCount() internal {
         userCount++;

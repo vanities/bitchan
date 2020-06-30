@@ -13,9 +13,6 @@ export function Catalog (props, context) {
   const threads = useCacheCall(["Bitchan"], (call) =>
     getThreads(call, numThreadsGet)
   );
-  const threadCount = useCacheCall("Bitchan", "threadCount");
-  const numThreads = threadCount ? threadCount[0] : "Loading";
-  // const catalog = d;
 
   return (
     <div>

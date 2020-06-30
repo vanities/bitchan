@@ -1,5 +1,4 @@
 import * as React from "react";
-import { CreateThread } from "./thread/create_thread";
 import { Catalog } from "./catalog";
 // import ReactCSSTransitionGroup from "react-transition-group";
 
