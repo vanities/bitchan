@@ -5,7 +5,7 @@
 
 Bitchan is an ethereum message board republic.
 
-## Just as some people have abused their power throughout history, we now see others abusing their power in the present.
+Just as some people have abused their power throughout history, we now see others abusing their power in the present.
 
 Because human beings can’t handle power. We are not good at handling power over others. Nothing corrupts us quicker, nothing degrades our ethics more, than having power over others.
 
@@ -35,6 +35,12 @@ Having a fee to post promotes speech in the following ways:
 - No CAPTCHA where google makes you train their car self-driving algorithms for free and causes you to solve multiple puzzles that cost you more than 30 seconds
 - Incentivize the president to clean the board
 - No vpn/proxy spamming the board with ads, and if they do, they're paying the president
+
+Creating multiple spam accounts
+- registered accounts can buy invite codes to give to people where the invite code cost scales logarithmically
+- registered users can peer to see who has invited who and can report bad actors
+
+
 
 ### Presidential capabilites
 
@@ -89,35 +95,35 @@ See the [Makefile](https://github.com/vanities/bitchan/blob/master/Makefile) for
 
 The development backend and frontend interact using the truffle stack.
 
-#### Backend
+##### Backend
 
 The backend is written in [solidity contracts](https://solidity.readthedocs.io/en/latest/introduction-to-smart-contracts.html) using [Ethereum](https://ethereum.org/). The Contracts used right now are User for user creation and and Bitchan for the basic messaging board component.
 
 
-#### Frontend
+##### Frontend
 
 The frontend is written in javascript/typescript and react.
 
 
 ### Testing
 
-#### Local
+##### Local
 
 1. [follow the Quick install & Run](https://github.com/vanities/bitchan/blob/master/README.md#quick-install--run)
 2. Go to [http://127.0.0.1:3001](http://127.0.0.1:3001) in your browser
 3. Install [Metamask](https://metamask.io/download.html) for whatever browser you're using
-4. Open Metamask <img src=https://github.com/vanities/bitchan/blob/master/docs/images/metamask1.png width=300>
+4. Open Metamask <img src=https://github.com/vanities/bitchan/blob/master/docs/images/metamask1.png height=400>
 5. enter `0x2264248e750146323373851aec1f3f700f6d9ed0ebdc934137c9e007a047197f` into metamask as a private key, it has 1 ETH.
-6. Ensure you're connected to the local node <img src=https://github.com/vanities/bitchan/blob/master/docs/images/metamask2.png width=300>
+6. Ensure you're connected to the local node <img src=https://github.com/vanities/bitchan/blob/master/docs/images/metamask2.png height=400>
 
 
-#### Backend
+##### Backend
 
 Testing the backend contracts can be done [here](https://github.com/vanities/bitchan/tree/master/contracts/test) and is written in solidity and typescript using [truffle](https://www.trufflesuite.com/docs/truffle/testing/testing-your-contracts).
 
 `$ make test_contracts`
 
-#### Frontend
+##### Frontend
 
 Testing the frontend can be done [here](https://github.com/vanities/bitchan/tree/master/client/tests) and is written in typescript.
 
