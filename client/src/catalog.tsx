@@ -3,9 +3,9 @@ import { CardColumns } from "reactstrap";
 
 import { drizzleReactHooks } from "@drizzle/react-plugin";
 
-import "./thread/thread.css";
-import { Thread, getThreads } from "./thread/thread";
+import { ThreadCard, getThreads } from "./thread/thread_card";
 import { CreateThreadModal } from "./thread/create_thread_modal";
+import { UserExists } from "./navigation/user_exists";
 
 export function Catalog (props, context) {
   const numThreadsGet = 20;
@@ -14,12 +14,18 @@ export function Catalog (props, context) {
     getThreads(call, numThreadsGet)
   );
 
+  var createThread = null;
+
+  if (UserExists()) {
+    createThread = <CreateThreadModal buttonLabel="Create Thread" />;
+  }
+
   return (
     <div>
-      <CreateThreadModal buttonLabel="Create Thread" />
+      {createThread}
       <CardColumns style={{ backgroundColor: "black", borderColor: "#333" }}>
         {threads.map((thread) => (
-          <Thread
+          <ThreadCard
             subject={thread ? thread[0] : "loading"}
             text={thread ? thread[1] : "loading"}
             image={thread ? thread[2] : "loading"}

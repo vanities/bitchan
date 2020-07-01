@@ -25,11 +25,6 @@ export function Bar (props, context) {
               Board
             </NavLink>
           </NavItem>
-          <NavItem>
-            <NavLink tag={Link} to="/signup">
-              Sign Up
-            </NavLink>
-          </NavItem>
         </Nav>
         <Address />
       </Navbar>

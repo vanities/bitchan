@@ -1,9 +1,9 @@
 import * as React from "react";
-import { Card, CardImg, CardText, CardBody, CardTitle, Button } from "reactstrap";
+import { Card, CardBody, Button, CardTitle, CardText, CardImg } from "reactstrap";
 
-import "./thread.css";
+import { drizzleReactHooks } from "@drizzle/react-plugin";
 
-export function getThreads (call, numThreads) {
+export function getReplies (call, numThreads) {
   const threads = [];
   for (var thread = 0; thread <= numThreads; thread++) {
     threads.push(call("Bitchan", "threads", thread));
@@ -11,31 +11,25 @@ export function getThreads (call, numThreads) {
   return threads;
 }
 
-interface ThreadProps {
-  subject: string;
-  text: string;
-  img: string;
-}
-
-export const Thread: React.FunctionComponent<ThreadProps> = ({
-  subject,
-  text,
-  image
-}) => {
-  return (
-    <Card
-      body
-      inverse
-      style={{ backgroundColor: "black", borderColor: "#333" }}
-      className="thread"
-    >
-      <Button>
-        <CardImg top width="100%" src={image} alt="caption" />
-      </Button>
-      <CardBody>
-        <CardTitle>{subject}</CardTitle>
-        <CardText>{text}</CardText>
-      </CardBody>
-    </Card>
+export function Thread (props, context) {
+  const { useCacheCall } = drizzleReactHooks.useDrizzle();
+  const threads = useCacheCall(["Bitchan"], (call) =>
+    getReplies(call, numThreadsGet)
   );
-};
+
+  var createThread = null;
+
+  return (
+    <div>
+      <Card>
+        <CardImg top width="100%" src="/assets/318x180.svg" alt="Card image cap" />
+        <CardBody>
+          <CardTitle>Card Title</CardTitle>
+          <CardText>This is a wider card with supporting text below as a natural lead-in to additional content. This content is a little bit longer.</CardText>
+          <CardText>
+            <small className="text-muted">Last updated 3 mins ago</small>
+          </CardText>
+        </CardBody>
+      </Card>
+      );
+}

@@ -5,6 +5,7 @@ import Blockies from "react-blockies";
 import { NavbarText, Tooltip } from "reactstrap";
 import { drizzleReactHooks } from "@drizzle/react-plugin";
 import { CreateUserModal } from "./create_user_modal";
+import { UserExists } from "./user_exists";
 
 export function Address (props, context) {
   const drizzleState = drizzleReactHooks.useDrizzleState((drizzleState) => ({
@@ -16,13 +17,10 @@ export function Address (props, context) {
     -1
   )}`;
 
-  const { useCacheCall } = drizzleReactHooks.useDrizzle();
-  const exists = useCacheCall("User", "exists");
-
   const [tooltipOpen, setTooltipOpen] = useState(false);
   const toggle = () => setTooltipOpen(!tooltipOpen);
 
-  if (exists) {
+  if (UserExists()) {
     return (
       <div className="account">
         <div className="address">
