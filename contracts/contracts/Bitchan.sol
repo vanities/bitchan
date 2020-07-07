@@ -22,6 +22,8 @@ contract Bitchan {
 		uint256 indexLastReply;
 		uint256 indexFirstReply;
 
+        uint256 threadId;
+
 		uint256 timestamp;
 	}
 	mapping (uint256 => thread) public threads;
@@ -48,7 +50,7 @@ contract Bitchan {
 	// Events
 	//
 
-	event createThreadEvent(uint256 threadId, string subject, string text, string imageUrl, uint256 timestamp);
+	event createThreadEvent(uint256 threadId, string subject, string text, string imageUrl, uint256 threadCount, uint256 timestamp);
 
 	event newReplyEvent(uint256 replyId, uint256 replyTo, string text, string imageUrl, uint256 timestamp);
 
@@ -83,12 +85,12 @@ contract Bitchan {
 		// collect the fees
 		require(msg.value >= feeCreateThread);
 		// calculate a new thread ID and post
-		threads[threadCount] = thread(subject, text, imageUrl, 0, 0, now);
+		threads[threadCount] = thread(subject, text, imageUrl, 0, 0, threadCount, now);
 		// add it to our last active threads array
 		lastThreads[indexLastThreads] = threadCount;
 		indexLastThreads = addmod(indexLastThreads, 1, 20); // increment index
 		// log!
-		emit createThreadEvent(threadCount, subject, text, imageUrl, now);
+		emit createThreadEvent(threadCount, subject, text, imageUrl, threadCount, now);
 		// increment index for next thread
 		threadCount += 1;
 	}

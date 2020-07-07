@@ -29,6 +29,7 @@ export function Catalog (props, context) {
             subject={thread ? thread[0] : "loading"}
             text={thread ? thread[1] : "loading"}
             image={thread ? thread[2] : "loading"}
+            threadId={thread ? thread[5] : 0}
           />
         ))}
       </CardColumns>
