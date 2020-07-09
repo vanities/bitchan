@@ -1,4 +1,9 @@
-FROM node:current
+FROM node:alpine
+
+WORKDIR /truffle
+ENV PATH /truffle/node_modules/.bin:$PATH
+RUN apk add --no-cache git python
 
 RUN npm update \
-    && npm --global install truffle @truffle/hdwallet-provider --unsafe-perm=true
+    && npm install truffle -g  --unsafe-perm=true \
+    && npm install @truffle/hdwallet-provider

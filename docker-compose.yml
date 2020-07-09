@@ -49,9 +49,9 @@ services:
     build:
       context: ./contracts
       dockerfile: ./Dockerfile.truffle
-    working_dir: /sources/contracts
+    working_dir: /truffle/contracts
     volumes:
-      - ./contracts:/sources
+      - ./contracts:/truffle
     depends_on:
       - ganache
     command: truffle deploy
