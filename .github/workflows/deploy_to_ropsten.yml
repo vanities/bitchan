@@ -1,4 +1,4 @@
-name: Build and Test Client
+name: Build and Deploy Contracts to Ropsten
 on:
   push:
     branches:
@@ -17,7 +17,7 @@ jobs:
         uses: actions/checkout@master
       - name: Build Contracts
         run: docker-compose build truffle
-      - name: Run Test
+      - name: Deploy to Ropsten
         run: docker-compose run --rm truffle truffle deploy --network ropsten
         env:
           INFURA_KEY: ${{ secrets.INFURA_KEY }}

@@ -1,4 +1,4 @@
 FROM node:current
 
 RUN npm update \
-    && npm --global install truffle --unsafe-perm=true
+    && npm --global install truffle @truffle/hdwallet-provider --unsafe-perm=true
