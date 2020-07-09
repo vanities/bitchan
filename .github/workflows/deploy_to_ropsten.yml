@@ -1,7 +1,5 @@
-name: Build and Test Contracts
+name: Build and Test Client
 on:
-  pull_request:
-    branches: [master]
   push:
     branches:
       - master
@@ -12,7 +10,7 @@ defaults:
 
 jobs:
   build:
-    name: Build and Test Contracts
+    name: Build and Deploy
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repo
@@ -20,4 +18,7 @@ jobs:
       - name: Build Contracts
         run: docker-compose build truffle
       - name: Run Test
-        run: docker-compose run --rm truffle truffle test --stacktrace
+        run: docker-compose run --rm truffle truffle deploy --network ropsten
+        env:
+          INFURA_KEY: ${{ secrets.INFURA_KEY }}
+          MNEMONIC: ${{ secrets.MNEMONIC }}
