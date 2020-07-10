@@ -42,3 +42,6 @@ migrate-reset: build_truffle
 
 deploy: build_truffle
 	docker-compose run --rm truffle truffle deploy
+
+deploy_ropsten: build_truffle
+	docker-compose run --rm truffle truffle deploy --network ropsten

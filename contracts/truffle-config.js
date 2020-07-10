@@ -19,10 +19,10 @@
  */
 
 const HDWalletProvider = require("@truffle/hdwallet-provider");
-const infuraKey = process.env.INFURA_KEY;
+const INFURA_KEY = process.env.INFURA_KEY;
 
 const fs = require("fs");
-const mnemonic = process.env.MNEMONIC;
+const MNEMONIC = process.env.MNEMONIC;
 
 module.exports = {
   /**
@@ -65,7 +65,7 @@ module.exports = {
     ropsten: {
       provider: () =>
         new HDWalletProvider(
-          mnemonic,
+          MNEMONIC,
           `https://ropsten.infura.io/v3/${INFURA_KEY}`
         ),
       network_id: 3, // Ropsten's id

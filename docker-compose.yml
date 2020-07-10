@@ -1,7 +1,6 @@
 version: "3.7"
 
 services:
-services:
   react-prod:
     container_name: react-prod
     build:
@@ -55,6 +54,9 @@ services:
     depends_on:
       - ganache
     command: truffle deploy
+    environment:
+      - INFURA_KEY=${INFURA_KEY}
+      - MNEMONIC=${MNEMONIC}
     restart: on-failure
 
   ganache:
