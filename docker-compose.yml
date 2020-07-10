@@ -17,6 +17,7 @@ services:
       - CHOKIDAR_USEPOLLING=true
     depends_on:
       - truffle
+      - ipfs
     restart: on-failure
     tty: true
 
@@ -65,6 +66,19 @@ services:
       - 8545:8545
     command: --account="0x2264248e750146323373851aec1f3f700f6d9ed0ebdc934137c9e007a047197f,1000000000000000000" --unlock "0x96afb074FBF48A2b12e31D5f1aB2112d7643801B"
     restart: on-failure
+
+  ipfs:
+    image: ipfs/go-ipfs:latest
+    environment:
+      - IPFS_PROFILE=server
+      - IPFS_PATH=/ipfs
+    volumes:
+      - ./data/ipfs:/ipfs
+    ports:
+      - "4001:4001"
+      - "127.0.0.1:8080:8080"
+      - "127.0.0.1:8081:8081"
+      - "127.0.0.1:5001:5001"
 
 volumes:
   node_modules:

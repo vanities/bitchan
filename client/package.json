@@ -12,6 +12,7 @@
     "@types/react-dom": "^16.9.8",
     "bootstrap": "^4.5.0",
     "drizzle": "^1.4.0",
+    "ipfs-http-client": "^44.3.0",
     "react": "^16.13.1",
     "react-blockies": "^1.4.1",
     "react-dom": "^16.13.1",
