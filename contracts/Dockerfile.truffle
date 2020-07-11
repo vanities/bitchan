@@ -1,8 +1,11 @@
-FROM node:alpine
+FROM node:slim
 
 WORKDIR /truffle
 ENV PATH /truffle/node_modules/.bin:$PATH
-RUN apk add --no-cache g++ make git python
+
+RUN apt-get update && apt-get install -y \
+    git \
+ && rm -rf /var/lib/apt/lists/*
 
 RUN npm update \
     && npm install truffle -g  --unsafe-perm=true \

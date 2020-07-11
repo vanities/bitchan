@@ -52,6 +52,7 @@ services:
     working_dir: /truffle/contracts
     volumes:
       - ./contracts:/truffle
+      - node_modules:/truffle/node_modules
     depends_on:
       - ganache
     command: truffle deploy
