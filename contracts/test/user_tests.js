@@ -15,6 +15,8 @@ contract("User test", async (accounts) => {
       {
         "1": "0x96afb074FBF48A2b12e31D5f1aB2112d7643801B",
         "2": "vanities",
+        "3": true,
+        "4": true,
       },
       owner
     );

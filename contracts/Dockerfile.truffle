@@ -2,7 +2,7 @@ FROM node:alpine
 
 WORKDIR /truffle
 ENV PATH /truffle/node_modules/.bin:$PATH
-RUN apk add --no-cache git python
+RUN apk add --no-cache g++ make git python
 
 RUN npm update \
     && npm install truffle -g  --unsafe-perm=true \
