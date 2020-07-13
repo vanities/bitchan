@@ -9,7 +9,7 @@ services:
     volumes:
       - ./client:/bitchan
       - ./contracts/build/contracts:/bitchan/src/contracts
-      - node_modules:/bitchan/node_modules
+      - node_modules_react:/bitchan/node_modules
     ports:
       - 80:80
     environment:
@@ -29,7 +29,7 @@ services:
     volumes:
       - ./client:/bitchan
       - ./contracts/build/contracts:/bitchan/src/contracts
-      - node_modules:/bitchan/node_modules
+      - node_modules_react:/bitchan/node_modules
     ports:
       - 3001:3000
     environment:
@@ -52,7 +52,7 @@ services:
     working_dir: /truffle/contracts
     volumes:
       - ./contracts:/truffle
-      - node_modules:/truffle/node_modules
+      - node_modules_truffle:/truffle/node_modules
     depends_on:
       - ganache
     command: truffle deploy
@@ -82,4 +82,5 @@ services:
       - "127.0.0.1:5001:5001"
 
 volumes:
-  node_modules:
+  node_modules_react:
+  node_modules_truffle:

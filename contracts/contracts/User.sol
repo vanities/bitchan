@@ -17,11 +17,17 @@ contract User {
     UserProfile public owner;
 
     mapping (uint => UserProfile) public users;
+    mapping (address => UserProfile) public usersAddress;
     mapping (address => bool) public userMap;
 
     // modifier to check if caller is owner
     modifier isOwner() {
         require(msg.sender == owner.addr, "Caller is not owner");
+        _;
+    }
+
+    modifier doesExist() {
+        require(exists(), "Caller is not a user");
         _;
     }
 
@@ -52,6 +58,7 @@ contract User {
         bool active = true;
         bool canVote = true;
         users[userCount] = UserProfile(userCount, msg.sender, _username, active, canVote);
+        usersAddress[msg.sender] = UserProfile(userCount, msg.sender, _username, active, canVote);
         incrementUserCount();
         userMap[msg.sender] = true;
 

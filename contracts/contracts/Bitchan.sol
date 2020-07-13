@@ -7,6 +7,8 @@
 
 pragma solidity >=0.4.22 <0.7.0;
 
+import {User} from "./User.sol";
+
 contract Bitchan {
 
 	address payable private owner;
@@ -25,6 +27,8 @@ contract Bitchan {
         uint256 threadId;
 
 		uint256 timestamp;
+
+        address user;
 	}
 	mapping (uint256 => thread) public threads;
 	uint256 public threadCount = 0;
@@ -37,6 +41,8 @@ contract Bitchan {
 		uint256 nextReply;
 
 		uint256 timestamp;
+
+        address user;
 	}
 	mapping (uint256 => reply) public replies;
 	uint256 public indexReplies = 0;
@@ -50,9 +56,9 @@ contract Bitchan {
 	// Events
 	//
 
-	event createThreadEvent(uint256 threadId, string subject, string text, string imageUrl, uint256 threadCount, uint256 timestamp);
+	event createThreadEvent(uint256 threadId, string subject, string text, string imageUrl, uint256 threadCount, uint256 timestamp, address user);
 
-	event newReplyEvent(uint256 replyId, uint256 replyTo, string text, string imageUrl, uint256 timestamp);
+	event newReplyEvent(uint256 replyId, uint256 replyTo, string text, string imageUrl, uint256 timestamp, address user);
 
 	//
 	// Meta
@@ -82,27 +88,31 @@ contract Bitchan {
 
 	// To create a Thread
 	function createThread(string memory subject, string memory text, string memory imageUrl) payable public {
+        User user = new User();
+        require(user.exists());
 		// collect the fees
 		require(msg.value >= feeCreateThread);
 		// calculate a new thread ID and post
-		threads[threadCount] = thread(subject, text, imageUrl, 0, 0, threadCount, now);
+		threads[threadCount] = thread(subject, text, imageUrl, 0, 0, threadCount, now, msg.sender);
 		// add it to our last active threads array
 		lastThreads[indexLastThreads] = threadCount;
 		indexLastThreads = addmod(indexLastThreads, 1, 20); // increment index
 		// log!
-		emit createThreadEvent(threadCount, subject, text, imageUrl, threadCount, now);
+		emit createThreadEvent(threadCount, subject, text, imageUrl, threadCount, now, msg.sender);
 		// increment index for next thread
 		threadCount += 1;
 	}
 
 	// To reply to a thread
 	function replyPost(uint256 _replyTo, string memory _text, string memory _imageUrl)  payable public {
+        User user = new User();
+        require(user.exists());
 		// collect the fees
 		require(msg.value >= feeReplyPost);
 		// make sure you can't reply to an inexistant thread
 		require(_replyTo < threadCount && _replyTo > 0);
 		// post the reply with nextReply = 0 (this is the last message in the chain)
-		replies[indexReplies] = reply(_text, _imageUrl, _replyTo, 0, now);
+		replies[indexReplies] = reply(_text, _imageUrl, _replyTo, 0, now, msg.sender);
 		// update the thread
 		if(threads[_replyTo].indexFirstReply == 0){// we're first
 			threads[_replyTo].indexFirstReply = indexReplies;
@@ -123,7 +133,7 @@ contract Bitchan {
 			}
 		}
 		// log!
-		emit newReplyEvent(indexReplies, _replyTo, _text, _imageUrl, now);
+		emit newReplyEvent(indexReplies, _replyTo, _text, _imageUrl, now, msg.sender);
 		// increment index for next reply
 		indexReplies += 1;
 	}
