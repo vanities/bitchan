@@ -31,7 +31,7 @@ contract Bitchan {
         address user;
 	}
 	mapping (uint256 => thread) public threads;
-	uint256 public threadCount = 0;
+	uint256 public threadCount = 1;
 
 	struct reply {
 		string text;
@@ -45,7 +45,7 @@ contract Bitchan {
         address user;
 	}
 	mapping (uint256 => reply) public replies;
-	uint256 public indexReplies = 0;
+	uint256 public indexReplies = 1;
 
 	// last 20 active threads
 	uint256[20] public lastThreads;

@@ -2,6 +2,7 @@ import * as React from "react";
 import {Card, CardBody, CardTitle, CardText, CardImg, Col} from "reactstrap";
 
 import "./thread.css";
+import {ReplyModal} from "./reply_modal";
 
 import {drizzleReactHooks} from "@drizzle/react-plugin";
 
@@ -104,9 +105,14 @@ export function Thread(props, context) {
   console.log(replies);
 
   return (
-    <div>
+    <div className="thread">
+      <div className="threadHeader">
+        <ReplyModal
+          buttonLabel="Reply"
+          indexLastReply={threadInfo.indexLastReply}
+        />
+      </div>
       <div>{OpCard(threadInfo, opInfo)}</div>
-      <div> {/* postReplyButton */} </div>
       {replies.map((reply) => replyCard(reply[1], reply[0], reply[4]))}
     </div>
   );

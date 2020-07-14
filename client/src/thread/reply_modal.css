@@ -1,0 +1,7 @@
+.replymodal {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: black;
+  padding: 2em;
+}
