@@ -54,7 +54,7 @@ contract User {
      * @dev Create
      * @return User tuple
      */
-    function create(string memory _username) public {
+    function create(string memory _username) public returns (uint, address, string memory, bool, bool) {
         bool active = true;
         bool canVote = true;
         users[userCount] = UserProfile(userCount, msg.sender, _username, active, canVote);
@@ -62,6 +62,7 @@ contract User {
         incrementUserCount();
         userMap[msg.sender] = true;
 
+        return (userCount, msg.sender, _username, active, canVote);
     }
 
     function exists() public view returns (bool) {

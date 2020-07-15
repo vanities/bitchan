@@ -14,7 +14,7 @@ export const Reply = (props, context) => {
   };
 
   const handleSubmit = (event) => {
-    console.log(values.index + 1, values.text, values.image);
+    console.log(values.index, values.text, values.image);
     send(values.index, values.text, values.image);
     event.preventDefault();
   };
