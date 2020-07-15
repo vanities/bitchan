@@ -1,6 +1,7 @@
 # bitchan
 ![Build and Test Contracts](https://github.com/vanities/bitchan/workflows/Build%20and%20Test%20Contracts/badge.svg)
 ![Build and Test Client](https://github.com/vanities/bitchan/workflows/Build%20and%20Test%20Client/badge.svg)
+![Build and Deploy Contracts to Ropsten](https://github.com/vanities/bitchan/workflows/Build%20and%20Deploy%20Contracts%20to%20Ropsten/badge.svg?branch=master)
 
 
 Bitchan is an ethereum message board republic.
