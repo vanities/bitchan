@@ -1,24 +1,27 @@
 import * as React from "react";
-import {useState} from "react";
-import {Container, Col, Form, FormGroup, Input} from "reactstrap";
-import {drizzleReactHooks} from "@drizzle/react-plugin";
+import { useState } from "react";
+import { Container, Col, Form, FormGroup, Input } from "reactstrap";
+import { drizzleReactHooks } from "@drizzle/react-plugin";
 
 export const Reply = (props, context) => {
-  const {indexLastReply} = props;
-  const {useCacheSend} = drizzleReactHooks.useDrizzle();
-  const {send} = useCacheSend("Bitchan", "replyPost");
+  const { useCacheSend, useCacheCall } = drizzleReactHooks.useDrizzle();
+  const { send } = useCacheSend("Bitchan", "replyPost");
+  const indexReplies = useCacheCall("Bitchan", "indexReplies");
 
   const handleInputChange = (e) => {
-    const {name, value} = e.target;
-    setValues({...values, [name]: value});
+    const { name, value } = e.target;
+    setValues({ ...values, [name]: value });
   };
 
   const handleSubmit = (event) => {
-    console.log(values.index, values.text, values.image);
-    send(values.index, values.text, values.image);
+    console.log("reply send", indexReplies + 1, values.text, values.image);
+    send(indexReplies + 1, values.text, values.image);
     event.preventDefault();
   };
-  const [values, setValues] = useState({index: 0, text: "", image: ""});
+  const [values, setValues] = useState({
+    text: "",
+    image: ""
+  });
 
   return (
     <div>

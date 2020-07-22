@@ -31,7 +31,7 @@ contract Bitchan {
         address user;
 	}
 	mapping (uint256 => thread) public threads;
-	uint256 public threadCount = 0;
+	uint256 public threadCount = 1;
 
 	struct reply {
 		string text;
@@ -45,7 +45,7 @@ contract Bitchan {
         address user;
 	}
 	mapping (uint256 => reply) public replies;
-	uint256 public indexReplies = 0;
+	uint256 public indexReplies = 1;
 
 	// last 20 active threads
 	uint256[20] public lastThreads;
@@ -110,7 +110,7 @@ contract Bitchan {
 		// collect the fees
 		require(msg.value >= feeReplyPost);
 		// make sure you can't reply to an inexistant thread
-		require(_replyTo <= threadCount && _replyTo >= 0);
+		require(_replyTo < threadCount && _replyTo > 0);
 		// post the reply with nextReply = 0 (this is the last message in the chain)
 		replies[indexReplies] = reply(_text, _imageUrl, _replyTo, 0, now, msg.sender);
 		// update the thread
