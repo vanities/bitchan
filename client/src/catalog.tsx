@@ -7,11 +7,41 @@ import { ThreadCard, getThreads } from "./thread/thread_card";
 import { CreateThreadModal } from "./thread/create_thread_modal";
 import { UserExists } from "./navigation/user_exists";
 
+export function getLast20ThreadIndexes (call) {
+  const numThreads = 20;
+  const threadIndexes = [];
+  var index;
+
+  for (var thread = 0; thread <= numThreads; thread++) {
+    index = call("Bitchan", "lastThreads", thread);
+    if (index) {
+      threadIndexes.push(index);
+    }
+  }
+  return threadIndexes;
+}
+export function getLast20Threads (call, indexes) {
+  const threads = [];
+  var indexOfThread;
+
+  for (var index = 0; index < indexes.length; index++) {
+    indexOfThread = indexes[index];
+
+    if (indexOfThread === "0") {
+      return threads;
+    }
+    threads.push(call("Bitchan", "threads", indexOfThread));
+  }
+  return threads;
+}
+
 export function Catalog (props, context) {
-  const numThreadsGet = 20;
   const { useCacheCall } = drizzleReactHooks.useDrizzle();
+  const threadIndexes = useCacheCall(["Bitchan"], (call) =>
+    getLast20ThreadIndexes(call)
+  );
   const threads = useCacheCall(["Bitchan"], (call) =>
-    getThreads(call, numThreadsGet)
+    getLast20Threads(call, threadIndexes)
   );
 
   var createThread = null;
