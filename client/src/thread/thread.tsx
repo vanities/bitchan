@@ -9,8 +9,9 @@ import { drizzleReactHooks } from "@drizzle/react-plugin";
 export function getReplies (call, indexFirstReply) {
   const replies = [];
   var index = indexFirstReply;
+
   while (true) {
-    if (index === "0") {
+    if (index === "0" || index === "loading") {
       return replies;
     }
     var reply = call("Bitchan", "replies", index);
@@ -20,7 +21,10 @@ export function getReplies (call, indexFirstReply) {
       reply.timestamp = timestamp;
       replies.push(reply);
       index = reply[3]; // next reply
+    } else {
+      return replies;
     }
+    console.log(reply);
   }
 }
 
@@ -52,7 +56,13 @@ export function OpCard (threadInfo, opInfo) {
 export function replyCard (replyInfo) {
   return (
     <Card>
-      <CardImg top width="100%" src={replyInfo.media} alt="Card image cap" />
+      <CardImg
+        top
+        width="40%"
+        src={replyInfo.media}
+        alt="Card image cap"
+        className="replycard"
+      />
       <CardBody>
         <CardTitle>
           {replyInfo.address} {replyInfo.timestamp.toString()}
@@ -91,15 +101,16 @@ function getOpInfo (user) {
   const username = user ? user[2] : "loading";
   const active = user ? user[3] : "loading";
   const canVote = user ? user[4] : "loading";
-  return { id, addr, username, active, canVote };
+  const opInfo = { id, addr, username, active, canVote };
+  return opInfo;
 }
 function getReplyInfo (reply) {
-  const text = thread ? thread[0] : "loading";
-  const media = thread ? thread[1] : "loading";
-  const replyTo = thread ? thread[2] : "loading";
-  const nextReply = thread ? thread[3] : "loading";
-  const epochTime = thread ? thread[4] : "loading";
-  const address = thread ? thread[5] : "loading";
+  const text = reply ? reply[0] : "loading";
+  const media = reply ? reply[1] : "loading";
+  const replyTo = reply ? reply[2] : "loading";
+  const nextReply = reply ? reply[3] : "loading";
+  const epochTime = reply ? reply[4] : "loading";
+  const address = reply ? reply[5] : "loading";
   var timestamp = new Date(0); // The 0 there is the key, which sets the date to the epoch
   timestamp.setUTCSeconds(epochTime);
   return {
@@ -126,15 +137,10 @@ export function Thread (props, context) {
     getReplies(call, threadInfo.indexFirstReply)
   );
 
-  console.log(replies);
-
   return (
     <div className="thread">
       <div className="threadHeader">
-        <ReplyModal
-          buttonLabel="Reply"
-          indexLastReply={threadInfo.indexLastReply}
-        />
+        <ReplyModal buttonLabel="Reply" indexThread={threadId} />
       </div>
       <div>{OpCard(threadInfo, opInfo)}</div>
       {replies.map((reply) => replyCard(getReplyInfo(reply)))}

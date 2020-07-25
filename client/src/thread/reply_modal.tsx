@@ -1,11 +1,11 @@
-import React, {useState} from "react";
-import {Button, Modal, ModalHeader, ModalBody, ModalFooter} from "reactstrap";
+import React, { useState } from "react";
+import { Button, Modal, ModalHeader, ModalBody, ModalFooter } from "reactstrap";
 
 import "./reply_modal.css";
-import {Reply} from "./reply";
+import { Reply } from "./reply";
 
 export const ReplyModal = (props) => {
-  const {buttonLabel, className, indexLastReply} = props;
+  const { buttonLabel, className, indexThread } = props;
 
   const [modal, setModal] = useState(false);
 
@@ -14,7 +14,7 @@ export const ReplyModal = (props) => {
   const externalCloseBtn = (
     <button
       className="close"
-      style={{position: "absolute", top: "15px", right: "15px"}}
+      style={{ position: "absolute", top: "15px", right: "15px" }}
       onClick={toggle}
     >
       &times;
@@ -38,7 +38,7 @@ export const ReplyModal = (props) => {
           reply
         </ModalHeader>
         <ModalBody>
-          <Reply indexLastReply={indexLastReply} />
+          <Reply indexThread={indexThread} />
         </ModalBody>
         <ModalFooter>
           <Button color="primary" type="submit" form="reply" onClick={toggle}>
