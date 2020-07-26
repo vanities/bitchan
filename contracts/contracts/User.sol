@@ -16,9 +16,10 @@ contract User {
 
     UserProfile public owner;
 
+    // use int or address as the key?
     mapping (uint => UserProfile) public users;
-    mapping (address => UserProfile) public usersAddress;
     mapping (address => bool) public userMap;
+    mapping (address => UserProfile) public usersAddress;
 
     // modifier to check if caller is owner
     modifier isOwner() {
@@ -55,14 +56,12 @@ contract User {
      * @return User tuple
      */
     function create(string memory _username) public returns (uint, address, string memory, bool, bool) {
-        bool active = true;
-        bool canVote = true;
-        users[userCount] = UserProfile(userCount, msg.sender, _username, active, canVote);
-        usersAddress[msg.sender] = UserProfile(userCount, msg.sender, _username, active, canVote);
-        incrementUserCount();
+        users[userCount] = UserProfile(userCount, msg.sender, _username, true, true);
+        usersAddress[msg.sender] = UserProfile(userCount, msg.sender, _username, true, true);
         userMap[msg.sender] = true;
+        incrementUserCount();
 
-        return (userCount, msg.sender, _username, active, canVote);
+        return (userCount, msg.sender, _username, true, true);
     }
 
     function exists() public view returns (bool) {

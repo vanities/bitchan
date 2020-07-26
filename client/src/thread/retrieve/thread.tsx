@@ -1,8 +1,8 @@
 import * as React from "react";
-import { Card, CardBody, CardTitle, CardText, CardImg, Col } from "reactstrap";
+import { Card, CardBody, CardTitle, CardText, CardImg } from "reactstrap";
 
 import "./thread.css";
-import { ReplyModal } from "./reply_modal";
+import { ReplyModal } from "../../reply/create/reply_modal";
 
 import { drizzleReactHooks } from "@drizzle/react-plugin";
 
@@ -34,7 +34,7 @@ interface ThreadProps {
 
 export function OpCard (threadInfo, opInfo) {
   return (
-    <Card>
+    <Card style={{ backgroundColor: "black", color: "#ddd" }}>
       <CardImg
         top
         width="40%"
@@ -55,7 +55,7 @@ export function OpCard (threadInfo, opInfo) {
 
 export function replyCard (replyInfo) {
   return (
-    <Card>
+    <Card style={{ backgroundColor: "black", color: "#ddd" }}>
       <CardImg
         top
         width="40%"

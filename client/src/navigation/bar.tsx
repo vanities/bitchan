@@ -21,8 +21,8 @@ export function Bar (props, context) {
             </NavLink>
           </NavItem>
           <NavItem>
-            <NavLink tag={Link} to="/board">
-              Board
+            <NavLink tag={Link} to="/catalog">
+              Catalog
             </NavLink>
           </NavItem>
         </Nav>

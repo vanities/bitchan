@@ -2,7 +2,7 @@ import * as React from "react";
 import { useState } from "react";
 
 import { Button, Modal, ModalHeader, ModalBody, ModalFooter } from "reactstrap";
-import { CreateUser } from "../create_user";
+import { CreateUser } from "./create_user";
 import "./create_user_modal.css";
 
 export function CreateUserModal (props, context) {

@@ -3,17 +3,19 @@ import { Route, BrowserRouter as Router } from "react-router-dom";
 
 import { Bar } from "./navigation/bar";
 import { Home } from "./home";
-import { Board } from "./board";
-import { Thread } from "./thread/thread";
+import { Thread } from "./thread/retrieve/thread";
+import { Catalog } from "./catalog/retrieve/catalog";
+
+import "./bitchan.css";
 
 export function Bitchan () {
   return (
-    <div className="Bitchan">
+    <div className="bitchan">
       <Router>
         <Bar />
         <Route path="/" />
         <Route path="/home" component={Home} />
-        <Route path="/board" component={Board} />
+        <Route path="/catalog" component={Catalog} />
         <Route path="/thread/:threadId" component={Thread} />
       </Router>
     </div>

@@ -4,8 +4,8 @@ import { useState } from "react";
 import Blockies from "react-blockies";
 import { NavbarText, Tooltip } from "reactstrap";
 import { drizzleReactHooks } from "@drizzle/react-plugin";
-import { CreateUserModal } from "./create_user_modal";
-import { UserExists } from "./user_exists";
+import { CreateUserModal } from "../user/create/create_user_modal";
+import { UserExists } from "../user/retrieve/user_exists";
 
 export function Address (props, context) {
   const drizzleState = drizzleReactHooks.useDrizzleState((drizzleState) => ({

@@ -26,21 +26,23 @@ export const ThreadCard: React.FunctionComponent<ThreadProps> = ({
   threadId
 }) => {
   return (
-    <Card
-      body
-      inverse
-      style={{ backgroundColor: "black", borderColor: "#333" }}
-      className="thread"
-    >
-      <Button>
-        <Link to={`/thread/${threadId}`}>
-          <CardImg top width="100%" src={image} alt="caption" />
-        </Link>
-      </Button>
-      <CardBody>
-        <CardTitle>{subject}</CardTitle>
-        <CardText>{text}</CardText>
-      </CardBody>
-    </Card>
+    <div className="threadcard">
+      <Card
+        body
+        inverse
+        style={{ backgroundColor: "#515151", borderColor: "#333" }}
+        className="thread"
+      >
+        <Button>
+          <Link to={`/thread/${threadId}`}>
+            <CardImg top width="100%" src={image} alt="caption" />
+          </Link>
+        </Button>
+        <CardBody>
+          <CardTitle>{subject}</CardTitle>
+          <CardText>{text}</CardText>
+        </CardBody>
+      </Card>
+    </div>
   );
 };

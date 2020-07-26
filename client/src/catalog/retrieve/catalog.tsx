@@ -3,9 +3,9 @@ import { CardColumns } from "reactstrap";
 
 import { drizzleReactHooks } from "@drizzle/react-plugin";
 
-import { ThreadCard, getThreads } from "./thread/thread_card";
-import { CreateThreadModal } from "./thread/create_thread_modal";
-import { UserExists } from "./navigation/user_exists";
+import { ThreadCard } from "../../thread/retrieve/thread_card";
+import { CreateThreadModal } from "../../thread/create/create_thread_modal";
+import { UserExists } from "../../user/retrieve/user_exists";
 
 export function getLast20ThreadIndexes (call) {
   const numThreads = 20;
@@ -51,7 +51,7 @@ export function Catalog (props, context) {
   }
 
   return (
-    <div>
+    <div className="catalog">
       {createThread}
       <CardColumns style={{ backgroundColor: "black", borderColor: "#333" }}>
         {threads.map((thread) => (
