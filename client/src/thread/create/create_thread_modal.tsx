@@ -5,7 +5,7 @@ import "./create_thread_modal.css";
 import { CreateThread } from "./create_thread";
 
 export const CreateThreadModal = (props) => {
-  const { buttonLabel, className } = props;
+  const { buttonLabel } = props;
 
   const [modal, setModal] = useState(false);
 
@@ -26,18 +26,23 @@ export const CreateThreadModal = (props) => {
     </button>
   );
   return (
-    <div className="createthreadmodal">
-      <Button onClick={toggle}>{buttonLabel}</Button>
+    <div>
+      <Button className="createthreadbutton" onClick={toggle}>
+        Start a New Thread
+      </Button>
       <Modal
         isOpen={modal}
         toggle={toggle}
-        className={className}
+        className="createthreadmodal"
         external={externalCloseBtn}
+        fade={false}
+        backdrop={false}
+        position="fixed"
       >
         <ModalHeader toggle={toggle} close={closeBtn}>
-          create a thread
+          New Thread
         </ModalHeader>
-        <ModalBody>
+        <ModalBody className="creatthreadbody">
           <CreateThread />
         </ModalBody>
         <ModalFooter>
@@ -46,12 +51,11 @@ export const CreateThreadModal = (props) => {
             type="submit"
             form="createthread"
             onClick={toggle}
+            style={{ width: true }}
+            className="createthreadsubmit"
           >
-            Submit
+            Create Thread
           </Button>{" "}
-          <Button color="secondary" onClick={toggle}>
-            Cancel
-          </Button>
         </ModalFooter>
       </Modal>
     </div>

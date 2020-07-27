@@ -32,9 +32,8 @@ export const CreateThread = (props, context) => {
                 value={values.subject}
               />
               <Input
-                type="text"
+                type="textarea"
                 name="text"
-                placeholder="text"
                 onChange={handleInputChange}
                 value={values.text}
               />

@@ -1,7 +1,55 @@
-.createthreadmodal {
+.createthreadbutton {
   display: flex;
-  justify-content: center;
-  align-items: center;
+  align-items: right;
   background: black;
-  padding: 2em;
+  padding: 0.2em !important;
+  border-radius: 0 !important;
+  border-color: 1px solid white !important;
+  position: fixed !important;
+  right: 0;
+}
+
+/* ----- MODAL STYLE ----- */
+.createthreadmodal {
+  position: fixed !important;
+  display: flex;
+  flex-direction: column;
+  width: 25% !important;
+  pointer-events: auto;
+  background-color: #fff;
+  background-clip: padding-box;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 0.3rem;
+  outline: 0;
+  right: 0;
+}
+
+.modal-header {
+  border-bottom-color: #eeeeee;
+  background-color: #fafafa;
+}
+
+.createthreadbody {
+  padding: 15px 15px 80px;
+}
+
+.modal.left .modal-content {
+  height: 100%;
+  overflow-y: auto;
+}
+
+.createthreadsubmit {
+  width: 100%;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  border: 0 !important;
+}
+
+/* ----- MODAL STYLE ----- */
+.modal-content {
+}
+
+.modal-footer {
+  padding: 0 !important;
+  border: 0 !important;
 }
