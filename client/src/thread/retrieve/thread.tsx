@@ -1,5 +1,6 @@
 import * as React from "react";
 import { Card, CardBody, CardTitle, CardText, CardImg } from "reactstrap";
+import Blockies from "react-blockies";
 
 import "./thread.css";
 import { ReplyModal } from "../../reply/create/reply_modal";
@@ -33,8 +34,14 @@ interface ThreadProps {
 }
 
 export function OpCard (threadInfo, opInfo) {
+  const abbreviatedAccount = `${opInfo.addr.slice(0, 5)}...${opInfo.addr.slice(
+    -5,
+    -1
+  )}`;
   return (
-    <Card style={{ backgroundColor: "black", color: "#ddd" }}>
+    <Card
+      style={{ backgroundColor: "#1D250A", color: "#ABBCC3", fontSize: "0.9rem" }}
+    >
       <CardImg
         top
         width="40%"
@@ -44,7 +51,8 @@ export function OpCard (threadInfo, opInfo) {
       />
       <CardBody>
         <CardTitle>
-          {threadInfo.title} {opInfo.username} {opInfo.addr}{" "}
+          <b>{threadInfo.title}</b> {opInfo.username} {abbreviatedAccount}{" "}
+          <Blockies seed={opInfo.addr} size={8} scale={2} />{" "}
           {threadInfo.timestamp.toString()} No. {threadInfo.threadId}{" "}
         </CardTitle>
         <CardText>{threadInfo.text}</CardText>
@@ -54,8 +62,14 @@ export function OpCard (threadInfo, opInfo) {
 }
 
 export function replyCard (replyInfo) {
+  const abbreviatedAccount = `${replyInfo.address.slice(
+    0,
+    5
+  )}...${replyInfo.address.slice(-5, -1)}`;
   return (
-    <Card style={{ backgroundColor: "black", color: "#ddd" }}>
+    <Card
+      style={{ backgroundColor: "#1D250A", color: "#ABBCC3", fontSize: "0.9rem" }}
+    >
       <CardImg
         top
         width="40%"
@@ -65,7 +79,9 @@ export function replyCard (replyInfo) {
       />
       <CardBody>
         <CardTitle>
-          {replyInfo.address} {replyInfo.timestamp.toString()}
+          {abbreviatedAccount}{" "}
+          <Blockies seed={replyInfo.address} size={8} scale={2} />{" "}
+          {replyInfo.timestamp.toString()}
         </CardTitle>
         <CardText>{replyInfo.text}</CardText>
       </CardBody>

@@ -1,8 +1,17 @@
 .opcard {
   max-width: 30%;
   height: auto;
+  font-size: 13px;
 }
 .replycard {
   max-width: 30%;
   height: auto;
+  font-size: 13px;
+}
+.identicon {
+  float: none;
+  display: inline;
+}
+.title {
+  font-weight: bold;
 }

@@ -5,8 +5,6 @@ import "./create_thread_modal.css";
 import { CreateThread } from "./create_thread";
 
 export const CreateThreadModal = (props) => {
-  const { buttonLabel } = props;
-
   const [modal, setModal] = useState(false);
 
   const toggle = () => setModal(!modal);
