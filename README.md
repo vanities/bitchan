@@ -65,16 +65,16 @@ This includes tests!
 ### Backend Contracts on ethereum
 
 - [x] Basic User
-- [ ] Basic Client
-- [ ] Basic Board
+- [x] Basic Client
+- [x] Basic Board
 - [ ] Basic Admin control
 - [ ] Governance
 - [ ] Personal Messaging
 
 ### Frontend client to interpret the backend state
 
-- [ ] User Signup/Login
-- [ ] Create post and reply
+- [x] User Signup/Login
+- [x] Create post and reply
 - [ ] Hide Post filters
 - [ ] Submit application for leadership
 - [ ] Submit vote for leadership
