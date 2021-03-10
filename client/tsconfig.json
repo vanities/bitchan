@@ -2,11 +2,7 @@
   "compileOnSave": true,
   "compilerOptions": {
     "target": "es6",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
+    "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
@@ -18,19 +14,14 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "jsx": "react",
+    "jsx": "react-jsx",
     "removeComments": true,
     "outDir": "./dist/",
     "sourceMap": true,
-    "noImplicitAny": true
+    "noImplicitAny": true,
+    "noFallthroughCasesInSwitch": true
   },
-  "exclude": [
-    "target",
-    "dist",
-    "node_modules",
-    "__tests__"
-  ],
-  "include": [
-    "**/*.ts"
-  ]
+  "baseUrl": "./src",
+  "exclude": ["target", "dist", "node_modules", "__tests__"],
+  "include": ["**/*.ts"]
 }

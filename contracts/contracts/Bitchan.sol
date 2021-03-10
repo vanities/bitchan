@@ -7,8 +7,6 @@
 
 pragma solidity >=0.4.22 <0.7.0;
 
-import {User} from "./User.sol";
-
 contract Bitchan {
 
 	address payable private owner;
@@ -88,8 +86,6 @@ contract Bitchan {
 
 	// To create a Thread
 	function createThread(string memory subject, string memory text, string memory imageUrl) payable public {
-        User user = new User();
-        require(user.exists());
 		// collect the fees
 		require(msg.value >= feeCreateThread);
 		// calculate a new thread ID and post
@@ -105,8 +101,6 @@ contract Bitchan {
 
 	// To reply to a thread
 	function replyPost(uint256 _replyTo, string memory _text, string memory _imageUrl)  payable public {
-        User user = new User();
-        require(user.exists());
 		// collect the fees
 		require(msg.value >= feeReplyPost);
 		// make sure you can't reply to an inexistant thread

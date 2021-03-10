@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Card, CardBody, CardTitle, CardText, CardImg } from "reactstrap";
 import Blockies from "react-blockies";
+import PropTypes from "prop-types";
 
 import "./thread.css";
 import { ReplyModal } from "../../reply/create/reply_modal";
@@ -9,15 +10,15 @@ import { drizzleReactHooks } from "@drizzle/react-plugin";
 
 export function getReplies (call, indexFirstReply) {
   const replies = [];
-  var index = indexFirstReply;
+  let index = indexFirstReply;
 
   while (true) {
     if (index === "0" || index === "loading") {
       return replies;
     }
-    var reply = call("Bitchan", "replies", index);
+    const reply = call("Bitchan", "replies", index);
     if (reply) {
-      var timestamp = new Date(0); // The 0 there is the key, which sets the date to the epoch
+      const timestamp = new Date(0); // The 0 there is the key, which sets the date to the epoch
       timestamp.setUTCSeconds(reply[4].epochTime);
       reply.timestamp = timestamp;
       replies.push(reply);
@@ -27,10 +28,6 @@ export function getReplies (call, indexFirstReply) {
     }
     console.log(reply);
   }
-}
-
-interface ThreadProps {
-  threadId: number;
 }
 
 export function OpCard (threadInfo, opInfo) {
@@ -98,7 +95,7 @@ function getThreadInfo (thread) {
   const threadId = thread ? thread[5] : "loading";
   const epochTime = thread ? thread[6] : 0;
   const opAddress = thread ? thread[7] : 0;
-  var timestamp = new Date(0); // The 0 there is the key, which sets the date to the epoch
+  const timestamp = new Date(0); // The 0 there is the key, which sets the date to the epoch
   timestamp.setUTCSeconds(epochTime);
   return {
     media,
@@ -127,7 +124,7 @@ function getReplyInfo (reply) {
   const nextReply = reply ? reply[3] : "loading";
   const epochTime = reply ? reply[4] : "loading";
   const address = reply ? reply[5] : "loading";
-  var timestamp = new Date(0); // The 0 there is the key, which sets the date to the epoch
+  const timestamp = new Date(0); // The 0 there is the key, which sets the date to the epoch
   timestamp.setUTCSeconds(epochTime);
   return {
     text,
@@ -163,3 +160,9 @@ export function Thread (props, context) {
     </div>
   );
 }
+
+Thread.propTypes = {
+  // You can declare that a prop is a specific JS type. By default, these
+  // are all optional.
+  match: PropTypes.object
+};

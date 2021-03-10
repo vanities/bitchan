@@ -1,10 +1,10 @@
 import * as React from "react";
 import { useState } from "react";
 import { Container, Col, Form, FormGroup, Input } from "reactstrap";
-import { drizzleReactHooks } from "@drizzle/react-plugin";
+// import { drizzleReactHooks } from "@drizzle/react-plugin";
 import { ipfsClient } from "ipfs-http-client";
 
-async function saveToIpfs ([file]) {
+export async function saveToIpfs ([file]) {
   try {
     console.log("CONNECTING");
     const ipfs = ipfsClient({
@@ -25,8 +25,14 @@ async function saveToIpfs ([file]) {
 }
 
 export const CreateThread = (props, context) => {
-  const { useCacheSend } = drizzleReactHooks.useDrizzle();
-  const { send } = useCacheSend("Bitchan", "createThread");
+  // const { useCacheSend } = drizzleReactHooks.useDrizzle();
+  // const { send } = useCacheSend("Bitchan", "createThread");
+
+  const [values, setValues] = useState({
+    subject: "",
+    text: "",
+    upload: ""
+  });
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -35,14 +41,9 @@ export const CreateThread = (props, context) => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    const hash = await saveToIpfs([values.upload]);
+    // const hash = await saveToIpfs([values.upload]);
     // send(values.subject, values.text, values.upload);
   };
-  const [values, setValues] = useState({
-    subject: "",
-    text: "",
-    upload: ""
-  });
 
   return (
     <div>

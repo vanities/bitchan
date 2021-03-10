@@ -2,27 +2,28 @@ import * as React from "react";
 import { useState } from "react";
 import { Container, Col, Form, FormGroup, Input } from "reactstrap";
 import { drizzleReactHooks } from "@drizzle/react-plugin";
+import PropTypes from "prop-types";
 
 export const Reply = (props, context) => {
   const { indexThread } = props;
   const { useCacheSend } = drizzleReactHooks.useDrizzle();
   const { send } = useCacheSend("Bitchan", "replyPost");
 
+  const [values, setValues] = useState({
+    index: indexThread,
+    text: "",
+    image: ""
+  });
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setValues({ ...values, [name]: value });
   };
 
   const handleSubmit = (event) => {
-    console.log("reply send", values.index, values.text, values.image);
+    // console.log("reply send", values.index, values.text, values.image);
     send(values.index, values.text, values.image);
     event.preventDefault();
   };
-  const [values, setValues] = useState({
-    index: indexThread,
-    text: "",
-    image: ""
-  });
 
   return (
     <div>
@@ -50,4 +51,8 @@ export const Reply = (props, context) => {
       </Container>
     </div>
   );
+};
+
+Reply.propTypes = {
+  indexThread: PropTypes.number
 };

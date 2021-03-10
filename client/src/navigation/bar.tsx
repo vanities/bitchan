@@ -16,11 +16,6 @@ export function Bar (props, context) {
         </NavbarBrand>
         <Nav className="mr-auto" navbar>
           <NavItem>
-            <NavLink tag={Link} to="/home">
-              Home
-            </NavLink>
-          </NavItem>
-          <NavItem>
             <NavLink tag={Link} to="/catalog">
               Catalog
             </NavLink>

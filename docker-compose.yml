@@ -60,6 +60,7 @@ services:
     environment:
       - INFURA_KEY=${INFURA_KEY}
       - MNEMONIC=${MNEMONIC}
+      - NODE_OPTIONS=--max_old_space_size=4096
     restart: on-failure
 
   ganache:

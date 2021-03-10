@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Button, Modal, ModalHeader, ModalBody, ModalFooter } from "reactstrap";
+import PropTypes from "prop-types";
 
 import "./reply_modal.css";
 import { Reply } from "./reply";
@@ -51,4 +52,10 @@ export const ReplyModal = (props) => {
       </Modal>
     </div>
   );
+};
+
+ReplyModal.propTypes = {
+  buttonLabel: PropTypes.string,
+  className: PropTypes.string,
+  indexThread: PropTypes.number
 };

@@ -1,12 +1,13 @@
 import * as React from "react";
 import { NavLink as Link } from "react-router-dom";
 import { Card, CardImg, CardText, CardBody, CardTitle, Button } from "reactstrap";
+import PropTypes from "prop-types";
 
 import "./thread_card.css";
 
 export function getThreads (call, numThreads) {
   const threads = [];
-  for (var thread = 0; thread <= numThreads; thread++) {
+  for (let thread = 0; thread <= numThreads; thread++) {
     threads.push(call("Bitchan", "threads", thread));
   }
   return threads;
@@ -45,4 +46,11 @@ export const ThreadCard: React.FunctionComponent<ThreadProps> = ({
       </Card>
     </div>
   );
+};
+
+ThreadCard.propTypes = {
+  subject: PropTypes.string,
+  text: PropTypes.string,
+  image: PropTypes.string,
+  threadId: PropTypes.string
 };

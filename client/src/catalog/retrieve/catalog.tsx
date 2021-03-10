@@ -5,14 +5,13 @@ import { drizzleReactHooks } from "@drizzle/react-plugin";
 
 import { ThreadCard } from "../../thread/retrieve/thread_card";
 import { CreateThreadModal } from "../../thread/create/create_thread_modal";
-import { UserExists } from "../../user/retrieve/user_exists";
 
 export function getLast20ThreadIndexes (call) {
   const numThreads = 20;
   const threadIndexes = [];
-  var index;
+  let index;
 
-  for (var thread = 0; thread <= numThreads; thread++) {
+  for (let thread = 0; thread <= numThreads; thread++) {
     index = call("Bitchan", "lastThreads", thread);
     if (index) {
       threadIndexes.push(index);
@@ -22,9 +21,9 @@ export function getLast20ThreadIndexes (call) {
 }
 export function getLast20Threads (call, indexes) {
   const threads = [];
-  var indexOfThread;
+  let indexOfThread;
 
-  for (var index = 0; index < indexes.length; index++) {
+  for (let index = 0; index < indexes.length; index++) {
     indexOfThread = indexes[index];
 
     if (indexOfThread === "0") {
@@ -44,11 +43,9 @@ export function Catalog (props, context) {
     getLast20Threads(call, threadIndexes)
   );
 
-  var createThread = null;
+  let createThread = null;
 
-  if (UserExists()) {
-    createThread = <CreateThreadModal buttonLabel="Create Thread" />;
-  }
+  createThread = <CreateThreadModal buttonLabel="Create Thread" />;
 
   return (
     <div className="catalog">
@@ -56,6 +53,7 @@ export function Catalog (props, context) {
       <CardColumns style={{ backgroundColor: "black", borderColor: "#333" }}>
         {threads.map((thread) => (
           <ThreadCard
+            key=""
             subject={thread ? thread[0] : "loading"}
             text={thread ? thread[1] : "loading"}
             image={thread ? thread[2] : "loading"}
