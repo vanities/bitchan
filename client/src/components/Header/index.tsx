@@ -17,7 +17,7 @@ import {
 } from "../../state/wallet/hooks";
 import { CardNoise } from "../earn/styled";
 import { CountUp } from "use-count-up";
-import { TYPE, ExternalLink } from "../../theme";
+import { TYPE } from "../../theme";
 
 import { YellowCard } from "../Card";
 import { Moon, Sun } from "react-feather";
@@ -232,37 +232,6 @@ const StyledNavLink = styled(NavLink).attrs({
   }
 `;
 
-const StyledExternalLink = styled(ExternalLink).attrs({
-  activeClassName,
-})<{ isActive?: boolean }>`
-  ${({ theme }) => theme.flexRowNoWrap}
-  align-items: left;
-  border-radius: 3rem;
-  outline: none;
-  cursor: pointer;
-  text-decoration: none;
-  color: ${({ theme }) => theme.text2};
-  font-size: 1rem;
-  width: fit-content;
-  margin: 0 12px;
-  font-weight: 500;
-
-  &.${activeClassName} {
-    border-radius: 12px;
-    font-weight: 600;
-    color: ${({ theme }) => theme.text1};
-  }
-
-  :hover,
-  :focus {
-    color: ${({ theme }) => darken(0.1, theme.text1)};
-  }
-
-  ${({ theme }) => theme.mediaWidth.upToExtraSmall`
-      display: none;
-`}
-`;
-
 export const StyledMenuButton = styled.button`
   position: relative;
   width: 100%;
@@ -337,31 +306,6 @@ export default function Header() {
           <StyledNavLink id={`swap-nav-link`} to={"/swap"}>
             {t("swap")}
           </StyledNavLink>
-          <StyledNavLink
-            id={`pool-nav-link`}
-            to={"/pool"}
-            isActive={(match, { pathname }) =>
-              Boolean(match) ||
-              pathname.startsWith("/add") ||
-              pathname.startsWith("/remove") ||
-              pathname.startsWith("/create") ||
-              pathname.startsWith("/find")
-            }
-          >
-            {t("pool")}
-          </StyledNavLink>
-          <StyledNavLink id={`stake-nav-link`} to={"/uni"}>
-            UNI
-          </StyledNavLink>
-          <StyledNavLink id={`stake-nav-link`} to={"/vote"}>
-            Vote
-          </StyledNavLink>
-          <StyledExternalLink
-            id={`stake-nav-link`}
-            href={"https://uniswap.info"}
-          >
-            Charts <span style={{ fontSize: "11px" }}>↗</span>
-          </StyledExternalLink>
         </HeaderLinks>
       </HeaderRow>
       <HeaderControls>
