@@ -1,0 +1,48 @@
+import { defineSchema, defineTable } from "convex/server";
+import { v } from "convex/values";
+
+// The off-chain read model + gasless engagement, on Convex (replaces the Ponder
+// indexer + the Bun engagement server). A cron polls the chain for events and
+// materializes `posts`/`accounts`; reactions are signed messages verified server-side.
+export default defineSchema({
+  accounts: defineTable({
+    address: v.string(), // lowercased
+    handle: v.optional(v.string()),
+    firstSeenAt: v.number(),
+  }).index("by_address", ["address"]),
+
+  posts: defineTable({
+    onchainId: v.string(), // on-chain post id
+    author: v.string(),
+    parentId: v.string(), // "0" = top-level
+    quotedId: v.string(),
+    mediaHash: v.string(),
+    text: v.string(),
+    createdAt: v.number(),
+    hidden: v.boolean(),
+    hiddenReason: v.optional(v.string()),
+    hiddenBy: v.optional(v.string()),
+    likeCount: v.number(),
+    repostCount: v.number(),
+    replyCount: v.number(),
+  })
+    .index("by_onchainId", ["onchainId"])
+    .index("by_createdAt", ["createdAt"])
+    .index("by_author", ["author"]),
+
+  // gasless engagement (EIP-712 signed): like / repost / follow
+  reactions: defineTable({
+    kind: v.union(v.literal("like"), v.literal("repost"), v.literal("follow")),
+    account: v.string(), // lowercased signer
+    target: v.string(), // postId (like/repost) or address (follow), lowercased
+    active: v.boolean(),
+  })
+    .index("by_account_kind_target", ["account", "kind", "target"])
+    .index("by_kind_target", ["kind", "target"]),
+
+  // indexer progress: last block scanned per chain
+  indexerCursor: defineTable({
+    chainId: v.number(),
+    lastBlock: v.number(),
+  }).index("by_chainId", ["chainId"]),
+});
