@@ -23,6 +23,8 @@ export type TimelinePost = {
   replyCount: number;
   repostCount: number;
   hidden: boolean;
+  hiddenReason: string | null;
+  hiddenBy: `0x${string}` | null;
   createdAt: string;
 };
 
@@ -35,7 +37,7 @@ export type TimelineData = {
 
 export const TIMELINE_QUERY = `
   query Timeline {
-    posts(orderBy: "createdAt", orderDirection: "desc", where: { hidden: false }, limit: 100) {
+    posts(orderBy: "createdAt", orderDirection: "desc", limit: 100) {
       items {
         id
         author
@@ -47,6 +49,8 @@ export const TIMELINE_QUERY = `
         replyCount
         repostCount
         hidden
+        hiddenReason
+        hiddenBy
         createdAt
       }
     }

@@ -16,6 +16,7 @@ export const post = onchainTable("post", (t) => ({
   createdAt: t.bigint().notNull(),
   hidden: t.boolean().notNull(),
   hiddenReason: t.text(),
+  hiddenBy: t.hex(),
   likeCount: t.integer().notNull(),
   repostCount: t.integer().notNull(),
   replyCount: t.integer().notNull(),

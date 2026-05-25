@@ -19,6 +19,7 @@ ponder.on("Bitchan:Posted", async ({ event, context }) => {
     createdAt,
     hidden: false,
     hiddenReason: null,
+    hiddenBy: null,
     likeCount: 0,
     repostCount: 0,
     replyCount: 0,
@@ -91,10 +92,10 @@ ponder.on("Bitchan:Unfollowed", async ({ event, context }) => {
 });
 
 ponder.on("Bitchan:Hidden", async ({ event, context }) => {
-  const { postId, reason } = event.args;
+  const { postId, by, reason } = event.args;
   const p = await context.db.find(post, { id: postId });
   if (p) {
-    await context.db.update(post, { id: postId }).set({ hidden: true, hiddenReason: reason });
+    await context.db.update(post, { id: postId }).set({ hidden: true, hiddenReason: reason, hiddenBy: by });
   }
 });
 
@@ -102,6 +103,6 @@ ponder.on("Bitchan:Unhidden", async ({ event, context }) => {
   const { postId } = event.args;
   const p = await context.db.find(post, { id: postId });
   if (p) {
-    await context.db.update(post, { id: postId }).set({ hidden: false, hiddenReason: null });
+    await context.db.update(post, { id: postId }).set({ hidden: false, hiddenReason: null, hiddenBy: null });
   }
 });
