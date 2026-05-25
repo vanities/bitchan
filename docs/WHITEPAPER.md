@@ -35,6 +35,7 @@ and bitchan treats it as one.
 
 | Project | Content | Governance of moderation |
 |---|---|---|
+| **X · Meta · TikTok** *(centralized)* | private servers (off-chain) | company-appointed mods + opaque ranking; no user say, no recall |
 | **Farcaster** | off-chain (hubs); on-chain *identity* only | per-client; no elected commons |
 | **Nostr** | off-chain (relays); keypair identity | per-relay/per-client; no commons |
 | **Lens** | mostly on-chain (+ Momoka DA) | protocol DAO; not moderation-of-feed |
@@ -123,7 +124,11 @@ treasury's open books, and closing a circular check — are incorporated. See th
 
 The republic's survival rests on one rule: **voting power is per-citizen, never
 per-token.** You cannot *buy* the franchise — there is no coin-weighted voting, so no
-plutocracy. The only attack left is sybil (manufacturing fake citizens), and the
+plutocracy. This is a deliberate break from the dominant on-chain governance model — the
+**token-weighted DAO** (Nouns, Compound, most "governance tokens"), where 1 token = 1
+vote, so a whale, an exchange, or a leveraged treasury raid simply *buys* the outcome.
+That is the very capture bitchan exists to prevent; we refuse coin-weighting outright.
+The only attack left is sybil (manufacturing fake citizens), and the
 defense is to make the **stake be time and reputation, not money:**
 
 - **Citizenship** = a wallet + a minimum **account age** + a (rate-limited) one-time

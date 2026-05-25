@@ -24,4 +24,7 @@ s "post(string,bytes32,uint256,uint256)" "first post with media attached" $MEDIA
 s "post(string,bytes32,uint256,uint256)" "nice to be here anon" $ZERO 1 0 --value 0.0001ether --private-key $PK1
 s "like(uint256)" 1 --private-key $PK1
 s "follow(address)" $A0 --private-key $PK1
-echo "seeded: 3 posts (1 reply), 1 like, 1 follow, handle 'satoshi'"
+# citizenship (Phase-1 governance): two founding citizens
+s "claimCitizenship()" --value 0.003ether --private-key $PK0
+s "claimCitizenship()" --value 0.003ether --private-key $PK1
+echo "seeded: 3 posts (1 reply), 1 like, 1 follow, handle 'satoshi', 2 citizens"

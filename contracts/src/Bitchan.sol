@@ -77,8 +77,9 @@ contract Bitchan {
     /// @param parentId   The post being replied to, or 0 for a top-level post.
     /// @param quotedId   The post being quoted, or 0.
     function post(string calldata text, bytes32 mediaHash, uint256 parentId, uint256 quotedId)
-        external
+        public
         payable
+        virtual
         returns (uint256 id)
     {
         if (msg.value < postFee) revert FeeNotMet(postFee, msg.value);
@@ -127,7 +128,7 @@ contract Bitchan {
 
     // --- moderation (president-only for now; custodian roles land with OZ AccessControl) ---
 
-    function hide(uint256 postId, string calldata reason) external onlyPresident {
+    function hide(uint256 postId, string calldata reason) external virtual onlyPresident {
         emit Hidden(postId, msg.sender, reason);
     }
 
@@ -137,7 +138,7 @@ contract Bitchan {
 
     // --- admin / treasury ---
 
-    function setPostFee(uint256 newFee) external onlyPresident {
+    function setPostFee(uint256 newFee) external virtual onlyPresident {
         postFee = newFee;
         emit PostFeeChanged(newFee);
     }
@@ -148,7 +149,7 @@ contract Bitchan {
         emit PresidentChanged(newPresident);
     }
 
-    function withdrawTreasury(address payable to) external onlyPresident {
+    function withdrawTreasury(address payable to) external virtual onlyPresident {
         if (to == address(0)) revert ZeroAddress();
         uint256 amount = treasury;
         if (amount == 0) revert NothingToWithdraw();

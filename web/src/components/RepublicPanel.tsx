@@ -3,6 +3,8 @@ import { useReadContract } from "wagmi";
 import { formatEther } from "viem";
 import { gql, STATS_QUERY, type StatsData } from "../lib/graphql";
 import { bitchanAbi, bitchanAddress, chain } from "../lib/contract";
+import { CitizenshipCard } from "./CitizenshipCard";
+import { ElectionCard } from "./ElectionCard";
 
 export function RepublicPanel() {
   const { data: stats } = useQuery({
@@ -23,9 +25,31 @@ export function RepublicPanel() {
     functionName: "postFee",
     chainId: chain.id,
   });
+  const { data: citizenCountRaw } = useReadContract({
+    address: bitchanAddress,
+    abi: bitchanAbi,
+    functionName: "citizenCount",
+    chainId: chain.id,
+    query: { refetchInterval: 8000 },
+  });
+  const { data: founding } = useReadContract({
+    address: bitchanAddress,
+    abi: bitchanAbi,
+    functionName: "foundingPhase",
+    chainId: chain.id,
+    query: { refetchInterval: 8000 },
+  });
+  const { data: targetT } = useReadContract({
+    address: bitchanAddress,
+    abi: bitchanAbi,
+    functionName: "T",
+    chainId: chain.id,
+  });
 
   const posts = stats?.posts.totalCount ?? 0;
-  const citizens = stats?.accounts.totalCount ?? 0;
+  const citizens = citizenCountRaw !== undefined ? Number(citizenCountRaw) : (stats?.accounts.totalCount ?? 0);
+  const Tn = targetT !== undefined ? Number(targetT) : 0;
+  const pct = Tn > 0 ? Math.min(100, Math.round((citizens / Tn) * 100)) : 0;
   const treasuryEth = treasury !== undefined ? trim(formatEther(treasury as bigint)) : "—";
   const feeEth = postFee !== undefined ? trim(formatEther(postFee as bigint)) : "—";
 
@@ -35,6 +59,10 @@ export function RepublicPanel() {
         placeholder="Search the republic"
         className="w-full rounded-md border border-line bg-ink-soft px-4 py-2.5 text-sm placeholder:text-bone-dim focus:border-brass focus:outline-none"
       />
+
+      <CitizenshipCard />
+
+      <ElectionCard />
 
       <section className="overflow-hidden rounded-lg border border-line bg-panel/60">
         <header className="flex items-center justify-between border-b border-line px-4 py-2.5">
@@ -50,6 +78,19 @@ export function RepublicPanel() {
           <Stat label="treasury" value={`${treasuryEth} Ξ`} />
           <Stat label="fee to post" value={`${feeEth} Ξ`} />
         </dl>
+        {founding === true && Tn > 0 && (
+          <div className="border-t border-line px-4 py-2.5">
+            <div className="mb-1 flex items-center justify-between">
+              <span className="label-civic text-[9px] text-bone-dim">founding phase</span>
+              <span className="font-mono text-[10px] text-bone-dim">
+                {citizens}/{Tn} to elections
+              </span>
+            </div>
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-line">
+              <div className="h-full rounded-full bg-seal transition-all" style={{ width: `${pct}%` }} />
+            </div>
+          </div>
+        )}
       </section>
 
       <section className="rounded-lg border border-line p-4">
