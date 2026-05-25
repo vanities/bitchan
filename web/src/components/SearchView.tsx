@@ -7,12 +7,14 @@ export function SearchView({
   posts,
   handles,
   onReply,
+  onOpenProfile,
   loading,
   error,
 }: {
   posts: TimelinePost[];
   handles: Handles;
   onReply?: (post: TimelinePost) => void;
+  onOpenProfile?: (address: `0x${string}`) => void;
   loading?: boolean;
   error?: unknown;
 }) {
@@ -46,6 +48,7 @@ export function SearchView({
         posts={results}
         handles={handles}
         onReply={onReply}
+        onOpenProfile={onOpenProfile}
         loading={loading}
         error={error}
         empty={<Notice>No posts match your search.</Notice>}

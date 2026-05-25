@@ -1,28 +1,43 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
+import { logger } from "hono/logger";
 import { Database } from "bun:sqlite";
 import { getAddress, verifyTypedData, type Hex } from "viem";
+import { createHash } from "node:crypto";
+import { existsSync, mkdirSync } from "node:fs";
 
-// Gasless engagement service.
-// Likes / reposts / follows are NOT on-chain transactions — the user signs an
-// EIP-712 message (free, no gas), we verify the signature recovers to the
-// claimed signer, and store the toggle. Posts/replies stay on-chain; this is
-// only the cheap, high-frequency engagement layer.
+// bitchan off-chain services:
+//  1. Gasless engagement — likes/reposts/follows as EIP-712 signed messages (no gas).
+//  2. Media — content-addressed multimedia (images/video). Bytes in, 32-byte content
+//     hash out; that hash is what a post stores on-chain (`mediaHash`). This mirrors
+//     Arweave's content-addressed model; in production swap this endpoint for
+//     Irys/Arweave (or arlocal to test) — the contract and frontend are unchanged.
 
 const PORT = Number(process.env.PORT ?? 42070);
 const CHAIN_ID = Number(process.env.CHAIN_ID ?? 31337);
 const DB_PATH = process.env.DB_PATH ?? "engagement.sqlite";
+const MEDIA_DIR = process.env.MEDIA_DIR ?? "media";
+const MAX_BYTES = Number(process.env.MAX_MEDIA_BYTES ?? 25 * 1024 * 1024); // 25 MB
 
+mkdirSync(MEDIA_DIR, { recursive: true });
 const db = new Database(DB_PATH);
 db.run(`
   CREATE TABLE IF NOT EXISTS reactions (
     signer     TEXT    NOT NULL,
-    kind       TEXT    NOT NULL,   -- 'like' | 'repost' | 'follow'
-    target     TEXT    NOT NULL,   -- postId (like/repost) or address (follow)
-    active     INTEGER NOT NULL,   -- 1 = on, 0 = toggled off
+    kind       TEXT    NOT NULL,
+    target     TEXT    NOT NULL,
+    active     INTEGER NOT NULL,
     nonce      TEXT    NOT NULL,
     updated_at INTEGER NOT NULL,
     PRIMARY KEY (signer, kind, target)
+  )
+`);
+db.run(`
+  CREATE TABLE IF NOT EXISTS media (
+    id      TEXT    PRIMARY KEY,  -- base64url(sha256(bytes)) — the Arweave-style id
+    mime    TEXT    NOT NULL,
+    size    INTEGER NOT NULL,
+    created INTEGER NOT NULL
   )
 `);
 
@@ -52,8 +67,14 @@ const viewerActive = db.prepare(
 const followingBySigner = db.prepare(
   "SELECT target FROM reactions WHERE signer = $signer AND kind = 'follow' AND active = 1",
 );
+const insertMedia = db.prepare(`
+  INSERT INTO media (id, mime, size, created) VALUES ($id, $mime, $size, $created)
+  ON CONFLICT(id) DO NOTHING
+`);
+const getMedia = db.prepare("SELECT mime, size FROM media WHERE id = $id");
 
 const app = new Hono();
+app.use("*", logger()); // request log: method, path, status, timing
 app.use("*", cors());
 
 app.get("/health", (c) => c.json({ ok: true, chainId: CHAIN_ID }));
@@ -94,10 +115,14 @@ app.post("/react", async (c) => {
       message,
       signature: signature as Hex,
     });
-  } catch {
+  } catch (e) {
+    console.error("[react] verify threw", e);
     valid = false;
   }
-  if (!valid) return c.json({ error: "invalid signature" }, 401);
+  if (!valid) {
+    console.warn(`[react] rejected bad signature: ${kind} ${target} by ${address}`);
+    return c.json({ error: "invalid signature" }, 401);
+  }
 
   const signer = getAddress(address);
   upsert.run({
@@ -108,7 +133,7 @@ app.post("/react", async (c) => {
     $nonce: String(nonce),
     $updated_at: Date.now(),
   });
-
+  console.log(`[react] ${active ? "+" : "-"}${kind} ${target} by ${signer}`);
   return c.json({ ok: true, signer, kind, target: String(target), active: !!active });
 });
 
@@ -137,7 +162,6 @@ app.get("/engagement", (c) => {
   return c.json(out);
 });
 
-// Addresses that `account` currently follows — powers the follow button + Following feed.
 app.get("/following", (c) => {
   const acct = c.req.query("account");
   let signer = "";
@@ -151,6 +175,46 @@ app.get("/following", (c) => {
   return c.json({ following: rows.map((r) => r.target) });
 });
 
-console.log(`bitchan engagement server on :${PORT} (chainId ${CHAIN_ID}, db ${DB_PATH})`);
+// --- Media (content-addressed; swap for Arweave/Irys in prod) ---
+
+// Upload: raw bytes in the body, the file's mime in Content-Type.
+// Returns the Arweave-style id (base64url) + the 0x-hex hash that goes on-chain.
+app.post("/upload", async (c) => {
+  const mime = c.req.header("content-type") || "application/octet-stream";
+  const buf = new Uint8Array(await c.req.arrayBuffer());
+  if (buf.length === 0) return c.json({ error: "empty body" }, 400);
+  if (buf.length > MAX_BYTES) {
+    console.warn(`[media] rejected oversize upload: ${buf.length} bytes (max ${MAX_BYTES})`);
+    return c.json({ error: "too large", max: MAX_BYTES }, 413);
+  }
+
+  const hash = createHash("sha256").update(buf).digest(); // 32-byte Buffer
+  const id = hash.toString("base64url");
+  const hashHex = `0x${hash.toString("hex")}`;
+  const path = `${MEDIA_DIR}/${id}`;
+  if (!existsSync(path)) await Bun.write(path, buf);
+  insertMedia.run({ $id: id, $mime: mime, $size: buf.length, $created: Date.now() });
+
+  console.log(`[media] upload id=${id.slice(0, 12)}… mime=${mime} size=${buf.length}`);
+  return c.json({ id, hash: hashHex, mime, size: buf.length });
+});
+
+app.get("/media/:id/info", (c) => {
+  const row = getMedia.get({ $id: c.req.param("id") }) as { mime: string; size: number } | undefined;
+  if (!row) return c.json({ error: "not found" }, 404);
+  return c.json({ mime: row.mime, size: row.size });
+});
+
+app.get("/media/:id", (c) => {
+  const id = c.req.param("id");
+  const row = getMedia.get({ $id: id }) as { mime: string } | undefined;
+  const path = `${MEDIA_DIR}/${id}`;
+  if (!row || !existsSync(path)) return c.json({ error: "not found" }, 404);
+  return new Response(Bun.file(path), {
+    headers: { "content-type": row.mime, "cache-control": "public, max-age=31536000, immutable" },
+  });
+});
+
+console.log(`bitchan server on :${PORT} (chainId ${CHAIN_ID}, db ${DB_PATH}, media ${MEDIA_DIR}/)`);
 
 export default { port: PORT, fetch: app.fetch };

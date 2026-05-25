@@ -20,10 +20,11 @@ indexer/generated/
 web/dist/
 web/.vite/
 
-# engagement server (sqlite)
+# engagement server (sqlite + uploaded media blobs)
 server/*.sqlite
 server/*.sqlite-shm
 server/*.sqlite-wal
+server/media/
 
 # logs / os
 *.log

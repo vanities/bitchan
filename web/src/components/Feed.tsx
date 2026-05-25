@@ -2,13 +2,14 @@ import type { ReactNode } from "react";
 import { useAccount } from "wagmi";
 import type { TimelinePost } from "../lib/graphql";
 import type { Handles } from "../lib/useTimeline";
-import { useEngagement, useFollowing } from "../lib/engagement";
+import { useEngagement } from "../lib/engagement";
 import { PostCard } from "./PostCard";
 
 export function Feed({
   posts,
   handles,
   onReply,
+  onOpenProfile,
   loading,
   error,
   empty,
@@ -16,18 +17,16 @@ export function Feed({
   posts: TimelinePost[];
   handles: Handles;
   onReply?: (post: TimelinePost) => void;
+  onOpenProfile?: (address: `0x${string}`) => void;
   loading?: boolean;
   error?: unknown;
   empty?: ReactNode;
 }) {
   const { address } = useAccount();
-  const viewer = address?.toLowerCase();
   const { data: engagement } = useEngagement(
     posts.map((p) => p.id),
     address,
   );
-  const { data: followingArr } = useFollowing(address);
-  const followingSet = new Set(followingArr ?? []);
 
   if (loading) return <Notice>reading the ledger…</Notice>;
   if (error) {
@@ -51,9 +50,8 @@ export function Feed({
           handle={handles.get(p.author.toLowerCase()) ?? null}
           index={i}
           onReply={onReply}
+          onOpenProfile={onOpenProfile}
           eng={engagement?.[p.id]}
-          viewer={viewer}
-          isFollowing={followingSet.has(p.author.toLowerCase())}
         />
       ))}
     </ul>

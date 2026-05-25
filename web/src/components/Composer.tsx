@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   useAccount,
   useReadContract,
@@ -7,7 +7,10 @@ import {
 } from "wagmi";
 import { useQueryClient } from "@tanstack/react-query";
 import { formatEther } from "viem";
+import { ImagePlus, X } from "lucide-react";
 import { bitchanAbi, bitchanAddress, chain, ZERO_BYTES32 } from "../lib/contract";
+import { mediaUrl, uploadMedia, type UploadResult } from "../lib/media";
+import { Button } from "@/components/ui/button";
 
 const MAX = 280;
 const ZERO_ADDR = "0x0000000000000000000000000000000000000000" as const;
@@ -26,6 +29,10 @@ export function Composer({
   const { address, isConnected } = useAccount();
   const [text, setText] = useState("");
   const [showStamp, setShowStamp] = useState(false);
+  const [media, setMedia] = useState<UploadResult | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [mediaError, setMediaError] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
   const qc = useQueryClient();
 
   const { data: postFee } = useReadContract({
@@ -49,6 +56,7 @@ export function Composer({
   useEffect(() => {
     if (!isSuccess) return;
     setText("");
+    setMedia(null);
     setShowStamp(true);
     onClearReply?.();
     qc.invalidateQueries({ queryKey: ["timeline"] });
@@ -57,14 +65,32 @@ export function Composer({
     return () => clearTimeout(t);
   }, [isSuccess, qc, onClearReply]);
 
+  async function onPickFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setMediaError(null);
+    setUploading(true);
+    try {
+      const r = await uploadMedia(file);
+      setMedia(r);
+      console.log("[media] uploaded", r.id, r.mime, `${r.size}b`);
+    } catch (err) {
+      console.error("[media] upload failed", err);
+      setMediaError(err instanceof Error ? err.message : "upload failed");
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  }
+
   function submit() {
     const body = text.trim();
-    if (!body) return;
+    if ((!body && !media) || uploading) return;
     writeContract({
       address: bitchanAddress,
       abi: bitchanAbi,
       functionName: "post",
-      args: [body, ZERO_BYTES32, replyTo ? BigInt(replyTo.id) : 0n, 0n],
+      args: [body, (media?.hash ?? ZERO_BYTES32) as `0x${string}`, replyTo ? BigInt(replyTo.id) : 0n, 0n],
       value: (postFee as bigint | undefined) ?? 0n,
       chainId: chain.id,
     });
@@ -130,22 +156,58 @@ export function Composer({
         className="w-full resize-none bg-transparent text-lg leading-snug placeholder:text-bone-dim/60 focus:outline-none"
       />
 
+      {media && (
+        <div className="relative mt-2 overflow-hidden rounded-xl border border-line">
+          <button
+            onClick={() => setMedia(null)}
+            className="absolute right-2 top-2 z-10 grid h-7 w-7 place-items-center rounded-full bg-ink/80 text-bone transition hover:text-seal"
+            aria-label="remove media"
+          >
+            <X size={16} strokeWidth={2.4} />
+          </button>
+          {media.mime.startsWith("video/") ? (
+            <video src={mediaUrl(media.id)} controls className="max-h-72 w-full bg-black" />
+          ) : (
+            <img src={mediaUrl(media.id)} alt="" className="max-h-72 w-full bg-ink-soft object-contain" />
+          )}
+        </div>
+      )}
+      {mediaError && <p className="mt-1 font-mono text-xs text-seal">media: {mediaError}</p>}
+
       <div className="mt-2 flex items-center justify-between gap-3">
-        <span className="font-mono text-[11px] text-bone-dim">{fee} ETH · funds the board, not ads</span>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => fileRef.current?.click()}
+            disabled={uploading}
+            className="flex items-center gap-1.5 text-sm text-bone-dim transition hover:text-brass disabled:opacity-50"
+          >
+            <ImagePlus size={18} strokeWidth={2} />
+            {uploading ? "uploading…" : "image / video"}
+          </button>
+          <span className="font-mono text-[11px] text-bone-dim">{fee} ETH · funds the board</span>
+        </div>
         <div className="flex items-center gap-3">
           <span className={`font-mono text-xs ${over ? "text-seal" : "text-bone-dim"}`}>
             {MAX - text.length}
           </span>
-          <button
+          <Button
             onClick={submit}
-            disabled={!text.trim() || over || isPending || isMining}
-            className="rounded-md bg-seal px-5 py-1.5 text-sm font-bold text-[#fff7ec] transition hover:bg-seal-bright disabled:opacity-40"
+            disabled={(!text.trim() && !media) || over || uploading || isPending || isMining}
+            className="px-5 font-bold"
           >
             {isPending ? "confirm…" : isMining ? "sealing…" : replyTo ? "Reply" : "Post"}
-          </button>
+          </Button>
         </div>
       </div>
       {error && <p className="mt-2 font-mono text-xs text-seal">{error.message.split("\n")[0]}</p>}
+
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/*,video/*"
+        onChange={onPickFile}
+        className="hidden"
+      />
     </div>
   );
 }

@@ -1,39 +1,36 @@
 import { useState } from "react";
 import { useAccount, useSignTypedData } from "wagmi";
 import { useQueryClient } from "@tanstack/react-query";
+import { Heart, MessageCircle, Repeat2, type LucideIcon } from "lucide-react";
 import type { TimelinePost } from "../lib/graphql";
 import { submitReaction, type Engagement } from "../lib/engagement";
+import { hasMedia, idFromHash, mediaUrl, useMediaInfo } from "../lib/media";
 
 export function PostCard({
   post,
   handle,
   index = 0,
   onReply,
+  onOpenProfile,
   eng,
-  viewer,
-  isFollowing,
 }: {
   post: TimelinePost;
   handle: string | null;
   index?: number;
   onReply?: (post: TimelinePost) => void;
+  onOpenProfile?: (address: `0x${string}`) => void;
   eng?: Engagement;
-  viewer?: string;
-  isFollowing?: boolean;
 }) {
   const { address, isConnected } = useAccount();
   const { signTypedDataAsync } = useSignTypedData();
   const qc = useQueryClient();
-  const [busy, setBusy] = useState<"like" | "repost" | "follow" | null>(null);
+  const [busy, setBusy] = useState<"like" | "repost" | null>(null);
 
-  const hasMedia = post.mediaHash != null && !/^0x0+$/.test(post.mediaHash);
   const isReply = post.parentId !== "0";
-
   const likes = eng?.likes ?? 0;
   const reposts = eng?.reposts ?? 0;
   const liked = eng?.likedByViewer ?? false;
   const reposted = eng?.repostedByViewer ?? false;
-  const canFollow = isConnected && !!viewer && post.author.toLowerCase() !== viewer;
 
   async function react(kind: "like" | "repost") {
     if (!address || busy) return;
@@ -49,112 +46,91 @@ export function PostCard({
     }
   }
 
-  async function toggleFollow() {
-    if (!address || busy) return;
-    setBusy("follow");
-    try {
-      await submitReaction({
-        signTypedDataAsync,
-        address,
-        kind: "follow",
-        target: post.author,
-        active: !isFollowing,
-      });
-      qc.invalidateQueries({ queryKey: ["following"] });
-    } catch (e) {
-      console.error("follow failed", e);
-    } finally {
-      setBusy(null);
-    }
-  }
-
   return (
     <li
       className="animate-fade-up border-b border-line px-4 py-3.5 transition-colors hover:bg-ink-soft/40"
       style={{ animationDelay: `${Math.min(index, 12) * 40}ms` }}
     >
       <div className="flex items-baseline gap-2">
-        <span className="truncate font-semibold text-bone">{handle ?? "anon"}</span>
-        <span className="font-mono text-xs text-bone-dim">{short(post.author)}</span>
+        <button
+          onClick={() => onOpenProfile?.(post.author)}
+          className="group flex min-w-0 items-baseline gap-2"
+        >
+          <span className="truncate font-semibold text-bone group-hover:underline">{handle ?? "anon"}</span>
+          <span className="font-mono text-xs text-bone-dim">{short(post.author)}</span>
+        </button>
         <span className="text-bone-dim">·</span>
         <span className="font-mono text-xs text-bone-dim">{timeAgo(post.createdAt)}</span>
         {isReply && (
           <span className="font-mono text-[10px] text-bone-dim">↳ re #{post.parentId}</span>
         )}
-        <div className="ml-auto flex items-center gap-2">
-          {canFollow && (
-            <button
-              onClick={toggleFollow}
-              disabled={busy !== null}
-              className={`rounded-full border px-2.5 py-0.5 text-[11px] font-semibold transition disabled:opacity-50 ${
-                isFollowing
-                  ? "border-brass text-brass"
-                  : "border-line text-bone hover:border-bone"
-              }`}
-            >
-              {isFollowing ? "Following" : "Follow"}
-            </button>
-          )}
-          <span className="font-mono text-[10px] text-bone-dim/60">#{post.id}</span>
-        </div>
+        <span className="ml-auto font-mono text-[10px] text-bone-dim/60">#{post.id}</span>
       </div>
 
-      <p className="mt-1 whitespace-pre-wrap break-words text-[15px] leading-normal text-bone">
-        {post.text}
-      </p>
-
-      {hasMedia && (
-        <div className="mt-2 flex items-center gap-2 rounded-lg border border-line bg-ink-soft/50 px-3 py-2">
-          <span className="text-brass">⛓</span>
-          <span className="font-mono text-[11px] text-bone-dim">
-            media on Arweave · {post.mediaHash.slice(0, 14)}…
-          </span>
-        </div>
+      {post.text && (
+        <p className="mt-1 whitespace-pre-wrap break-words text-[15px] leading-normal text-bone">
+          {post.text}
+        </p>
       )}
+
+      {hasMedia(post.mediaHash) && <MediaView hash={post.mediaHash} />}
 
       <div className="mt-2.5 flex items-center gap-7">
         <Action
-          glyph="↩"
+          icon={MessageCircle}
           label={post.replyCount}
           onClick={onReply ? () => onReply(post) : undefined}
           disabled={!isConnected || !onReply}
           color="bone"
         />
-        <Action
-          glyph="↺"
-          label={reposts}
-          onClick={() => react("repost")}
-          disabled={!isConnected || busy !== null}
-          active={reposted}
-          color="brass"
-        />
-        <Action
-          glyph="♥"
-          label={likes}
-          onClick={() => react("like")}
-          disabled={!isConnected || busy !== null}
-          active={liked}
-          color="seal"
-        />
-        <span className="label-civic ml-auto text-[9px] text-bone-dim/60">gasless</span>
+        <Action icon={Repeat2} label={reposts} onClick={() => react("repost")} disabled={!isConnected || busy !== null} active={reposted} color="brass" />
+        <Action icon={Heart} label={likes} onClick={() => react("like")} disabled={!isConnected || busy !== null} active={liked} filled={liked} color="seal" />
       </div>
     </li>
   );
 }
 
+function MediaView({ hash }: { hash: `0x${string}` }) {
+  const id = idFromHash(hash);
+  const { data: info, isLoading, error } = useMediaInfo(id);
+  const url = mediaUrl(id);
+
+  if (isLoading) {
+    return <div className="mt-2 h-40 animate-pulse rounded-xl border border-line bg-ink-soft/50" />;
+  }
+  if (error || !info) {
+    return (
+      <div className="mt-2 rounded-xl border border-line bg-ink-soft/50 px-3 py-2 font-mono text-[11px] text-bone-dim">
+        media unavailable · {id.slice(0, 12)}…
+      </div>
+    );
+  }
+  return (
+    <div className="mt-2 overflow-hidden rounded-xl border border-line">
+      {info.mime.startsWith("video/") ? (
+        <video src={url} controls className="max-h-[480px] w-full bg-black" />
+      ) : (
+        <img src={url} alt="" loading="lazy" className="max-h-[480px] w-full bg-ink-soft object-contain" />
+      )}
+    </div>
+  );
+}
+
 function Action({
-  glyph,
+  icon: Icon,
   label,
   onClick,
   disabled,
   active,
+  filled,
   color = "bone",
 }: {
-  glyph: string;
+  icon: LucideIcon;
   label: number;
   onClick?: () => void;
   disabled?: boolean;
   active?: boolean;
+  filled?: boolean;
   color?: "seal" | "brass" | "bone";
 }) {
   const hover = color === "seal" ? "hover:text-seal" : color === "brass" ? "hover:text-brass" : "hover:text-bone";
@@ -169,10 +145,10 @@ function Action({
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`flex items-center gap-1.5 text-xs transition disabled:opacity-50 ${activeCls} ${hover}`}
+      className={`flex items-center gap-1.5 text-xs tabular-nums transition disabled:opacity-50 ${activeCls} ${hover}`}
     >
-      <span className="text-sm">{glyph}</span>
-      {label}
+      <Icon size={17} strokeWidth={2} fill={filled ? "currentColor" : "none"} />
+      {label > 0 && label}
     </button>
   );
 }
