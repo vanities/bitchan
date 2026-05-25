@@ -35,6 +35,7 @@ contract BitchanRepublic is Bitchan, AccessControl, ReentrancyGuard {
     // ── Founding (immutable, one-way: nothing ever sets this true again) ─────
     bool public foundingPhase = true;
     address public election; // the Phase-2 election authorized to install the next president
+    address public recall; // the recall contract authorized to remove the president
 
     // ── Citizenship registry — the dumb franchise predicate ──────────────────
     mapping(address => uint64) public registeredAt; // age anchor; set on first interaction
@@ -69,6 +70,7 @@ contract BitchanRepublic is Bitchan, AccessControl, ReentrancyGuard {
     event DoNotServed(uint256 indexed postId, address indexed by, string reason, uint256 until);
     event FoundingTransitioned(uint256 atCount, uint256 atTime);
     event ElectionSet(address indexed election);
+    event RecallSet(address indexed recall);
     event CitizenshipCostChanged(uint256 newCost);
     event AgeThresholdChanged(uint64 newThreshold);
     event Slashed(address indexed who);
@@ -87,6 +89,8 @@ contract BitchanRepublic is Bitchan, AccessControl, ReentrancyGuard {
     error FoundingEnded();
     error NotElection();
     error ElectionAlreadySet();
+    error NotRecall();
+    error RecallAlreadySet();
     error TransitionNotReady();
     error RateLimited();
     error BelowFloor();
@@ -217,6 +221,22 @@ contract BitchanRepublic is Bitchan, AccessControl, ReentrancyGuard {
         if (p == address(0)) revert ZeroAddress();
         president = p;
         emit PresidentChanged(p);
+    }
+
+    /// @notice Wire the recall contract (governance, post-founding).
+    function setRecall(address r) external onlyRole(GOVERNANCE_ROLE) {
+        if (recall != address(0)) revert RecallAlreadySet();
+        recall = r;
+        emit RecallSet(r);
+    }
+
+    /// @notice Remove the sitting president after a successful recall vote.
+    ///         Leaves the office vacant until the next election fills it.
+    function removePresident() external {
+        if (msg.sender != recall) revert NotRecall();
+        if (foundingPhase) revert FoundingActive();
+        president = address(0);
+        emit PresidentChanged(address(0));
     }
 
     // ── Treasury: governance-gated, rate-limited; base drain-all disabled ────
