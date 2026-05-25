@@ -1,0 +1,34 @@
+# deps
+node_modules/
+.pnp.*
+
+# env
+.env
+.env.*
+!.env.example
+
+# foundry
+contracts/out/
+contracts/cache/
+contracts/broadcast/
+
+# ponder
+indexer/.ponder/
+indexer/generated/
+
+# vite
+web/dist/
+web/.vite/
+
+# engagement server (sqlite)
+server/*.sqlite
+server/*.sqlite-shm
+server/*.sqlite-wal
+
+# logs / os
+*.log
+.DS_Store
+.tmp/
+
+# local agent config / skills (framer-council is a symlink into another repo)
+.claude/

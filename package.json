@@ -1,0 +1,27 @@
+{
+  "name": "bitchan",
+  "private": true,
+  "version": "0.0.0",
+  "description": "An on-chain social republic. Censorship-resistant timeline on Ethereum.",
+  "workspaces": [
+    "contracts",
+    "indexer",
+    "server",
+    "web"
+  ],
+  "scripts": {
+    "dev": "bash scripts/dev.sh",
+    "anvil": "anvil --silent",
+    "seed": "bash scripts/seed.sh",
+    "sync-abi": "bash scripts/sync-abi.sh",
+    "contracts:build": "cd contracts && forge build",
+    "contracts:test": "cd contracts && forge test -vvv",
+    "contracts:deploy:local": "cd contracts && forge script script/Deploy.s.sol:Deploy --rpc-url http://127.0.0.1:8545 --broadcast",
+    "indexer:dev": "cd indexer && bun run dev",
+    "server:dev": "cd server && bun run dev",
+    "web:dev": "cd web && bun run dev"
+  },
+  "engines": {
+    "bun": ">=1.3.0"
+  }
+}
