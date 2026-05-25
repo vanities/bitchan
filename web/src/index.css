@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
 @theme {
   /* New-federalist civic tech: blue-black surfaces, cool-white text,

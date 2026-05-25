@@ -5,6 +5,7 @@ import { Heart, MessageCircle, Repeat2, type LucideIcon } from "lucide-react";
 import type { TimelinePost } from "../lib/graphql";
 import { submitReaction, type Engagement } from "../lib/engagement";
 import { hasMedia, idFromHash, mediaUrl, useMediaInfo } from "../lib/media";
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 export function PostCard({
   post,
@@ -105,14 +106,34 @@ function MediaView({ hash }: { hash: `0x${string}` }) {
       </div>
     );
   }
-  return (
-    <div className="mt-2 overflow-hidden rounded-xl border border-line">
-      {info.mime.startsWith("video/") ? (
+  if (info.mime.startsWith("video/")) {
+    return (
+      <div className="mt-2 overflow-hidden rounded-xl border border-line">
         <video src={url} controls className="max-h-[480px] w-full bg-black" />
-      ) : (
-        <img src={url} alt="" loading="lazy" className="max-h-[480px] w-full bg-ink-soft object-contain" />
-      )}
-    </div>
+      </div>
+    );
+  }
+
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <button type="button" className="mt-2 block w-full overflow-hidden rounded-xl border border-line">
+          <img
+            src={url}
+            alt=""
+            loading="lazy"
+            className="max-h-[480px] w-full cursor-zoom-in bg-ink-soft object-contain transition hover:opacity-90"
+          />
+        </button>
+      </DialogTrigger>
+      <DialogContent
+        aria-describedby={undefined}
+        className="w-auto max-w-[96vw] border-0 bg-transparent p-0 shadow-none sm:max-w-[96vw]"
+      >
+        <DialogTitle className="sr-only">Expanded image</DialogTitle>
+        <img src={url} alt="" className="max-h-[88vh] w-auto max-w-[96vw] rounded-lg object-contain" />
+      </DialogContent>
+    </Dialog>
   );
 }
 
