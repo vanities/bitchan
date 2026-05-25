@@ -154,7 +154,7 @@ export default function App() {
         </div>
 
         <aside className="sticky top-0 hidden h-screen w-[350px] shrink-0 overflow-y-auto px-6 py-5 xl:block">
-          <RepublicPanel />
+          <RepublicPanel onOpenProfile={openProfile} handles={handles} />
         </aside>
       </div>
 

@@ -1,11 +1,18 @@
 import { useEffect } from "react";
 import { useAccount, useReadContract, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 import { bitchanAbi, bitchanAddress, chain, electionAbi, electionAddress } from "../lib/contract";
+import type { Handles } from "../lib/useTimeline";
 
 const ZERO_ADDR = "0x0000000000000000000000000000000000000000" as const;
 const PHASES = ["Nomination", "Voting", "Closed"] as const;
 
-export function ElectionCard() {
+export function ElectionCard({
+  onOpenProfile,
+  handles,
+}: {
+  onOpenProfile?: (address: `0x${string}`) => void;
+  handles?: Handles;
+}) {
   const { address, isConnected } = useAccount();
   const valid = /^0x[0-9a-fA-F]{40}$/.test(electionAddress);
   const el = { address: electionAddress as `0x${string}`, abi: electionAbi, chainId: chain.id } as const;
@@ -84,10 +91,14 @@ export function ElectionCard() {
               >
                 {Number(votes[i] ?? 0n)}
               </span>
-              <span className="min-w-0 flex-1 truncate font-mono text-xs text-bone">
-                {short(c)}
+              <button
+                onClick={() => onOpenProfile?.(c)}
+                className="min-w-0 flex-1 truncate text-left text-xs text-bone hover:underline"
+                title="view profile"
+              >
+                {handles?.get(c.toLowerCase()) ?? short(c)}
                 {fin && win === c ? " · elected" : ""}
-              </span>
+              </button>
               {ph === 1 && isConnected && eligible && !voted && (
                 <button
                   onClick={() => vote(c)}
@@ -125,7 +136,10 @@ export function ElectionCard() {
         )}
         {fin && win && (
           <p className="text-center text-sm font-semibold text-bone">
-            President-elect <span className="font-mono text-brass">{short(win)}</span>
+            President-elect{" "}
+            <button onClick={() => onOpenProfile?.(win)} className="text-brass hover:underline" title="view profile">
+              {handles?.get(win.toLowerCase()) ?? short(win)}
+            </button>
           </p>
         )}
         {!isConnected && <p className="text-center text-xs text-bone-dim">Connect a wallet to vote.</p>}

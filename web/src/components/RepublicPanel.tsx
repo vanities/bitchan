@@ -5,8 +5,15 @@ import { gql, STATS_QUERY, type StatsData } from "../lib/graphql";
 import { bitchanAbi, bitchanAddress, chain } from "../lib/contract";
 import { CitizenshipCard } from "./CitizenshipCard";
 import { ElectionCard } from "./ElectionCard";
+import type { Handles } from "../lib/useTimeline";
 
-export function RepublicPanel() {
+export function RepublicPanel({
+  onOpenProfile,
+  handles,
+}: {
+  onOpenProfile?: (address: `0x${string}`) => void;
+  handles?: Handles;
+}) {
   const { data: stats } = useQuery({
     queryKey: ["stats"],
     queryFn: () => gql<StatsData>(STATS_QUERY),
@@ -62,7 +69,7 @@ export function RepublicPanel() {
 
       <CitizenshipCard />
 
-      <ElectionCard />
+      <ElectionCard onOpenProfile={onOpenProfile} handles={handles} />
 
       <section className="overflow-hidden rounded-lg border border-line bg-panel/60">
         <header className="flex items-center justify-between border-b border-line px-4 py-2.5">
