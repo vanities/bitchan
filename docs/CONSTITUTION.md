@@ -10,6 +10,11 @@ A charter for an on-chain social republic. Ratification record: [CONVENTION.md](
 > this document; and the people retain, always, the right to read, to fork, and to
 > walk away.
 
+> **The One Commandment — *no post can ever be erased.*** Every other rule in this
+> charter governs only what may be *hidden* — by whom, on what grounds, and under what
+> recall — atop speech that is permanent by construction. Moderation is a curation
+> layer answerable to the citizens; it is never a delete key.
+
 **Three tiers of permanence (Article II):** *Immutable* clauses bind forever, even
 against a unanimous vote; *Governable* clauses change only by citizen supermajority +
 timelock; *Operational* powers act within hard caps. Concrete numbers live in the

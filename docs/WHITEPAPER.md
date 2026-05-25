@@ -9,12 +9,13 @@ owner can delete speech, shadowban silently, and rewrite the rules overnight, wi
 accountability to the people who live there. The decentralized alternatives fix the
 *infrastructure* but punt on *governance* — moderation devolves to whoever runs a
 relay, a client, or a labeler, or to no one at all. bitchan takes a third path: a
-**self-governing on-chain republic.** Speech is immutable — it can be *hidden*, never
-*deleted*. The government is **elected, transparent, and recallable.** And the system
-is engineered so that **no actor — not even a malicious president — can destroy it**,
-because the destructive levers do not exist in the non-upgradeable core. This paper
-describes the architecture, the constitution, the sybil-economics, and the threat
-model.
+**self-governing on-chain republic.** Its one commandment: **no post can ever be
+erased** — speech may be *hidden*, never *deleted*. Its wedge, which no other platform
+has: **moderation answers to a government the citizens elect and can recall** — not a
+company, not fragmented relay operators, not no one. And the system is engineered so
+that **no actor — not even a malicious president — can destroy it**, because the
+destructive levers do not exist in the non-upgradeable core. This paper describes the
+architecture, the constitution, the sybil-economics, and the threat model.
 
 ## 1. The problem: capture vs. anarchy
 
@@ -39,12 +40,19 @@ and bitchan treats it as one.
 | **Lens** | mostly on-chain (+ Momoka DA) | protocol DAO; not moderation-of-feed |
 | **Bluesky / AT** | federated servers (not a chain) | composable labelers; company runs the app |
 | **DeSo** | bespoke L1 | node + app level |
+| **Reddit** *(centralized)* | private servers | volunteer mods, **self-appointed** via succession; paid admins above |
 | **bitchan** | **posts on Ethereum L1** + Arweave media | **elected, on-chain, recallable government** |
 
-Every prior system decentralizes the *pipes* and leaves governance to a company, to
-fragmented operators, or to nobody. bitchan is *more* on-chain than Farcaster for
-content, and it adds the layer none of them have: a constitutional government of the
-commons.
+The column that matters is the last one. Centralized platforms appoint moderators by
+fiat — and even Reddit's "community" mods are self-appointed through succession, never
+elected by the community they police. Decentralized platforms abolish moderation
+*governance* altogether (pick a relay, a client, a labeler). **No social network —
+centralized or decentralized — has ever made its moderators answer to a government the
+users elect and can recall.** That empty quadrant is bitchan's wedge: a constitutional
+government of the commons, atop a substrate *more* on-chain than Farcaster's. (We elect
+the government that appoints moderators rather than electing each moderator directly —
+a deliberate single accountability chain — but every individual moderation act is
+contestable by any citizen before the judiciary.)
 
 ## 3. Architecture
 
