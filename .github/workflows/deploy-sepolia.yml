@@ -1,0 +1,39 @@
+name: Deploy (Sepolia)
+
+# Manual trigger only. Requires two repo secrets:
+#   DEPLOYER_PK      — a funded Sepolia deployer key (get test ETH from a faucet)
+#   SEPOLIA_RPC_URL  — an https RPC (Alchemy/Infura/etc.)
+# Optional: ETHERSCAN_API_KEY to also verify the contracts (uncomment --verify).
+on:
+  workflow_dispatch:
+    inputs:
+      citizen_target:
+        description: "Citizens to end founding (T)"
+        default: "10"
+
+jobs:
+  deploy:
+    name: deploy governance stack to Sepolia
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: foundry-rs/foundry-toolchain@v1
+      - name: deploy
+        working-directory: contracts
+        env:
+          DEPLOYER_PK: ${{ secrets.DEPLOYER_PK }}
+          SEPOLIA_RPC_URL: ${{ secrets.SEPOLIA_RPC_URL }}
+          CITIZEN_TARGET: ${{ github.event.inputs.citizen_target }}
+        run: |
+          forge script script/DeployAll.s.sol:DeployAll \
+            --rpc-url "$SEPOLIA_RPC_URL" \
+            --broadcast \
+            -vvv
+          # add `--verify` above (and an ETHERSCAN_API_KEY secret) to verify on Etherscan
+      - name: upload broadcast artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: sepolia-broadcast
+          path: contracts/broadcast/**/*.json
