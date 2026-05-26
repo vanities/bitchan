@@ -15,6 +15,7 @@ export function RepublicPanel({
   handles?: Handles;
 }) {
   const stats = useConvexQuery(api.stats.stats, {});
+  const activity = useConvexQuery(api.governance.recent, { limit: 8 });
   const { data: treasury } = useReadContract({
     address: bitchanAddress,
     abi: bitchanAbi,
@@ -96,6 +97,27 @@ export function RepublicPanel({
         )}
       </section>
 
+      {activity && activity.length > 0 && (
+        <section className="overflow-hidden rounded-lg border border-line bg-panel/60">
+          <header className="border-b border-line px-4 py-2.5">
+            <h2 className="label-civic text-[10px] text-bone-dim">republic activity</h2>
+          </header>
+          <ul className="divide-y divide-line">
+            {activity.map((e, i) => (
+              <li key={i} className="flex items-start gap-2.5 px-4 py-2.5">
+                <span className={`mt-1 inline-block h-1.5 w-1.5 shrink-0 rounded-full ${kindColor(e.kind)}`} />
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs leading-snug text-bone">{e.summary}</p>
+                  <p className="label-civic mt-0.5 text-[9px] text-bone-dim">
+                    {e.kind} · {ago(e.at)}
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       <section className="rounded-lg border border-line p-4">
         <h2 className="text-lg font-bold text-bone">The republic</h2>
         <p className="mt-1.5 text-sm leading-relaxed text-bone-dim">
@@ -127,6 +149,20 @@ function Stat({ label, value }: { label: string; value: string }) {
       <div className="label-civic mt-1.5 text-[9px] text-bone-dim">{label}</div>
     </div>
   );
+}
+
+function kindColor(kind: string): string {
+  if (kind === "treasury" || kind === "moderation" || kind === "slash") return "bg-seal";
+  if (kind === "citizen" || kind === "president" || kind === "founding") return "bg-brass";
+  return "bg-bone-dim";
+}
+
+function ago(at: number): string {
+  const s = Math.floor((Date.now() - at) / 1000);
+  if (s < 60) return `${s}s`;
+  if (s < 3600) return `${Math.floor(s / 60)}m`;
+  if (s < 86400) return `${Math.floor(s / 3600)}h`;
+  return `${Math.floor(s / 86400)}d`;
 }
 
 function trim(s: string) {

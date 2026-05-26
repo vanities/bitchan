@@ -46,6 +46,24 @@ export default defineSchema({
     lastBlock: v.number(),
   }).index("by_chainId", ["chainId"]),
 
+  // Citizenship census — indexed from CitizenshipClaimed / InviteRedeemed.
+  citizens: defineTable({
+    address: v.string(),
+    via: v.union(v.literal("claim"), v.literal("invite")),
+    invitedBy: v.optional(v.string()),
+    at: v.number(),
+  }).index("by_address", ["address"]),
+
+  // Chronological governance log — the transparency feed (the product, not an admin panel).
+  // `at` is index time (≈ block time for live events, since the cron runs every 30s).
+  govLog: defineTable({
+    kind: v.string(), // citizen | president | treasury | moderation | founding | param | slash | wiring
+    actor: v.optional(v.string()),
+    summary: v.string(),
+    blockNumber: v.number(),
+    at: v.number(),
+  }).index("by_at", ["at"]),
+
   // Media: content-addressed by sha256 (= the on-chain bytes32 mediaHash). Bytes
   // live in Convex file storage (deletable, so illegal content can be taken down —
   // see [[bitchan-convex-backend]]); screened by an NSFW check before storage.

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAccount } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { ArrowLeft, CircleUser, Landmark, Newspaper, Search } from "lucide-react";
+import { ArrowLeft, CircleUser, Landmark, Scale, Search } from "lucide-react";
 import { Composer, type ReplyTarget } from "./components/Composer";
 import { Feed, Notice } from "./components/Feed";
 import { SearchView } from "./components/SearchView";
@@ -10,12 +10,12 @@ import { RepublicPanel } from "./components/RepublicPanel";
 import { useTimeline, type TimelinePost } from "./lib/useTimeline";
 import { useFollowing } from "./lib/engagement";
 
-type View = "home" | "search" | "dispatches" | "profile";
+type View = "home" | "search" | "republic" | "profile";
 
 const NAV = [
   { key: "home", label: "The Square", Icon: Landmark },
   { key: "search", label: "Search", Icon: Search },
-  { key: "dispatches", label: "Dispatches", Icon: Newspaper },
+  { key: "republic", label: "Republic", Icon: Scale },
   { key: "citizen", label: "Citizen", Icon: CircleUser },
 ] as const;
 type NavKey = (typeof NAV)[number]["key"];
@@ -23,7 +23,7 @@ type NavKey = (typeof NAV)[number]["key"];
 const TITLES: Record<View, string> = {
   home: "The Square",
   search: "Search",
-  dispatches: "Dispatches",
+  republic: "The Republic",
   profile: "Profile",
 };
 
@@ -142,8 +142,10 @@ export default function App() {
               <SearchView posts={posts} handles={handles} onReply={startReply} onOpenProfile={openProfile} loading={isLoading} error={error} />
             )}
 
-            {view === "dispatches" && (
-              <Feed posts={posts} handles={handles} onReply={startReply} onOpenProfile={openProfile} loading={isLoading} error={error} empty={<Notice>No dispatches yet — the republic is quiet.</Notice>} />
+            {view === "republic" && (
+              <div className="px-4 py-5">
+                <RepublicPanel onOpenProfile={openProfile} handles={handles} />
+              </div>
             )}
 
             {view === "profile" && (
@@ -152,9 +154,11 @@ export default function App() {
           </main>
         </div>
 
-        <aside className="sticky top-0 hidden h-screen w-[350px] shrink-0 overflow-y-auto px-6 py-5 xl:block">
-          <RepublicPanel onOpenProfile={openProfile} handles={handles} />
-        </aside>
+        {view !== "republic" && (
+          <aside className="sticky top-0 hidden h-screen w-[350px] shrink-0 overflow-y-auto px-6 py-5 xl:block">
+            <RepublicPanel onOpenProfile={openProfile} handles={handles} />
+          </aside>
+        )}
       </div>
 
       <BottomNav view={view} onNav={nav} />

@@ -1,7 +1,7 @@
 import { internalAction, internalMutation, internalQuery } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { v } from "convex/values";
-import { createPublicClient, http, parseAbiItem } from "viem";
+import { createPublicClient, http, parseAbiItem, formatEther } from "viem";
 
 // The events we materialize. Engagement (likes/reposts/follows) is gasless and
 // lives in `reactions`, not here.
@@ -11,6 +11,24 @@ const POSTED = parseAbiItem(
 const HIDDEN = parseAbiItem("event Hidden(uint256 indexed postId, address indexed by, string reason)");
 const UNHIDDEN = parseAbiItem("event Unhidden(uint256 indexed postId, address indexed by)");
 const HANDLE_SET = parseAbiItem("event HandleSet(address indexed account, string handle)");
+
+// Governance events (all emitted by the Republic contract). Election/recall/
+// judiciary live on separate per-instance contracts — not indexed here yet.
+const CITIZENSHIP_CLAIMED = parseAbiItem("event CitizenshipClaimed(address indexed who)");
+const INVITE_REDEEMED = parseAbiItem("event InviteRedeemed(address indexed who, address indexed inviter, bytes32 indexed code)");
+const PRESIDENT_CHANGED = parseAbiItem("event PresidentChanged(address indexed newPresident)");
+const TREASURY_WITHDRAWN = parseAbiItem("event TreasuryWithdrawn(address indexed to, uint256 amount)");
+const DO_NOT_SERVED = parseAbiItem("event DoNotServed(uint256 indexed postId, address indexed by, string reason, uint256 until)");
+const FOUNDING_TRANSITIONED = parseAbiItem("event FoundingTransitioned(uint256 atCount, uint256 atTime)");
+const POST_FEE_CHANGED = parseAbiItem("event PostFeeChanged(uint256 newFee)");
+const CITIZENSHIP_COST_CHANGED = parseAbiItem("event CitizenshipCostChanged(uint256 newCost)");
+const AGE_THRESHOLD_CHANGED = parseAbiItem("event AgeThresholdChanged(uint64 newThreshold)");
+const SLASHED = parseAbiItem("event Slashed(address indexed who)");
+const ELECTION_SET = parseAbiItem("event ElectionSet(address indexed election)");
+const RECALL_SET = parseAbiItem("event RecallSet(address indexed recall)");
+
+const short = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`;
+const isZero = (a: string) => /^0x0+$/.test(a);
 
 const CHUNK = 4000n;
 
@@ -67,13 +85,22 @@ export const poll = internalAction({
 
     const logs = await client.getLogs({
       address,
-      events: [POSTED, HIDDEN, UNHIDDEN, HANDLE_SET],
+      events: [
+        POSTED, HIDDEN, UNHIDDEN, HANDLE_SET,
+        CITIZENSHIP_CLAIMED, INVITE_REDEEMED, PRESIDENT_CHANGED, TREASURY_WITHDRAWN,
+        DO_NOT_SERVED, FOUNDING_TRANSITIONED, POST_FEE_CHANGED, CITIZENSHIP_COST_CHANGED,
+        AGE_THRESHOLD_CHANGED, SLASHED, ELECTION_SET, RECALL_SET,
+      ],
       fromBlock: from,
       toBlock: to,
     });
 
     for (const log of logs) {
       const a = log.args as Record<string, unknown>;
+      const blk = Number(log.blockNumber);
+      const at = Date.now();
+      const gov = (kind: string, summary: string, actor?: string) =>
+        ctx.runMutation(internal.governance.appendLog, { kind, summary, actor, blockNumber: blk, at });
       switch (log.eventName) {
         case "Posted": {
           const author = (a.author as string).toLowerCase();
@@ -112,6 +139,57 @@ export const poll = internalAction({
             handle: a.handle as string,
             firstSeenAt: 0,
           });
+          break;
+        case "CitizenshipClaimed": {
+          const who = (a.who as string).toLowerCase();
+          await ctx.runMutation(internal.governance.recordCitizen, { address: who, via: "claim", at });
+          await gov("citizen", `${short(who)} claimed citizenship`, who);
+          break;
+        }
+        case "InviteRedeemed": {
+          const who = (a.who as string).toLowerCase();
+          const inviter = (a.inviter as string).toLowerCase();
+          await ctx.runMutation(internal.governance.recordCitizen, { address: who, via: "invite", invitedBy: inviter, at });
+          await gov("citizen", `${short(who)} joined via invite from ${short(inviter)}`, who);
+          break;
+        }
+        case "PresidentChanged": {
+          const p = (a.newPresident as string).toLowerCase();
+          await gov("president", isZero(p) ? "president removed" : `president set to ${short(p)}`, isZero(p) ? undefined : p);
+          break;
+        }
+        case "TreasuryWithdrawn": {
+          const to = (a.to as string).toLowerCase();
+          await gov("treasury", `withdrew ${formatEther(a.amount as bigint)} Ξ to ${short(to)}`, to);
+          break;
+        }
+        case "DoNotServed": {
+          const by = (a.by as string).toLowerCase();
+          await gov("moderation", `do-not-serve #${(a.postId as bigint).toString()}: ${a.reason as string}`, by);
+          break;
+        }
+        case "FoundingTransitioned":
+          await gov("founding", `founding ended at ${(a.atCount as bigint).toString()} citizens`);
+          break;
+        case "PostFeeChanged":
+          await gov("param", `post fee set to ${formatEther(a.newFee as bigint)} Ξ`);
+          break;
+        case "CitizenshipCostChanged":
+          await gov("param", `citizenship cost set to ${formatEther(a.newCost as bigint)} Ξ`);
+          break;
+        case "AgeThresholdChanged":
+          await gov("param", `age threshold set to ${(a.newThreshold as bigint).toString()}s`);
+          break;
+        case "Slashed": {
+          const who = (a.who as string).toLowerCase();
+          await gov("slash", `slashed ${short(who)}`, who);
+          break;
+        }
+        case "ElectionSet":
+          await gov("wiring", "election contract wired");
+          break;
+        case "RecallSet":
+          await gov("wiring", "recall contract wired");
           break;
       }
     }
