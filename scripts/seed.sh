@@ -5,8 +5,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 RPC="${RPC:-http://127.0.0.1:8545}"
 export FOUNDRY_DISABLE_NIGHTLY_WARNING=1
 
-ADDR="${BITCHAN_ADDRESS:-$(grep -h '^BITCHAN_ADDRESS=' "$ROOT/indexer/.env.local" 2>/dev/null | cut -d= -f2)}"
-ADDR="${ADDR:-0x5FbDB2315678afecb367f032d93F642f64180aa3}"
+ADDR="${BITCHAN_ADDRESS:-0x5FbDB2315678afecb367f032d93F642f64180aa3}"
 
 # Anvil dev accounts (local only).
 PK0=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80

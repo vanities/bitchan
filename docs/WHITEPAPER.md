@@ -82,9 +82,10 @@ reads the same chain. The default experience is governed; the substrate is not. 
 is the ultimate backstop against capture: you cannot destroy a credibly-neutral
 substrate, only the default UI on top of it.
 
-**Stack.** Solidity 0.8.30 + Foundry; Ponder indexer (chain → GraphQL); a Bun
-engagement server; Vite + React frontend. **Ethereum L1 only — no L2**, because an L2
-sequencer is a single point of censorship that would undercut the entire thesis.
+**Stack.** Solidity 0.8.30 + Foundry; **Convex** for the off-chain backend (a
+chain-indexing cron materializes the read model; a Node action verifies the gasless
+EIP-712 social layer); Vite + React frontend. **Ethereum L1 only — no L2**, because an
+L2 sequencer is a single point of censorship that would undercut the entire thesis.
 
 ## 4. The constitution: a governed commons
 
@@ -166,14 +167,16 @@ not claim to be perfect — it claims to be **un-destroyable.**
 
 ## 7. Status & roadmap
 
-- **Built (M0–M2):** the monorepo, the `Bitchan` contract + tests, the Ponder indexer,
-  the gasless engagement server, and a mobile-first React frontend — posts, replies,
-  gasless likes/reposts/follows, timelines, search, profiles. Verified end-to-end.
+- **Built (M0–M2):** the monorepo, the `Bitchan` contract + tests, a **Convex** backend
+  (chain-indexing cron + gasless EIP-712 engagement), and a mobile-first React frontend —
+  posts, replies, gasless likes/reposts/follows, timelines, search, profiles. Verified
+  end-to-end.
 - **Designed & ratified:** the constitution (this paper's governance section), passed by
   the full 42-framer convention.
-- **Next (M3–M4):** the governance contracts — roles, moderation, citizenship registry,
-  treasury, the founder transition, and the right-of-contest — built to the ratified
-  spec, with the immutable bounds enforced in the non-upgradeable core.
+- **Built & deployed (M3–M4):** the governance contracts — roles, moderation, citizenship
+  registry, rate-limited treasury, the founder transition, elections, recall, and the
+  right-of-contest — built to the ratified spec with the immutable bounds enforced in the
+  non-upgradeable core, **live on Sepolia** behind a 97-test Foundry suite.
 
 ## Conclusion
 

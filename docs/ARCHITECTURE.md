@@ -4,10 +4,12 @@
 > forever on Ethereum + Arweave, governance is transparent and elected, and the
 > feed algorithm is yours to swap. Mobile-first.
 
-**Status:** M0 done, M1 mostly done — the skeleton is **built and runs locally**
-(Anvil + contract + Ponder + web, one command: `bun run dev`). Fresh build —
-*not* a continuation of the 2020–2023 Truffle/Ropsten repo (that toolchain is
-dead). See the repo `README.md` for how to run it.
+**Status:** M0–M4 built. Posts, gasless social, and the full elected-government
+layer (roles, moderation, citizenship, treasury, elections, recall, judiciary)
+are **deployed live on Sepolia**, backed by **Convex** (cloud read model + a
+chain-indexing cron + signature-verifying engagement). `bun run dev` runs the app
+against Sepolia. Fresh build — *not* a continuation of the 2020–2023
+Truffle/Ropsten repo (that toolchain is dead). See the repo `README.md`.
 
 ---
 
@@ -77,16 +79,17 @@ authorship.
 - Roles (AccessControl), governance proposals / votes, treasury balance, fee params
 - Handle registry (handle → address), account registration + timestamp
 
-**On-chain events (no storage; Ponder materializes):**
+**On-chain events (no storage; the Convex indexer materializes):**
 - `Posted(id, author, contentHash, parentId, quotedId, fee)` — posts + replies
 - `Hidden / Unhidden(postId, by, reason)` — moderation
 
 **Gasless, off-chain (NOT on-chain):** likes, reposts and follows are **EIP-712
 signed messages** — no transaction, no gas, no per-action wallet cost — verified
-and stored by the `server/` package. A like as an L1 tx would cost gas + a wallet
-popup every time, which kills casual engagement. (The contract still has
-`like()/repost()/follow()` for an optional on-chain path, but the app uses the
-gasless server.) This mirrors Farcaster: on-chain anchor, off-chain signed social.
+in a **Convex Node action** (`verifyTypedData` recovers the signer) and stored in
+Convex. A like as an L1 tx would cost gas + a wallet popup every time, which kills
+casual engagement. (The contract still has `like()/repost()/follow()` for an
+optional on-chain path, but the app uses the gasless Convex path.) This mirrors
+Farcaster: on-chain anchor, off-chain signed social.
 
 **Contracts (modular, lean MVP):**
 - `Accounts` — handle registry + profile hash + registration
@@ -103,13 +106,17 @@ Arweave → gets TXID → submits TXID + metadata in the post tx.
 - **Arweave (via Irys / Turbo bundler):** images, video, long-form text,
   profile assets. Pay-once, ~permanent, content-addressed, sub-cent per item.
   Immutable — satisfies the one condition for going off-chain.
-- **Ponder indexer (TS):** subscribes to contract events → read model → GraphQL.
-  Materializes the timeline + threads from `Posted`; applies hide events. Same
-  TS/viem mental model as the frontend.
-- **Engagement server (`server/`):** Bun + Hono + `bun:sqlite`. Accepts EIP-712
-  signed likes/reposts/follows, verifies the signature recovers to the claimed
-  signer (viem `verifyTypedData`), stores the toggle, and serves counts. The
-  gasless social layer.
+- **Convex (`web/convex/`):** the whole off-chain backend, in the cloud.
+  - *Indexer cron* — a scheduled action polls the chain (viem `getLogs` for
+    `Posted` / `Hidden` / `Unhidden` / `HandleSet`) and materializes the
+    `posts` / `accounts` read model; `useQuery` makes the timeline reactive.
+  - *Engagement* — a Node action verifies EIP-712 likes/reposts/follows
+    (`verifyTypedData`) and stores the toggle; queries serve counts + viewer
+    state. (Verification must run in a Node action — the Convex query/mutation
+    runtime forbids the dynamic import viem uses.)
+  Replaces the old Ponder indexer + Bun engagement server (both removed). Because
+  Convex runs in the cloud it can only index a **public** chain, so the app dev
+  loop runs against **Sepolia**, not local Anvil.
 - **Optional IPFS mirror** for fast gateway reads; Arweave is the durable copy.
 
 ## 6. Costs (real numbers)
@@ -145,37 +152,37 @@ bitchan is designed mobile-first — the timeline is a phone experience.
 | Layer | Choice |
 |---|---|
 | Monorepo | **Bun** workspaces (≥ 1.3) — runtime + package manager |
-| Contracts | Solidity 0.8.30, **Foundry 1.6**. OpenZeppelin v5 (AccessControl / Governor / Timelock) lands at **M3** — M0/M1 uses a minimal `president` |
-| Permanent storage | Arweave via Irys / Turbo SDK (planned — M1; today media is a hash placeholder) |
-| Indexer | **Ponder 0.16** (TS → GraphQL / SQL); CORS-enabled for the SPA |
-| Engagement | **`server/`** — Bun + Hono + `bun:sqlite` + viem; gasless EIP-712 likes/reposts/follows |
+| Contracts | Solidity 0.8.30, **Foundry 1.6**. OpenZeppelin v5 (AccessControl / Governor / Timelock) — the full governance layer is built + deployed |
+| Permanent storage | Arweave via Irys / Turbo SDK (media upload still being wired — task #17) |
+| Backend | **Convex** (cloud): reactive read model, a chain-indexing cron, and a Node action that verifies gasless EIP-712 likes/reposts/follows |
 | Frontend | **Vite 6 + React 18 + TypeScript** SPA, **Tailwind v4** (mobile-first) |
 | Web3 | **viem 2 + wagmi 2 + RainbowKit 2** — pinned to v2; RainbowKit has no wagmi-v3 support yet, revisit when it ships |
-| Networks | **Local Anvil (dev)** → Sepolia (testnet) → Ethereum L1 mainnet. **No L2.** |
+| Networks | **Sepolia** (the live app + Convex index) → Ethereum L1 mainnet. Local Anvil for contract/Foundry work only. **No L2.** |
 
 ## 9. Repo layout (Bun workspaces monorepo)
 
 ```
 bitchan/
   contracts/   # Foundry: src/ test/ script/
-  indexer/     # Ponder (chain events -> GraphQL)
-  server/      # gasless engagement (signed likes/reposts/follows)
   web/         # Vite + React SPA (mobile-first)
+    convex/    # Convex backend: indexer cron + gasless engagement + read model
   docs/
     ARCHITECTURE.md   <- this file
 ```
 
 ## 10. Roadmap
 
-- **M0 — Skeleton.** ✅ *Done.* Foundry + Vite + Ponder wired together on local
-  Anvil via `bun run dev`; mobile-responsive shell; RainbowKit wallet connect.
-- **M1 — Post.** 🚧 Done: text posts, handles, `post()` + fee → treasury, the
-  global chronological timeline, likes/replies/follows (events + indexer).
-  Remaining: real **Arweave upload** for images (the contract already carries a
-  media hash; the upload path isn't wired yet).
-- **M2 — Social.** Follow graph, Following timeline, replies / threads, likes, reposts.
-- **M3 — Governance.** AccessControl roles, custodian hide / moderation, president.
-- **M4 — Elections.** Governor + Timelock, voting eligibility, treasury disbursement.
+- **M0 — Skeleton.** ✅ *Done.* Foundry + Vite + backend wired via `bun run dev`;
+  mobile-responsive shell; RainbowKit wallet connect.
+- **M1 — Post.** ✅ *Done* (except media): text posts, handles, `post()` + fee →
+  treasury, the global chronological timeline. Remaining: real **Arweave upload**
+  for images (the contract already carries a media hash; task #17).
+- **M2 — Social.** ✅ *Done.* Follow graph, Following timeline, replies / threads,
+  gasless likes / reposts.
+- **M3 — Governance.** ✅ *Done.* AccessControl roles, custodian hide / moderation,
+  the founding-phase president, citizenship registry, rate-limited treasury.
+- **M4 — Elections.** ✅ *Done & deployed to Sepolia.* Governor + Timelock (per-citizen
+  `_getVotes`), election + recall + judiciary, voting eligibility.
 - **M5 — Polish.** Off-chain For You ranking, notifications (web push), search, profiles.
 
 ## 11. Open decisions

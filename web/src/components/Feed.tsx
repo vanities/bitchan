@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import { useAccount, useReadContract } from "wagmi";
-import type { TimelinePost } from "../lib/graphql";
-import type { Handles } from "../lib/useTimeline";
+import type { TimelinePost, Handles } from "../lib/useTimeline";
 import { useEngagement } from "../lib/engagement";
 import { bitchanAbi, bitchanAddress, chain, ZERO_BYTES32 } from "../lib/contract";
 import { PostCard } from "./PostCard";
@@ -49,8 +48,8 @@ export function Feed({
   if (error) {
     return (
       <Notice>
-        the indexer is offline — start it with{" "}
-        <code className="font-mono text-bone">bun run indexer:dev</code>
+        the backend is unreachable — check{" "}
+        <code className="font-mono text-bone">VITE_CONVEX_URL</code>
       </Notice>
     );
   }

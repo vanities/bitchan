@@ -1,10 +1,9 @@
-import { useEffect, useState } from "react";
-import { useAccount, useSignTypedData, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
-import { useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import { useAccount, useSignTypedData, useWriteContract } from "wagmi";
 import { EyeOff, Heart, MessageCircle, Repeat2, type LucideIcon } from "lucide-react";
-import type { TimelinePost } from "../lib/graphql";
+import type { TimelinePost } from "../lib/useTimeline";
 import { submitReaction, type Engagement } from "../lib/engagement";
-import { hasMedia, idFromHash, mediaUrl, useMediaInfo } from "../lib/media";
+import { hasMedia, mediaUrl, useMediaInfo } from "../lib/media";
 import { bitchanAbi, bitchanAddress, chain } from "../lib/contract";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
@@ -27,17 +26,12 @@ export function PostCard({
 }) {
   const { address, isConnected } = useAccount();
   const { signTypedDataAsync } = useSignTypedData();
-  const qc = useQueryClient();
   const [busy, setBusy] = useState<"like" | "repost" | null>(null);
   const [revealed, setRevealed] = useState(false);
   const [hiding, setHiding] = useState(false);
   const [reason, setReason] = useState("spam");
 
-  const { data: hideHash, writeContract: writeHide } = useWriteContract();
-  const { isSuccess: hideMined } = useWaitForTransactionReceipt({ hash: hideHash });
-  useEffect(() => {
-    if (hideMined) qc.invalidateQueries({ queryKey: ["timeline"] });
-  }, [hideMined, qc]);
+  const { writeContract: writeHide } = useWriteContract();
 
   const isReply = post.parentId !== "0";
   const likes = eng?.likes ?? 0;
@@ -51,7 +45,6 @@ export function PostCard({
     try {
       const active = kind === "like" ? !liked : !reposted;
       await submitReaction({ signTypedDataAsync, address, kind, target: post.id, active });
-      qc.invalidateQueries({ queryKey: ["engagement"] });
     } catch (e) {
       console.error("reaction failed", e);
     } finally {
@@ -149,17 +142,16 @@ export function PostCard({
 }
 
 function MediaView({ hash }: { hash: `0x${string}` }) {
-  const id = idFromHash(hash);
-  const { data: info, isLoading, error } = useMediaInfo(id);
-  const url = mediaUrl(id);
+  const info = useMediaInfo(hash);
+  const url = mediaUrl(hash);
 
-  if (isLoading) {
+  if (info === undefined) {
     return <div className="mt-2 h-40 animate-pulse rounded-xl border border-line bg-ink-soft/50" />;
   }
-  if (error || !info) {
+  if (info === null) {
     return (
       <div className="mt-2 rounded-xl border border-line bg-ink-soft/50 px-3 py-2 font-mono text-[11px] text-bone-dim">
-        media unavailable · {id.slice(0, 12)}…
+        media unavailable · {hash.slice(0, 12)}…
       </div>
     );
   }

@@ -1,6 +1,5 @@
 import { useState } from "react";
-import type { TimelinePost } from "../lib/graphql";
-import type { Handles } from "../lib/useTimeline";
+import type { TimelinePost, Handles } from "../lib/useTimeline";
 import { Feed, Notice } from "./Feed";
 
 export function SearchView({

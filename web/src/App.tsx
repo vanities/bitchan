@@ -7,9 +7,8 @@ import { Feed, Notice } from "./components/Feed";
 import { SearchView } from "./components/SearchView";
 import { ProfileView } from "./components/ProfileView";
 import { RepublicPanel } from "./components/RepublicPanel";
-import { useTimeline } from "./lib/useTimeline";
+import { useTimeline, type TimelinePost } from "./lib/useTimeline";
 import { useFollowing } from "./lib/engagement";
-import type { TimelinePost } from "./lib/graphql";
 
 type View = "home" | "search" | "dispatches" | "profile";
 

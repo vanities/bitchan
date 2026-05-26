@@ -5,11 +5,15 @@ build, plus the test strategy, the UI surface, and the backend logic it requires
 constitution says **why**; this says **what to build**. Concrete numbers come from the
 [Parameters table](CONSTITUTION.md#parameters).*
 
+> **Status (built):** Phase 1 + Phase 2 contracts are built, tested (97 Foundry tests),
+> and **deployed to Sepolia**; the Republic UI ships citizenship + elections. Remaining:
+> indexing governance events into Convex (task #21) and election-cadence automation.
+
 ## The governing principle
 
 The core is **non-upgradeable** → a bug in it is **unfixable.** So the on-chain code
 must be minimal and boring. Everything clever — reputation, sybil-detection,
-invite-graph health, rep-weighted discounts — lives **off-chain** (indexer/server),
+invite-graph health, rep-weighted discounts — lives **off-chain** (Convex),
 where it's cheap and fixable, and may only *recommend*; the chain executes one-line
 actions. **Dumb primitives on-chain, smart brains off-chain** (same pattern as gasless
 likes). *Simple is better — this can balloon into something we can't safely code in
@@ -191,25 +195,27 @@ Same split as everywhere: **the chain executes one-liners; the backend indexes a
 recommends.** Extensive structured logging on every handler, route, and on-chain
 round-trip (AI-written code is buggy — log the full event → state transition).
 
-### Ponder indexer (read model → GraphQL)
-Index the new governance events and materialize queryable state for the UI:
+### Convex indexer (reactive read model)
+Extend the chain-indexing cron to materialize governance state for the UI (see
+ARCHITECTURE.md §5 for the backend shape):
 - `citizens`, `citizenship` (claims / invites / slashes), `roleGrants` (custodians)
 - `moderationActions` (hide / unhide / do-not-serve / reaffirm — actor, reason, expiry)
 - `treasuryFlows` (in / out), `elections` (candidacy / votes / result),
   `recalls` (petitions / votes), `contests` (filed / ruled)
 - Derived: current president, custodian roster, founding progress, the treasury ledger,
   live tallies, recall progress. Apply `hide`/`do-not-serve` to the timeline read model.
+  *(posts + moderation are indexed today; the governance events above are task #21.)*
 
-### Engagement server (Bun + Hono + sqlite) — the brains that *recommend, never execute*
-- Keep gasless EIP-712 for likes/reposts/follows. **Voting is NOT gasless** — a vote is
-  consequential and must be the citizen's own signed tx with the franchise predicate
-  enforced on-chain.
+### Convex engagement + recommenders — the brains that *recommend, never execute*
+- Gasless EIP-712 likes/reposts/follows are verified in a Convex Node action. **Voting is
+  NOT gasless** — a vote is consequential and must be the citizen's own signed tx with the
+  franchise predicate enforced on-chain.
 - Off-chain services that **recommend** (a custodian/governance then executes the
   one-liner on-chain): invite-graph / sybil health → `slash` candidates; reputation
   (tenure + honest-graph standing, never likes) → fee/cost discounts (future); contest
   deliberation threads (discussion off-chain, verdict on-chain).
 - **Boundary discipline (Art. VII §6 / X):** any off-chain system that touches
-  eligibility must be **named, published, and its outputs contestable.** The server
+  eligibility must be **named, published, and its outputs contestable.** The backend
   never holds a key that unilaterally executes a consequential on-chain action.
 
 ---

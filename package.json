@@ -5,8 +5,6 @@
   "description": "An on-chain social republic. Censorship-resistant timeline on Ethereum.",
   "workspaces": [
     "contracts",
-    "indexer",
-    "server",
     "web"
   ],
   "scripts": {
@@ -17,8 +15,7 @@
     "contracts:build": "cd contracts && forge build",
     "contracts:test": "cd contracts && forge test -vvv",
     "contracts:deploy:local": "cd contracts && forge script script/Deploy.s.sol:Deploy --rpc-url http://127.0.0.1:8545 --broadcast",
-    "indexer:dev": "cd indexer && bun run dev",
-    "server:dev": "cd server && bun run dev",
+    "convex:dev": "cd web && bunx convex dev",
     "web:dev": "cd web && bun run dev"
   },
   "engines": {

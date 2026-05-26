@@ -1,23 +1,54 @@
-import { useQuery } from "@tanstack/react-query";
-import { gql, TIMELINE_QUERY, type TimelineData } from "./graphql";
+import { useQuery } from "convex/react";
+import { api } from "../../convex/_generated/api";
 
 export type Handles = Map<string, string | null>;
 
-/** Shared timeline query — react-query dedupes by key, so every view reads one fetch. */
+export type TimelinePost = {
+  id: string;
+  author: `0x${string}`;
+  text: string;
+  mediaHash: `0x${string}`;
+  parentId: string;
+  quotedId: string;
+  likeCount: number;
+  replyCount: number;
+  repostCount: number;
+  hidden: boolean;
+  hiddenReason: string | null;
+  hiddenBy: `0x${string}` | null;
+  createdAt: string;
+};
+
+export type AccountRow = { address: `0x${string}`; handle: string | null };
+
+/** Shared timeline — Convex useQuery is reactive, so every view shares one live subscription. */
 export function useTimeline() {
-  const q = useQuery({
-    queryKey: ["timeline"],
-    queryFn: () => gql<TimelineData>(TIMELINE_QUERY),
-    refetchInterval: 5000,
-  });
+  const rows = useQuery(api.posts.timeline, { limit: 100 });
+  const accts = useQuery(api.accounts.list, {});
 
   const handles: Handles = new Map();
-  for (const a of q.data?.accounts.items ?? []) handles.set(a.address.toLowerCase(), a.handle);
+  for (const a of accts ?? []) handles.set(a.address.toLowerCase(), a.handle);
+
+  const posts: TimelinePost[] = (rows ?? []).map((p) => ({
+    id: p.id,
+    author: p.author as `0x${string}`,
+    text: p.text,
+    mediaHash: p.mediaHash as `0x${string}`,
+    parentId: p.parentId,
+    quotedId: p.quotedId,
+    likeCount: p.likeCount,
+    replyCount: p.replyCount,
+    repostCount: p.repostCount,
+    hidden: p.hidden,
+    hiddenReason: p.hiddenReason,
+    hiddenBy: p.hiddenBy as `0x${string}` | null,
+    createdAt: String(p.createdAt),
+  }));
 
   return {
-    posts: q.data?.posts.items ?? [],
+    posts,
     handles,
-    isLoading: q.isLoading,
-    error: q.error,
+    isLoading: rows === undefined,
+    error: undefined as unknown,
   };
 }

@@ -1,7 +1,7 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery as useConvexQuery } from "convex/react";
 import { useReadContract } from "wagmi";
 import { formatEther } from "viem";
-import { gql, STATS_QUERY, type StatsData } from "../lib/graphql";
+import { api } from "../../convex/_generated/api";
 import { bitchanAbi, bitchanAddress, chain } from "../lib/contract";
 import { CitizenshipCard } from "./CitizenshipCard";
 import { ElectionCard } from "./ElectionCard";
@@ -14,11 +14,7 @@ export function RepublicPanel({
   onOpenProfile?: (address: `0x${string}`) => void;
   handles?: Handles;
 }) {
-  const { data: stats } = useQuery({
-    queryKey: ["stats"],
-    queryFn: () => gql<StatsData>(STATS_QUERY),
-    refetchInterval: 8000,
-  });
+  const stats = useConvexQuery(api.stats.stats, {});
   const { data: treasury } = useReadContract({
     address: bitchanAddress,
     abi: bitchanAbi,
@@ -53,8 +49,8 @@ export function RepublicPanel({
     chainId: chain.id,
   });
 
-  const posts = stats?.posts.totalCount ?? 0;
-  const citizens = citizenCountRaw !== undefined ? Number(citizenCountRaw) : (stats?.accounts.totalCount ?? 0);
+  const posts = stats?.posts ?? 0;
+  const citizens = citizenCountRaw !== undefined ? Number(citizenCountRaw) : (stats?.accounts ?? 0);
   const Tn = targetT !== undefined ? Number(targetT) : 0;
   const pct = Tn > 0 ? Math.min(100, Math.round((citizens / Tn) * 100)) : 0;
   const treasuryEth = treasury !== undefined ? trim(formatEther(treasury as bigint)) : "—";

@@ -5,7 +5,6 @@ import {
   useWaitForTransactionReceipt,
   useWriteContract,
 } from "wagmi";
-import { useQueryClient } from "@tanstack/react-query";
 import { formatEther } from "viem";
 import { ImagePlus, X } from "lucide-react";
 import { bitchanAbi, bitchanAddress, chain, ZERO_BYTES32 } from "../lib/contract";
@@ -33,7 +32,6 @@ export function Composer({
   const [uploading, setUploading] = useState(false);
   const [mediaError, setMediaError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
-  const qc = useQueryClient();
 
   const { data: postFee } = useReadContract({
     address: bitchanAddress,
@@ -59,11 +57,9 @@ export function Composer({
     setMedia(null);
     setShowStamp(true);
     onClearReply?.();
-    qc.invalidateQueries({ queryKey: ["timeline"] });
-    qc.invalidateQueries({ queryKey: ["stats"] });
     const t = setTimeout(() => setShowStamp(false), 1600);
     return () => clearTimeout(t);
-  }, [isSuccess, qc, onClearReply]);
+  }, [isSuccess, onClearReply]);
 
   async function onPickFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -73,7 +69,7 @@ export function Composer({
     try {
       const r = await uploadMedia(file);
       setMedia(r);
-      console.log("[media] uploaded", r.id, r.mime, `${r.size}b`);
+      console.log("[media] uploaded", r.hash, r.mime, `${r.size}b`);
     } catch (err) {
       console.error("[media] upload failed", err);
       setMediaError(err instanceof Error ? err.message : "upload failed");
@@ -166,9 +162,9 @@ export function Composer({
             <X size={16} strokeWidth={2.4} />
           </button>
           {media.mime.startsWith("video/") ? (
-            <video src={mediaUrl(media.id)} controls className="max-h-72 w-full bg-black" />
+            <video src={mediaUrl(media.hash)} controls className="max-h-72 w-full bg-black" />
           ) : (
-            <img src={mediaUrl(media.id)} alt="" className="max-h-72 w-full bg-ink-soft object-contain" />
+            <img src={mediaUrl(media.hash)} alt="" className="max-h-72 w-full bg-ink-soft object-contain" />
           )}
         </div>
       )}

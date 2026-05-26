@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAccount, useSignTypedData, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
-import { useQueryClient } from "@tanstack/react-query";
-import type { TimelinePost } from "../lib/graphql";
-import type { Handles } from "../lib/useTimeline";
+import type { TimelinePost, Handles } from "../lib/useTimeline";
 import { bitchanAbi, bitchanAddress, chain } from "../lib/contract";
 import { submitReaction, useFollowing } from "../lib/engagement";
 import { Feed, Notice } from "./Feed";
@@ -27,7 +25,6 @@ export function ProfileView({
 }) {
   const { address: viewerAddr, isConnected } = useAccount();
   const { signTypedDataAsync } = useSignTypedData();
-  const qc = useQueryClient();
   const [handleInput, setHandleInput] = useState("");
   const [busyFollow, setBusyFollow] = useState(false);
 
@@ -36,8 +33,7 @@ export function ProfileView({
   useEffect(() => {
     if (!isSuccess) return;
     setHandleInput("");
-    qc.invalidateQueries({ queryKey: ["timeline"] });
-  }, [isSuccess, qc]);
+  }, [isSuccess]);
 
   const { data: followingArr } = useFollowing(viewerAddr);
 
@@ -61,7 +57,6 @@ export function ProfileView({
     setBusyFollow(true);
     try {
       await submitReaction({ signTypedDataAsync, address: viewerAddr, kind: "follow", target: addr, active: !isFollowing });
-      qc.invalidateQueries({ queryKey: ["following"] });
     } catch (e) {
       console.error("follow failed", e);
     } finally {

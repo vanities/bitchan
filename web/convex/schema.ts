@@ -45,4 +45,15 @@ export default defineSchema({
     chainId: v.number(),
     lastBlock: v.number(),
   }).index("by_chainId", ["chainId"]),
+
+  // Media: content-addressed by sha256 (= the on-chain bytes32 mediaHash). Bytes
+  // live in Convex file storage (deletable, so illegal content can be taken down —
+  // see [[bitchan-convex-backend]]); screened by an NSFW check before storage.
+  media: defineTable({
+    hash: v.string(), // "0x" + sha256(content) hex — matches the on-chain mediaHash
+    storageId: v.id("_storage"),
+    mime: v.string(),
+    size: v.number(),
+    createdAt: v.number(),
+  }).index("by_hash", ["hash"]),
 });
