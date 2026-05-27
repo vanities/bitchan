@@ -1,4 +1,5 @@
-import { useQuery } from "convex/react";
+import { useCallback } from "react";
+import { useQuery, usePaginatedQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { usePref } from "./prefs";
 
@@ -23,9 +24,17 @@ export type TimelinePost = {
 
 export type AccountRow = { address: `0x${string}`; handle: string | null };
 
-/** Shared timeline — Convex useQuery is reactive, so every view shares one live subscription. */
+const PAGE = 30;
+
+/** Shared timeline — Convex is reactive, so every view shares one live subscription.
+ * Paginated: the home feed loads more on scroll; other views filter the loaded set. */
 export function useTimeline() {
-  const rows = useQuery(api.posts.timeline, { limit: 100 });
+  const {
+    results: rows,
+    status,
+    loadMore: loadMoreRaw,
+  } = usePaginatedQuery(api.posts.timeline, {}, { initialNumItems: PAGE });
+  const loadMore = useCallback(() => loadMoreRaw(PAGE), [loadMoreRaw]);
   const accts = useQuery(api.accounts.list, {});
   // Blocked authors (viewer-local) are removed everywhere; muted authors stay but
   // their cards collapse (handled in PostCard). See [[bitchan-design-principles]].
@@ -38,7 +47,7 @@ export function useTimeline() {
     avatars.set(a.address.toLowerCase(), a.avatar);
   }
 
-  const posts: TimelinePost[] = (rows ?? [])
+  const posts: TimelinePost[] = rows
     .filter((p) => !blocked.includes(p.author.toLowerCase()))
     .map((p) => ({
       id: p.id,
@@ -60,7 +69,9 @@ export function useTimeline() {
     posts,
     handles,
     avatars,
-    isLoading: rows === undefined,
+    isLoading: status === "LoadingFirstPage",
     error: undefined as unknown,
+    loadMore,
+    canLoadMore: status === "CanLoadMore",
   };
 }

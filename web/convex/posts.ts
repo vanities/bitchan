@@ -1,4 +1,5 @@
 import { internalMutation, query } from "./_generated/server";
+import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
 
 const postShape = {
@@ -106,30 +107,32 @@ export const getById = query({
   },
 });
 
-/// The timeline read model — newest first.
+/// The timeline read model — newest first, paginated (infinite scroll).
 export const timeline = query({
-  args: { limit: v.optional(v.number()) },
-  returns: v.array(v.object(postShape)),
-  handler: async (ctx, { limit }) => {
-    const rows = await ctx.db
+  args: { paginationOpts: paginationOptsValidator },
+  handler: async (ctx, { paginationOpts }) => {
+    const result = await ctx.db
       .query("posts")
       .withIndex("by_createdAt")
       .order("desc")
-      .take(limit ?? 100);
-    return rows.map((p) => ({
-      id: p.onchainId,
-      author: p.author,
-      text: p.text,
-      mediaHash: p.mediaHash,
-      parentId: p.parentId,
-      quotedId: p.quotedId,
-      likeCount: p.likeCount,
-      repostCount: p.repostCount,
-      replyCount: p.replyCount,
-      hidden: p.hidden,
-      hiddenReason: p.hiddenReason ?? null,
-      hiddenBy: p.hiddenBy ?? null,
-      createdAt: p.createdAt,
-    }));
+      .paginate(paginationOpts);
+    return {
+      ...result,
+      page: result.page.map((p) => ({
+        id: p.onchainId,
+        author: p.author,
+        text: p.text,
+        mediaHash: p.mediaHash,
+        parentId: p.parentId,
+        quotedId: p.quotedId,
+        likeCount: p.likeCount,
+        repostCount: p.repostCount,
+        replyCount: p.replyCount,
+        hidden: p.hidden,
+        hiddenReason: p.hiddenReason ?? null,
+        hiddenBy: p.hiddenBy ?? null,
+        createdAt: p.createdAt,
+      })),
+    };
   },
 });

@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { useAccount, useReadContract } from "wagmi";
 import type { TimelinePost, Handles } from "../lib/useTimeline";
 import { useEngagement } from "../lib/engagement";
@@ -19,6 +19,8 @@ export function Feed({
   error,
   empty,
   depths,
+  onLoadMore,
+  canLoadMore,
 }: {
   posts: TimelinePost[];
   handles: Handles;
@@ -32,6 +34,9 @@ export function Feed({
   empty?: ReactNode;
   // Optional reply-nesting depth per post id (thread view); 0/absent = top level.
   depths?: Map<string, number>;
+  // Infinite scroll (home feed only): called when the sentinel scrolls into view.
+  onLoadMore?: () => void;
+  canLoadMore?: boolean;
 }) {
   const { address } = useAccount();
   const { data: engagement } = useEngagement(
@@ -86,7 +91,31 @@ export function Feed({
           depth={depths?.get(p.id) ?? 0}
         />
       ))}
+      {onLoadMore && canLoadMore && <LoadMoreSentinel onLoadMore={onLoadMore} />}
     </ul>
+  );
+}
+
+// Fires onLoadMore when scrolled near the bottom (infinite scroll). Only mounted
+// while there's more to load, so it can't loop.
+function LoadMoreSentinel({ onLoadMore }: { onLoadMore: () => void }) {
+  const ref = useRef<HTMLLIElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) onLoadMore();
+      },
+      { rootMargin: "600px" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [onLoadMore]);
+  return (
+    <li ref={ref} className="py-6 text-center text-xs text-bone-dim">
+      loading more…
+    </li>
   );
 }
 

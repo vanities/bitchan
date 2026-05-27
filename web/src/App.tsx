@@ -88,7 +88,7 @@ export default function App() {
   const [pendingHandle, setPendingHandle] = useState<string | null>(null);
   const [postId, setPostId] = useState<string | null>(null);
   const [tagParam, setTagParam] = useState<string | null>(null);
-  const { posts, handles, avatars, isLoading, error } = useTimeline();
+  const { posts, handles, avatars, isLoading, error, loadMore, canLoadMore } = useTimeline();
   const { address } = useAccount();
   const { data: followingArr } = useFollowing(address);
   const notifs = useNotifications(address, address ? handles.get(address.toLowerCase()) : undefined);
@@ -289,6 +289,8 @@ export default function App() {
                   onQuote={startQuote}
                   loading={isLoading}
                   error={error}
+                  onLoadMore={homeFilter === "all" ? loadMore : undefined}
+                  canLoadMore={homeFilter === "all" && canLoadMore}
                   empty={
                     homeFilter === "following" ? (
                       <Notice>
