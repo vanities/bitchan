@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useAccount, useSignTypedData, useWriteContract } from "wagmi";
 import { EyeOff, Heart, MessageCircle, Quote, Repeat2, type LucideIcon } from "lucide-react";
 import type { TimelinePost, Handles } from "../lib/useTimeline";
-import { submitReaction, type Engagement } from "../lib/engagement";
+import { submitReaction, useReactors, type Engagement } from "../lib/engagement";
 import { hasMedia, mediaUrl, useMediaInfo } from "../lib/media";
 import { bitchanAbi, bitchanAddress, chain } from "../lib/contract";
 import { useEnsName } from "../lib/ens";
@@ -11,6 +11,7 @@ import { firstEmbed } from "../lib/embeds";
 import { usePref } from "../lib/prefs";
 import { Embed } from "./Embed";
 import { PostMenu } from "./PostMenu";
+import { AccountList } from "./AccountList";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 export function PostCard({
@@ -57,6 +58,8 @@ export function PostCard({
   const { has: isMuted } = usePref("muted");
   const muted = isMuted(post.author);
   const [mutedShown, setMutedShown] = useState(false);
+  const [reactorList, setReactorList] = useState<"like" | "repost" | null>(null);
+  const { data: reactorAddrs } = useReactors(post.id, reactorList ?? "like", reactorList !== null);
   // Optimistic overrides for instant feedback; cleared once the reactive query catches up.
   const liked = optLike ?? eng?.likedByViewer ?? false;
   const reposted = optRepost ?? eng?.repostedByViewer ?? false;
@@ -206,6 +209,7 @@ export function PostCard({
               icon={Repeat2}
               label={reposts}
               onClick={() => react("repost")}
+              onCountClick={reposts > 0 ? () => setReactorList("repost") : undefined}
               disabled={!isConnected || busy !== null}
               active={reposted}
               color="brass"
@@ -214,6 +218,7 @@ export function PostCard({
               icon={Heart}
               label={likes}
               onClick={() => react("like")}
+              onCountClick={likes > 0 ? () => setReactorList("like") : undefined}
               disabled={!isConnected || busy !== null}
               active={liked}
               filled={liked}
@@ -257,6 +262,18 @@ export function PostCard({
             </div>
           )}
         </>
+      )}
+      {reactorList && (
+        <AccountList
+          title={reactorList === "like" ? "Liked by" : "Reposted by"}
+          addresses={reactorAddrs}
+          handles={handles ?? new Map()}
+          onOpenProfile={(a) => {
+            setReactorList(null);
+            onOpenProfile?.(a);
+          }}
+          onClose={() => setReactorList(null)}
+        />
       )}
     </li>
   );
@@ -311,6 +328,7 @@ function Action({
   icon: Icon,
   label,
   onClick,
+  onCountClick,
   disabled,
   active,
   filled,
@@ -319,6 +337,7 @@ function Action({
   icon: LucideIcon;
   label: number;
   onClick?: () => void;
+  onCountClick?: () => void; // clicking the count opens the liked-by/reposted-by list
   disabled?: boolean;
   active?: boolean;
   filled?: boolean;
@@ -334,14 +353,25 @@ function Action({
         : "text-bone"
     : "text-bone-dim";
   return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      className={`flex items-center gap-1.5 text-xs tabular-nums transition disabled:opacity-50 ${activeCls} ${hover}`}
-    >
-      <Icon size={17} strokeWidth={2} fill={filled ? "currentColor" : "none"} />
-      {label > 0 && label}
-    </button>
+    <div className={`flex items-center gap-1.5 text-xs tabular-nums ${activeCls}`}>
+      <button onClick={onClick} disabled={disabled} className={`transition disabled:opacity-50 ${hover}`}>
+        <Icon size={17} strokeWidth={2} fill={filled ? "currentColor" : "none"} />
+      </button>
+      {label > 0 &&
+        (onCountClick ? (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onCountClick();
+            }}
+            className={`transition hover:underline ${hover}`}
+          >
+            {label}
+          </button>
+        ) : (
+          <span>{label}</span>
+        ))}
+    </div>
   );
 }
 

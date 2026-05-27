@@ -22,7 +22,14 @@ export const writeReaction = internalMutation({
       .unique();
     const at = Date.now();
     if (existing) await ctx.db.patch(existing._id, { active: a.active, at });
-    else await ctx.db.insert("reactions", { account: a.account, kind: a.kind, target: a.target, active: a.active, at });
+    else
+      await ctx.db.insert("reactions", {
+        account: a.account,
+        kind: a.kind,
+        target: a.target,
+        active: a.active,
+        at,
+      });
     console.log(`[react] ${a.active ? "+" : "-"}${a.kind} ${a.target} by ${a.account}`);
     return null;
   },
@@ -97,6 +104,19 @@ export const following = query({
       .withIndex("by_account_kind_target", (q) => q.eq("account", account.toLowerCase()).eq("kind", "follow"))
       .collect();
     return { following: rows.filter((r) => r.active).map((r) => r.target) };
+  },
+});
+
+/// Accounts that liked or reposted a post — for the "liked by" / "reposted by" lists.
+export const reactors = query({
+  args: { target: v.string(), kind: v.union(v.literal("like"), v.literal("repost")) },
+  returns: v.object({ accounts: v.array(v.string()) }),
+  handler: async (ctx, { target, kind }) => {
+    const rows = await ctx.db
+      .query("reactions")
+      .withIndex("by_kind_target", (q) => q.eq("kind", kind).eq("target", target.toLowerCase()))
+      .collect();
+    return { accounts: rows.filter((r) => r.active).map((r) => r.account) };
   },
 });
 

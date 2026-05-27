@@ -27,10 +27,7 @@ export type ReactionKind = "like" | "repost" | "follow";
 
 /** Live like/repost counts (+ viewer state) for a batch of posts. */
 export function useEngagement(postIds: string[], viewer?: string) {
-  const rows = useQuery(
-    api.engagement.engagement,
-    postIds.length > 0 ? { postIds, viewer } : "skip",
-  );
+  const rows = useQuery(api.engagement.engagement, postIds.length > 0 ? { postIds, viewer } : "skip");
   let data: EngagementMap | undefined;
   if (rows) {
     data = {};
@@ -58,6 +55,12 @@ export function useFollowers(account?: string) {
   return { data: res ? res.followers.map((a) => a.toLowerCase()) : undefined };
 }
 
+/** Lowercased accounts that liked/reposted `target`, fetched only when `enabled`. */
+export function useReactors(target: string, kind: "like" | "repost", enabled: boolean) {
+  const res = useQuery(api.engagement.reactors, enabled ? { target, kind } : "skip");
+  return { data: res ? res.accounts.map((a) => a.toLowerCase()) : undefined };
+}
+
 /** Live notifications for a viewer (replies/mentions/follows/likes/reposts). */
 export function useNotifications(viewer?: string, handle?: string | null) {
   return useQuery(api.notifications.feed, viewer ? { viewer, handle: handle ?? undefined } : "skip");
@@ -80,7 +83,10 @@ export async function submitReaction(opts: {
 }): Promise<void> {
   // One wallet popup authorizes a browser session key; reactions after that are
   // signed silently by the delegate key (no popup) until it expires.
-  const session = await getSession(opts.address, opts.signTypedDataAsync as unknown as Parameters<typeof getSession>[1]);
+  const session = await getSession(
+    opts.address,
+    opts.signTypedDataAsync as unknown as Parameters<typeof getSession>[1],
+  );
   const delegate = privateKeyToAccount(session.privateKey);
   const nonce = BigInt(Date.now());
   const signature = await delegate.signTypedData({
