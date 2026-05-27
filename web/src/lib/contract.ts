@@ -12,7 +12,7 @@ export const rpcUrl = isSepolia
 
 // Per-network contract defaults; override any with the matching VITE_*_ADDRESS.
 const ANVIL_REPUBLIC = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
-const SEPOLIA_REPUBLIC = "0x999b0cC06B0511017c0076efe458568977ff9E33";
+const SEPOLIA_REPUBLIC = "0x53Fe019128e41fCA367Afc5CF004A9e63eae8ebd";
 
 export const bitchanAddress = (import.meta.env.VITE_BITCHAN_ADDRESS ??
   (isSepolia ? SEPOLIA_REPUBLIC : ANVIL_REPUBLIC)) as `0x${string}`;

@@ -6,6 +6,7 @@ import {TimelockController} from "@openzeppelin/contracts/governance/TimelockCon
 import {BitchanRepublic} from "../src/BitchanRepublic.sol";
 import {BitchanGovernor} from "../src/BitchanGovernor.sol";
 import {BitchanJudiciary} from "../src/BitchanJudiciary.sol";
+import {BitchanElections} from "../src/BitchanElections.sol";
 
 /// @notice Deploys + wires the full persistent governance stack:
 ///   Timelock -> Republic(governance = timelock) -> Governor -> Judiciary.
@@ -22,7 +23,13 @@ contract DeployAll is Script {
 
     function run()
         external
-        returns (BitchanRepublic republic, BitchanGovernor governor, BitchanJudiciary judiciary, TimelockController timelock)
+        returns (
+            BitchanRepublic republic,
+            BitchanGovernor governor,
+            BitchanJudiciary judiciary,
+            TimelockController timelock,
+            BitchanElections elections
+        )
     {
         uint256 pk = vm.envOr("DEPLOYER_PK", ANVIL_PK);
         uint256 fee = vm.envOr("POST_FEE_WEI", uint256(0.0001 ether));
@@ -39,6 +46,10 @@ contract DeployAll is Script {
         governor = new BitchanGovernor(republic, timelock);
         judiciary = new BitchanJudiciary(republic, 3 days);
 
+        // Recurring annual elections, wired once (deployer is president during setup).
+        elections = new BitchanElections(republic);
+        republic.setElection(address(elections));
+
         // The Governor proposes & cancels; anyone may execute once the delay elapses.
         timelock.grantRole(timelock.PROPOSER_ROLE(), address(governor));
         timelock.grantRole(timelock.CANCELLER_ROLE(), address(governor));
@@ -52,6 +63,7 @@ contract DeployAll is Script {
         console2.log("timelock:", address(timelock));
         console2.log("governor:", address(governor));
         console2.log("judiciary:", address(judiciary));
+        console2.log("elections:", address(elections));
         console2.log("president (founder):", deployer);
     }
 }
