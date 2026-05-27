@@ -52,6 +52,12 @@ export function useFollowing(account?: string) {
   return { data: res ? res.following.map((a) => a.toLowerCase()) : undefined };
 }
 
+/** Lowercased set of addresses that follow `account` (live). */
+export function useFollowers(account?: string) {
+  const res = useQuery(api.engagement.followers, account ? { account } : "skip");
+  return { data: res ? res.followers.map((a) => a.toLowerCase()) : undefined };
+}
+
 type SignTypedDataAsync = (args: {
   domain: typeof engagementDomain;
   types: typeof engagementTypes;

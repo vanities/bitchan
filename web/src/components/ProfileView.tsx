@@ -4,9 +4,10 @@ import { keccak256, stringToBytes } from "viem";
 import type { TimelinePost, Handles } from "../lib/useTimeline";
 import { bitchanAbi, bitchanAddress, chain, explorerAddress } from "../lib/contract";
 import { useEnsName } from "../lib/ens";
-import { submitReaction, useFollowing } from "../lib/engagement";
+import { submitReaction, useFollowing, useFollowers } from "../lib/engagement";
 import { Feed, Notice } from "./Feed";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 
 export function ProfileView({
   address,
@@ -43,6 +44,9 @@ export function ProfileView({
 
   const { data: followingArr } = useFollowing(viewerAddr);
   const { data: ensName } = useEnsName(address);
+  const { data: profileFollowing } = useFollowing(address ?? undefined);
+  const { data: profileFollowers } = useFollowers(address ?? undefined);
+  const [listView, setListView] = useState<"following" | "followers" | null>(null);
 
   // Pre-check handle availability (debounced) so we error before signing a tx that
   // would revert HandleTaken. Key matches the contract: keccak256(bytes(handle)).
@@ -69,6 +73,8 @@ export function ProfileView({
   const handle = handles.get(addr) ?? null;
   const theirPosts = posts.filter((p) => p.author.toLowerCase() === addr);
   const isFollowing = new Set(followingArr ?? []).has(addr);
+  const followingCount = profileFollowing?.length ?? 0;
+  const followerCount = profileFollowers?.length ?? 0;
   const handleOwnerLc = typeof handleOwner === "string" ? handleOwner.toLowerCase() : null;
   const handleTaken =
     !!handleOwnerLc && handleOwnerLc !== "0x0000000000000000000000000000000000000000" && handleOwnerLc !== addr;
@@ -135,6 +141,23 @@ export function ProfileView({
           </div>
         </div>
 
+        <div className="mt-3 flex gap-4 text-sm">
+          <button
+            onClick={() => setListView("following")}
+            disabled={!followingCount}
+            className="transition hover:underline disabled:opacity-50"
+          >
+            <span className="font-bold text-bone">{followingCount}</span> <span className="text-bone-dim">Following</span>
+          </button>
+          <button
+            onClick={() => setListView("followers")}
+            disabled={!followerCount}
+            className="transition hover:underline disabled:opacity-50"
+          >
+            <span className="font-bold text-bone">{followerCount}</span> <span className="text-bone-dim">Followers</span>
+          </button>
+        </div>
+
         {isSelf && (
           <div className="mt-4 flex gap-2">
             <input
@@ -174,6 +197,62 @@ export function ProfileView({
         error={error}
         empty={<Notice>{isSelf ? "You haven't posted yet — head to The Square." : "No posts yet."}</Notice>}
       />
+
+      {listView && (
+        <FollowList
+          title={listView === "following" ? "Following" : "Followers"}
+          addresses={listView === "following" ? (profileFollowing ?? []) : (profileFollowers ?? [])}
+          handles={handles}
+          onOpenProfile={(a) => {
+            setListView(null);
+            onOpenProfile?.(a);
+          }}
+          onClose={() => setListView(null)}
+        />
+      )}
     </div>
+  );
+}
+
+function FollowList({
+  title,
+  addresses,
+  handles,
+  onOpenProfile,
+  onClose,
+}: {
+  title: string;
+  addresses: string[];
+  handles: Handles;
+  onOpenProfile?: (a: `0x${string}`) => void;
+  onClose: () => void;
+}) {
+  return (
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-sm border-line bg-ink p-0">
+        <DialogTitle className="border-b border-line px-4 py-3 text-sm font-bold text-bone">{title}</DialogTitle>
+        <ul className="max-h-[60vh] overflow-y-auto">
+          {addresses.length === 0 && <li className="px-4 py-6 text-center text-sm text-bone-dim">Nobody yet.</li>}
+          {addresses.map((a) => (
+            <li key={a}>
+              <button
+                onClick={() => onOpenProfile?.(a as `0x${string}`)}
+                className="flex w-full items-center gap-2 px-4 py-2.5 text-left transition hover:bg-ink-soft"
+              >
+                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-seal text-xs font-bold text-white">
+                  {(handles.get(a.toLowerCase()) ?? "a")[0]!.toUpperCase()}
+                </span>
+                <span className="min-w-0">
+                  <span className="block truncate text-sm font-semibold text-bone">{handles.get(a.toLowerCase()) ?? "anon"}</span>
+                  <span className="block truncate font-mono text-[11px] text-bone-dim">
+                    {a.slice(0, 10)}…{a.slice(-6)}
+                  </span>
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -98,3 +98,16 @@ export const following = query({
     return { following: rows.filter((r) => r.active).map((r) => r.target) };
   },
 });
+
+/// The set of addresses that follow an account (reverse of following).
+export const followers = query({
+  args: { account: v.string() },
+  returns: v.object({ followers: v.array(v.string()) }),
+  handler: async (ctx, { account }) => {
+    const rows = await ctx.db
+      .query("reactions")
+      .withIndex("by_kind_target", (q) => q.eq("kind", "follow").eq("target", account.toLowerCase()))
+      .collect();
+    return { followers: rows.filter((r) => r.active).map((r) => r.account) };
+  },
+});
