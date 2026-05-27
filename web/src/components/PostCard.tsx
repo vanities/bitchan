@@ -21,6 +21,7 @@ export function PostCard({
   onReply,
   onOpenProfile,
   onOpenPost,
+  onOpenTag,
   onQuote,
   canModerate,
   eng,
@@ -34,6 +35,7 @@ export function PostCard({
   onReply?: (post: TimelinePost) => void;
   onOpenProfile?: (address: `0x${string}`) => void;
   onOpenPost?: (post: TimelinePost) => void;
+  onOpenTag?: (tag: string) => void;
   onQuote?: (post: TimelinePost) => void;
   canModerate?: boolean;
   eng?: Engagement;
@@ -172,7 +174,7 @@ export function PostCard({
                   onClick={onOpenPost ? () => onOpenPost(post) : undefined}
                   className={`mt-1 whitespace-pre-wrap break-words text-[15px] leading-normal text-bone ${onOpenPost ? "cursor-pointer" : ""}`}
                 >
-                  {renderText(post.text, handles, onOpenProfile)}
+                  {renderText(post.text, handles, onOpenProfile, onOpenTag)}
                 </p>
               )}
               {quotedPost && (
@@ -382,7 +384,12 @@ function short(addr: string) {
 // Linkify @handle mentions (→ profile links, resolved against the address→handle
 // map) and URLs (→ new-tab links). stopPropagation so a link/mention click doesn't
 // also open the post thread.
-function renderText(text: string, handles: Handles | undefined, onOpenProfile?: (a: `0x${string}`) => void) {
+function renderText(
+  text: string,
+  handles: Handles | undefined,
+  onOpenProfile?: (a: `0x${string}`) => void,
+  onOpenTag?: (tag: string) => void,
+) {
   const rev = new Map<string, string>();
   if (handles) for (const [addr, h] of handles) if (h) rev.set(h.toLowerCase(), addr);
   return tokenize(text).map((tok, i) => {
@@ -403,6 +410,20 @@ function renderText(text: string, handles: Handles | undefined, onOpenProfile?: 
         );
       }
       return `@${tok.handle}`;
+    }
+    if (tok.type === "hashtag") {
+      return (
+        <button
+          key={i}
+          onClick={(e) => {
+            e.stopPropagation();
+            onOpenTag?.(tok.tag);
+          }}
+          className="text-brass hover:underline"
+        >
+          #{tok.tag}
+        </button>
+      );
     }
     if (tok.type === "url") {
       return (

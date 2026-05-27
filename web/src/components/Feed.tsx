@@ -13,6 +13,7 @@ export function Feed({
   onReply,
   onOpenProfile,
   onOpenPost,
+  onOpenTag,
   onQuote,
   loading,
   error,
@@ -24,6 +25,7 @@ export function Feed({
   onReply?: (post: TimelinePost) => void;
   onOpenProfile?: (address: `0x${string}`) => void;
   onOpenPost?: (post: TimelinePost) => void;
+  onOpenTag?: (tag: string) => void;
   onQuote?: (post: TimelinePost) => void;
   loading?: boolean;
   error?: unknown;
@@ -75,6 +77,7 @@ export function Feed({
           onReply={onReply}
           onOpenProfile={onOpenProfile}
           onOpenPost={onOpenPost}
+          onOpenTag={onOpenTag}
           onQuote={onQuote}
           canModerate={canModerate}
           eng={engagement?.[p.id]}

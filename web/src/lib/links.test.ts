@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { tokenize } from "./links";
+import { tokenize, topHashtags } from "./links";
 
 describe("tokenize", () => {
   it("returns a single text token for plain text", () => {
@@ -38,6 +38,24 @@ describe("tokenize", () => {
       { type: "text", value: " check " },
       { type: "url", href: "https://b.io" },
       { type: "text", value: " done" },
+    ]);
+  });
+
+  it("splits out #hashtags but not a # inside a word", () => {
+    expect(tokenize("gm #bitchan c#sharp")).toEqual([
+      { type: "text", value: "gm " },
+      { type: "hashtag", tag: "bitchan" },
+      { type: "text", value: " c#sharp" },
+    ]);
+  });
+});
+
+describe("topHashtags", () => {
+  it("ranks tags by number of posts using them (once per post), case-insensitively", () => {
+    const posts = ["#gm #bitchan", "#Bitchan again", "no tags", "#bitchan #bitchan dupes"];
+    expect(topHashtags(posts)).toEqual([
+      { tag: "bitchan", count: 3 },
+      { tag: "gm", count: 1 },
     ]);
   });
 });

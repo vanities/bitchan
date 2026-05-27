@@ -28,6 +28,7 @@ export function ProfileView({
   onReply,
   onOpenProfile,
   onOpenPost,
+  onOpenTag,
   onQuote,
   loading,
   error,
@@ -39,6 +40,7 @@ export function ProfileView({
   onReply?: (post: TimelinePost) => void;
   onOpenProfile?: (address: `0x${string}`) => void;
   onOpenPost?: (post: TimelinePost) => void;
+  onOpenTag?: (tag: string) => void;
   onQuote?: (post: TimelinePost) => void;
   loading?: boolean;
   error?: unknown;
@@ -295,6 +297,7 @@ export function ProfileView({
         onReply={onReply}
         onOpenProfile={onOpenProfile}
         onOpenPost={onOpenPost}
+        onOpenTag={onOpenTag}
         onQuote={onQuote}
         loading={loading}
         error={error}

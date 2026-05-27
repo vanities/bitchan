@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type { TimelinePost, Handles } from "../lib/useTimeline";
+import { topHashtags } from "../lib/links";
 import { Feed, Notice } from "./Feed";
 
 export function SearchView({
@@ -8,6 +9,7 @@ export function SearchView({
   onReply,
   onOpenProfile,
   onOpenPost,
+  onOpenTag,
   onQuote,
   loading,
   error,
@@ -17,6 +19,7 @@ export function SearchView({
   onReply?: (post: TimelinePost) => void;
   onOpenProfile?: (address: `0x${string}`) => void;
   onOpenPost?: (post: TimelinePost) => void;
+  onOpenTag?: (tag: string) => void;
   onQuote?: (post: TimelinePost) => void;
   loading?: boolean;
   error?: unknown;
@@ -30,6 +33,7 @@ export function SearchView({
           (handles.get(p.author.toLowerCase()) ?? "").toLowerCase().includes(term),
       )
     : posts;
+  const trends = useMemo(() => topHashtags(posts.map((p) => p.text)), [posts]);
 
   return (
     <div>
@@ -42,6 +46,24 @@ export function SearchView({
           className="w-full rounded-md border border-line bg-ink-soft px-4 py-2.5 text-sm placeholder:text-bone-dim focus:border-brass focus:outline-none"
         />
       </div>
+
+      {!term && trends.length > 0 && (
+        <div className="border-b border-line px-4 py-3">
+          <p className="label-civic mb-2 text-[10px] text-bone-dim">trending</p>
+          <div className="flex flex-wrap gap-2">
+            {trends.map((t) => (
+              <button
+                key={t.tag}
+                onClick={() => onOpenTag?.(t.tag)}
+                className="rounded-full border border-line bg-ink-soft px-3 py-1 text-sm text-brass transition hover:border-brass/50"
+              >
+                #{t.tag} <span className="text-bone-dim">{t.count}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {term && (
         <p className="px-4 py-2 font-mono text-xs text-bone-dim">
           {results.length} result{results.length === 1 ? "" : "s"} for "{q.trim()}"
@@ -53,6 +75,7 @@ export function SearchView({
         onReply={onReply}
         onOpenProfile={onOpenProfile}
         onOpenPost={onOpenPost}
+        onOpenTag={onOpenTag}
         onQuote={onQuote}
         loading={loading}
         error={error}
