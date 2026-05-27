@@ -87,6 +87,11 @@ it draws breath"*).
 ETH ceiling** (Morris/Few's ceiling declined — staking-trap), softened by extending
 the rate-limit to the citizenship cost.
 
+> *Post-ratification footnote:* the term decision was later reopened — the charter now
+> sets a **Governable band [1yr → 2yr], default 1yr**, with re-election as the runway
+> mechanism (adopting what Hamilton and Jenifer pressed here). See the revision note at
+> the end of [CONSTITUTION.md](CONSTITUTION.md).
+
 > **Gerry, in voice:** *"I have been taught by experience the danger of the levelling
 > spirit — and the equal danger of the man who, finding himself alone at the wheel,
 > persuades himself that his own virtue is security enough for a free people; grant
