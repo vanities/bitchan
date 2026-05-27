@@ -20,9 +20,6 @@ indexer/generated/
 web/dist/
 web/.vite/
 
-# docs copied into the app at build by scripts/sync-docs.mjs (source of truth is /docs)
-web/public/docs/
-
 # engagement server (sqlite + uploaded media blobs)
 server/*.sqlite
 server/*.sqlite-shm

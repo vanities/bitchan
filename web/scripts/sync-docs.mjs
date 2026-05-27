@@ -1,13 +1,20 @@
 // Copies the repo's living docs (../docs/*.md) into web/public/docs so the in-app
 // Charter page can fetch + render them. Runs before dev and build (see
 // package.json), so the page always reflects the docs in the current deploy.
-import { readdirSync, readFileSync, writeFileSync, mkdirSync, copyFileSync } from "node:fs";
+import { readdirSync, readFileSync, writeFileSync, mkdirSync, copyFileSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const docsDir = join(here, "..", "..", "docs");
 const outDir = join(here, "..", "public", "docs");
+
+// On Vercel the build is scoped to web/, so ../docs isn't present — fall back to
+// the committed copy in public/docs (refreshed here whenever ../docs exists).
+if (!existsSync(docsDir)) {
+  console.log("[sync-docs] ../docs not present (scoped build) — using committed public/docs");
+  process.exit(0);
+}
 
 // Curated reading order + friendly labels; anything not listed is appended.
 const ORDER = [

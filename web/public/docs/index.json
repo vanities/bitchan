@@ -1,0 +1,37 @@
+[
+  {
+    "file": "WHITEPAPER.md",
+    "slug": "WHITEPAPER",
+    "title": "White Paper"
+  },
+  {
+    "file": "CONSTITUTION.md",
+    "slug": "CONSTITUTION",
+    "title": "Constitution"
+  },
+  {
+    "file": "GOVERNANCE_MVP.md",
+    "slug": "GOVERNANCE_MVP",
+    "title": "Governance — Build Plan"
+  },
+  {
+    "file": "CONVENTION.md",
+    "slug": "CONVENTION",
+    "title": "Ratifying Convention"
+  },
+  {
+    "file": "ARCHITECTURE.md",
+    "slug": "ARCHITECTURE",
+    "title": "Architecture"
+  },
+  {
+    "file": "CONTENTIONS.md",
+    "slug": "CONTENTIONS",
+    "title": "Contentions (living log)"
+  },
+  {
+    "file": "DEPLOYMENTS.md",
+    "slug": "DEPLOYMENTS",
+    "title": "Deployments"
+  }
+]
