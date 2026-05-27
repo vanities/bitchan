@@ -12,7 +12,7 @@ import { api } from "../../convex/_generated/api";
 import type { TimelinePost, Handles, Avatars } from "../lib/useTimeline";
 import { bitchanAbi, bitchanAddress, chain, explorerAddress } from "../lib/contract";
 import { useEnsName } from "../lib/ens";
-import { submitReaction, useFollowing, useFollowers } from "../lib/engagement";
+import { submitReaction, useFollowing, useFollowers, useLikedPosts } from "../lib/engagement";
 import { setAvatar } from "../lib/avatar";
 import { setProfile } from "../lib/profile";
 import { hasMedia, mediaUrl, uploadMedia } from "../lib/media";
@@ -65,7 +65,9 @@ export function ProfileView({
   const avatarRef = useRef<HTMLInputElement>(null);
   const [avatarBusy, setAvatarBusy] = useState(false);
   const [editingProfile, setEditingProfile] = useState(false);
+  const [tab, setTab] = useState<"posts" | "replies" | "media" | "likes">("posts");
   const profile = useQuery(api.accounts.getProfile, address ? { address: address.toLowerCase() } : "skip");
+  const { data: likedPostIds } = useLikedPosts(address?.toLowerCase());
 
   // Pre-check handle availability (debounced) so we error before signing a tx that
   // would revert HandleTaken. Key matches the contract: keccak256(bytes(handle)).
@@ -92,6 +94,15 @@ export function ProfileView({
   const isSelf = !!viewer && viewer === addr;
   const handle = handles.get(addr) ?? null;
   const theirPosts = posts.filter((p) => p.author.toLowerCase() === addr);
+  const likedSet = new Set(likedPostIds ?? []);
+  const tabPosts =
+    tab === "replies"
+      ? theirPosts.filter((p) => p.parentId !== "0")
+      : tab === "media"
+        ? theirPosts.filter((p) => p.mediaHash !== `0x${"0".repeat(64)}`)
+        : tab === "likes"
+          ? posts.filter((p) => likedSet.has(p.id))
+          : theirPosts.filter((p) => p.parentId === "0");
   const isFollowing = new Set(followingArr ?? []).has(addr);
   const followingCount = profileFollowing?.length ?? 0;
   const followerCount = profileFollowers?.length ?? 0;
@@ -291,8 +302,22 @@ export function ProfileView({
         </div>
       </div>
 
+      <div className="flex border-b border-line text-sm">
+        {(["posts", "replies", "media", "likes"] as const).map((t) => (
+          <button
+            key={t}
+            onClick={() => setTab(t)}
+            className={`flex-1 py-3 font-semibold capitalize transition ${
+              tab === t ? "border-b-2 border-seal text-bone" : "text-bone-dim hover:bg-ink-soft"
+            }`}
+          >
+            {t}
+          </button>
+        ))}
+      </div>
+
       <Feed
-        posts={theirPosts}
+        posts={tabPosts}
         handles={handles}
         onReply={onReply}
         onOpenProfile={onOpenProfile}
@@ -301,7 +326,19 @@ export function ProfileView({
         onQuote={onQuote}
         loading={loading}
         error={error}
-        empty={<Notice>{isSelf ? "You haven't posted yet — head to The Square." : "No posts yet."}</Notice>}
+        empty={
+          <Notice>
+            {tab === "likes"
+              ? "No liked posts yet."
+              : tab === "media"
+                ? "No media yet."
+                : tab === "replies"
+                  ? "No replies yet."
+                  : isSelf
+                    ? "You haven't posted yet — head to The Square."
+                    : "No posts yet."}
+          </Notice>
+        }
       />
 
       {listView && (

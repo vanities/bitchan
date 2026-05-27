@@ -120,6 +120,19 @@ export const reactors = query({
   },
 });
 
+/// Post ids an account has liked — for the Likes tab on a profile.
+export const likes = query({
+  args: { account: v.string() },
+  returns: v.object({ postIds: v.array(v.string()) }),
+  handler: async (ctx, { account }) => {
+    const rows = await ctx.db
+      .query("reactions")
+      .withIndex("by_account_kind_target", (q) => q.eq("account", account.toLowerCase()).eq("kind", "like"))
+      .collect();
+    return { postIds: rows.filter((r) => r.active).map((r) => r.target) };
+  },
+});
+
 /// The set of addresses that follow an account (reverse of following).
 export const followers = query({
   args: { account: v.string() },

@@ -61,6 +61,12 @@ export function useReactors(target: string, kind: "like" | "repost", enabled: bo
   return { data: res ? res.accounts.map((a) => a.toLowerCase()) : undefined };
 }
 
+/** Post ids `account` has liked (live). */
+export function useLikedPosts(account?: string) {
+  const res = useQuery(api.engagement.likes, account ? { account } : "skip");
+  return { data: res ? res.postIds : undefined };
+}
+
 /** Live notifications for a viewer (replies/mentions/follows/likes/reposts). */
 export function useNotifications(viewer?: string, handle?: string | null) {
   return useQuery(api.notifications.feed, viewer ? { viewer, handle: handle ?? undefined } : "skip");
