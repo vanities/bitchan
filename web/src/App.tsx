@@ -83,7 +83,7 @@ export default function App() {
     Number(localStorage.getItem("bitchan.notif.seen") || 0),
   );
   const latestNotifAt = notifs?.[0]?.at ?? 0;
-  const hasUnread = !!address && latestNotifAt > seenNotifAt;
+  const unreadCount = address ? (notifs?.filter((n) => n.at > seenNotifAt).length ?? 0) : 0;
 
   const topLevel = useMemo(() => posts.filter((p) => p.parentId === "0"), [posts]);
   const followingSet = new Set(followingArr ?? []);
@@ -201,7 +201,7 @@ export default function App() {
       <div className="fixed inset-x-0 top-0 z-30 h-[3px] bg-gradient-to-r from-seal via-brass to-seal" />
 
       <div className="mx-auto flex w-full max-w-7xl justify-center">
-        <LeftRail view={view} onNav={nav} unread={hasUnread} />
+        <LeftRail view={view} onNav={nav} unreadCount={unreadCount} />
 
         <div className="flex min-h-screen w-full max-w-[600px] flex-col border-line sm:border-x">
           <header className="sticky top-0 z-20 flex items-center justify-between border-b border-line bg-ink/85 px-4 py-3 backdrop-blur lg:hidden">
@@ -350,7 +350,7 @@ export default function App() {
         </aside>
       </div>
 
-      <BottomNav view={view} onNav={nav} unread={hasUnread} />
+      <BottomNav view={view} onNav={nav} unreadCount={unreadCount} />
     </div>
   );
 }
@@ -367,7 +367,25 @@ function isActive(key: NavKey, view: View) {
   return key === "citizen" ? view === "profile" : view === key;
 }
 
-function LeftRail({ view, onNav, unread }: { view: View; onNav: (k: NavKey) => void; unread?: boolean }) {
+// Red count bubble for unread notifications (caps at 9+ to fit the icon).
+function NotifBadge({ count }: { count: number }) {
+  if (count <= 0) return null;
+  return (
+    <span className="absolute -right-2 -top-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-seal px-1 text-[10px] font-bold leading-none text-white">
+      {count > 9 ? "9+" : count}
+    </span>
+  );
+}
+
+function LeftRail({
+  view,
+  onNav,
+  unreadCount = 0,
+}: {
+  view: View;
+  onNav: (k: NavKey) => void;
+  unreadCount?: number;
+}) {
   return (
     <header className="sticky top-0 hidden h-screen w-[88px] shrink-0 flex-col justify-between px-2 py-5 lg:flex xl:w-[268px] xl:px-4">
       <div className="flex flex-col gap-7">
@@ -389,9 +407,7 @@ function LeftRail({ view, onNav, unread }: { view: View; onNav: (k: NavKey) => v
               >
                 <span className="relative">
                   <t.Icon size={22} strokeWidth={active ? 2.4 : 1.9} className={active ? "text-seal" : ""} />
-                  {t.key === "notifications" && unread && (
-                    <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-seal" />
-                  )}
+                  {t.key === "notifications" && <NotifBadge count={unreadCount} />}
                 </span>
                 <span className="hidden text-base xl:inline">{t.label}</span>
               </button>
@@ -406,7 +422,15 @@ function LeftRail({ view, onNav, unread }: { view: View; onNav: (k: NavKey) => v
   );
 }
 
-function BottomNav({ view, onNav, unread }: { view: View; onNav: (k: NavKey) => void; unread?: boolean }) {
+function BottomNav({
+  view,
+  onNav,
+  unreadCount = 0,
+}: {
+  view: View;
+  onNav: (k: NavKey) => void;
+  unreadCount?: number;
+}) {
   return (
     <nav className="fixed inset-x-0 bottom-0 z-20 flex justify-around border-t border-line bg-ink/90 backdrop-blur lg:hidden">
       {NAV.map((t) => (
@@ -418,9 +442,7 @@ function BottomNav({ view, onNav, unread }: { view: View; onNav: (k: NavKey) => 
         >
           <span className="relative">
             <t.Icon size={23} strokeWidth={isActive(t.key, view) ? 2.4 : 1.9} />
-            {t.key === "notifications" && unread && (
-              <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-seal" />
-            )}
+            {t.key === "notifications" && <NotifBadge count={unreadCount} />}
           </span>
         </button>
       ))}
