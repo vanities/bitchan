@@ -2,7 +2,7 @@ import { useQuery as useConvexQuery } from "convex/react";
 import { useReadContract } from "wagmi";
 import { formatEther } from "viem";
 import { api } from "../../convex/_generated/api";
-import { bitchanAbi, bitchanAddress, chain } from "../lib/contract";
+import { bitchanAbi, bitchanAddress, chain, explorerAddress } from "../lib/contract";
 import { CitizenshipCard } from "./CitizenshipCard";
 import { ElectionCard } from "./ElectionCard";
 import type { Handles } from "../lib/useTimeline";
@@ -56,6 +56,7 @@ export function RepublicPanel({
   const pct = Tn > 0 ? Math.min(100, Math.round((citizens / Tn) * 100)) : 0;
   const treasuryEth = treasury !== undefined ? trim(formatEther(treasury as bigint)) : "—";
   const feeEth = postFee !== undefined ? trim(formatEther(postFee as bigint)) : "—";
+  const contractUrl = explorerAddress(bitchanAddress);
 
   return (
     <div className="flex flex-col gap-5">
@@ -135,6 +136,16 @@ export function RepublicPanel({
             <span className="text-brass">✓</span> The feed algorithm is yours to swap.
           </li>
         </ul>
+        {contractUrl && (
+          <a
+            href={contractUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-3 inline-block font-mono text-[11px] text-brass transition hover:underline"
+          >
+            view contract on-chain ↗
+          </a>
+        )}
       </section>
 
       <p className="label-civic px-1 text-[9px] text-bone-dim/70">on-chain · no ads · no masters</p>

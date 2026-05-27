@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAccount, useSignTypedData, useWriteContract } from "wagmi";
-import { EyeOff, Heart, MessageCircle, Repeat2, type LucideIcon } from "lucide-react";
+import { EyeOff, Heart, MessageCircle, Quote, Repeat2, type LucideIcon } from "lucide-react";
 import type { TimelinePost, Handles } from "../lib/useTimeline";
 import { submitReaction, type Engagement } from "../lib/engagement";
 import { hasMedia, mediaUrl, useMediaInfo } from "../lib/media";
 import { bitchanAbi, bitchanAddress, chain } from "../lib/contract";
+import { useEnsName } from "../lib/ens";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 export function PostCard({
@@ -14,9 +15,11 @@ export function PostCard({
   onReply,
   onOpenProfile,
   onOpenPost,
+  onQuote,
   canModerate,
   eng,
   handles,
+  quotedPost,
 }: {
   post: TimelinePost;
   handle: string | null;
@@ -24,33 +27,50 @@ export function PostCard({
   onReply?: (post: TimelinePost) => void;
   onOpenProfile?: (address: `0x${string}`) => void;
   onOpenPost?: (post: TimelinePost) => void;
+  onQuote?: (post: TimelinePost) => void;
   canModerate?: boolean;
   eng?: Engagement;
   handles?: Handles;
+  quotedPost?: TimelinePost | null;
 }) {
   const { address, isConnected } = useAccount();
   const { signTypedDataAsync } = useSignTypedData();
+  const { data: ensName } = useEnsName(post.author);
   const [busy, setBusy] = useState<"like" | "repost" | null>(null);
   const [revealed, setRevealed] = useState(false);
   const [hiding, setHiding] = useState(false);
   const [reason, setReason] = useState("spam");
+  const [optLike, setOptLike] = useState<boolean | null>(null);
+  const [optRepost, setOptRepost] = useState<boolean | null>(null);
 
   const { writeContract: writeHide } = useWriteContract();
 
   const isReply = post.parentId !== "0";
-  const likes = eng?.likes ?? 0;
-  const reposts = eng?.reposts ?? 0;
-  const liked = eng?.likedByViewer ?? false;
-  const reposted = eng?.repostedByViewer ?? false;
+  // Optimistic overrides for instant feedback; cleared once the reactive query catches up.
+  const liked = optLike ?? eng?.likedByViewer ?? false;
+  const reposted = optRepost ?? eng?.repostedByViewer ?? false;
+  const likes = (eng?.likes ?? 0) + (optLike === null ? 0 : (optLike ? 1 : 0) - (eng?.likedByViewer ? 1 : 0));
+  const reposts = (eng?.reposts ?? 0) + (optRepost === null ? 0 : (optRepost ? 1 : 0) - (eng?.repostedByViewer ? 1 : 0));
+
+  useEffect(() => {
+    if (optLike !== null && eng?.likedByViewer === optLike) setOptLike(null);
+  }, [eng?.likedByViewer, optLike]);
+  useEffect(() => {
+    if (optRepost !== null && eng?.repostedByViewer === optRepost) setOptRepost(null);
+  }, [eng?.repostedByViewer, optRepost]);
 
   async function react(kind: "like" | "repost") {
     if (!address || busy) return;
+    const active = kind === "like" ? !liked : !reposted;
+    if (kind === "like") setOptLike(active);
+    else setOptRepost(active);
     setBusy(kind);
     try {
-      const active = kind === "like" ? !liked : !reposted;
       await submitReaction({ signTypedDataAsync, address, kind, target: post.id, active });
     } catch (e) {
       console.error("reaction failed", e);
+      if (kind === "like") setOptLike(null);
+      else setOptRepost(null);
     } finally {
       setBusy(null);
     }
@@ -70,7 +90,7 @@ export function PostCard({
     >
       <div className="flex items-baseline gap-2">
         <button onClick={() => onOpenProfile?.(post.author)} className="group flex min-w-0 items-baseline gap-2">
-          <span className="truncate font-semibold text-bone group-hover:underline">{handle ?? "anon"}</span>
+          <span className="truncate font-semibold text-bone group-hover:underline">{handle ?? ensName ?? "anon"}</span>
           <span className="font-mono text-xs text-bone-dim">{short(post.author)}</span>
         </button>
         <span className="text-bone-dim">·</span>
@@ -105,6 +125,21 @@ export function PostCard({
               {renderText(post.text, handles, onOpenProfile)}
             </p>
           )}
+          {quotedPost && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onOpenPost?.(quotedPost);
+              }}
+              className="mt-2 block w-full rounded-xl border border-line bg-ink-soft/40 px-3 py-2 text-left transition hover:border-brass/50"
+            >
+              <div className="flex items-baseline gap-1.5 text-xs">
+                <span className="font-semibold text-bone">{handles?.get(quotedPost.author.toLowerCase()) ?? "anon"}</span>
+                <span className="font-mono text-bone-dim">{short(quotedPost.author)}</span>
+              </div>
+              <p className="mt-0.5 line-clamp-3 text-sm text-bone-dim">{quotedPost.text || "↳ media"}</p>
+            </button>
+          )}
           {hasMedia(post.mediaHash) && <MediaView hash={post.mediaHash} />}
         </>
       )}
@@ -119,6 +154,7 @@ export function PostCard({
         />
         <Action icon={Repeat2} label={reposts} onClick={() => react("repost")} disabled={!isConnected || busy !== null} active={reposted} color="brass" />
         <Action icon={Heart} label={likes} onClick={() => react("like")} disabled={!isConnected || busy !== null} active={liked} filled={liked} color="seal" />
+        <Action icon={Quote} label={0} onClick={onQuote ? () => onQuote(post) : undefined} disabled={!isConnected || !onQuote} color="bone" />
         {canModerate && !post.hidden && (
           <button
             onClick={() => setHiding((v) => !v)}

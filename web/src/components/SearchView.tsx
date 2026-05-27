@@ -8,6 +8,7 @@ export function SearchView({
   onReply,
   onOpenProfile,
   onOpenPost,
+  onQuote,
   loading,
   error,
 }: {
@@ -16,6 +17,7 @@ export function SearchView({
   onReply?: (post: TimelinePost) => void;
   onOpenProfile?: (address: `0x${string}`) => void;
   onOpenPost?: (post: TimelinePost) => void;
+  onQuote?: (post: TimelinePost) => void;
   loading?: boolean;
   error?: unknown;
 }) {
@@ -51,6 +53,7 @@ export function SearchView({
         onReply={onReply}
         onOpenProfile={onOpenProfile}
         onOpenPost={onOpenPost}
+        onQuote={onQuote}
         loading={loading}
         error={error}
         empty={<Notice>No posts match your search.</Notice>}

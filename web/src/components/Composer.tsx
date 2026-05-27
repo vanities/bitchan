@@ -19,10 +19,14 @@ export type ReplyTarget = { id: string; handle: string | null; author: `0x${stri
 export function Composer({
   replyTo,
   onClearReply,
+  quoteTo,
+  onClearQuote,
   onGoProfile,
 }: {
   replyTo?: ReplyTarget | null;
   onClearReply?: () => void;
+  quoteTo?: ReplyTarget | null;
+  onClearQuote?: () => void;
   onGoProfile?: () => void;
 }) {
   const { address, isConnected } = useAccount();
@@ -57,9 +61,10 @@ export function Composer({
     setMedia(null);
     setShowStamp(true);
     onClearReply?.();
+    onClearQuote?.();
     const t = setTimeout(() => setShowStamp(false), 1600);
     return () => clearTimeout(t);
-  }, [isSuccess, onClearReply]);
+  }, [isSuccess, onClearReply, onClearQuote]);
 
   async function onPickFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -81,12 +86,17 @@ export function Composer({
 
   function submit() {
     const body = text.trim();
-    if ((!body && !media) || uploading) return;
+    if ((!body && !media && !quoteTo) || uploading) return;
     writeContract({
       address: bitchanAddress,
       abi: bitchanAbi,
       functionName: "post",
-      args: [body, (media?.hash ?? ZERO_BYTES32) as `0x${string}`, replyTo ? BigInt(replyTo.id) : 0n, 0n],
+      args: [
+        body,
+        (media?.hash ?? ZERO_BYTES32) as `0x${string}`,
+        replyTo ? BigInt(replyTo.id) : 0n,
+        quoteTo ? BigInt(quoteTo.id) : 0n,
+      ],
       value: (postFee as bigint | undefined) ?? 0n,
       chainId: chain.id,
     });
@@ -126,6 +136,17 @@ export function Composer({
             replying to <span className="text-bone">{replyTo.handle ?? "anon"}</span> · #{replyTo.id}
           </span>
           <button onClick={onClearReply} className="text-seal hover:underline">
+            cancel
+          </button>
+        </div>
+      )}
+
+      {quoteTo && (
+        <div className="mb-2 flex items-center justify-between rounded-md bg-ink-soft px-3 py-1.5 text-xs">
+          <span className="text-bone-dim">
+            quoting <span className="text-bone">{quoteTo.handle ?? "anon"}</span> · #{quoteTo.id}
+          </span>
+          <button onClick={onClearQuote} className="text-seal hover:underline">
             cancel
           </button>
         </div>

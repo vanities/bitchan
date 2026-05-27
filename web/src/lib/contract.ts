@@ -23,4 +23,8 @@ export const electionAddress = (import.meta.env.VITE_ELECTION_ADDRESS ?? "") as 
 export const ZERO_BYTES32 =
   "0x0000000000000000000000000000000000000000000000000000000000000000" as const;
 
+/// Block explorer for the active chain (null on Anvil — no explorer to link to).
+export const explorerBase = chain.blockExplorers?.default.url ?? null;
+export const explorerAddress = (addr: string) => (explorerBase ? `${explorerBase}/address/${addr}` : null);
+
 export { bitchanAbi, electionAbi };

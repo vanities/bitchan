@@ -32,6 +32,7 @@ export default function App() {
   const [view, setView] = useState<View>("home");
   const [homeFilter, setHomeFilter] = useState<"all" | "following">("all");
   const [replyTo, setReplyTo] = useState<ReplyTarget | null>(null);
+  const [quoteTo, setQuoteTo] = useState<ReplyTarget | null>(null);
   const [profileAddress, setProfileAddress] = useState<string | null>(null);
   const [postId, setPostId] = useState<string | null>(null);
   const { posts, handles, isLoading, error } = useTimeline();
@@ -82,7 +83,13 @@ export default function App() {
     else go({ view: key });
   }
   function startReply(post: TimelinePost) {
+    setQuoteTo(null);
     setReplyTo({ id: post.id, handle: handles.get(post.author.toLowerCase()) ?? null, author: post.author });
+    go({ view: "home" });
+  }
+  function startQuote(post: TimelinePost) {
+    setReplyTo(null);
+    setQuoteTo({ id: post.id, handle: handles.get(post.author.toLowerCase()) ?? null, author: post.author });
     go({ view: "home" });
   }
 
@@ -128,13 +135,20 @@ export default function App() {
                     </button>
                   ))}
                 </div>
-                <Composer replyTo={replyTo} onClearReply={() => setReplyTo(null)} onGoProfile={() => nav("citizen")} />
+                <Composer
+                  replyTo={replyTo}
+                  onClearReply={() => setReplyTo(null)}
+                  quoteTo={quoteTo}
+                  onClearQuote={() => setQuoteTo(null)}
+                  onGoProfile={() => nav("citizen")}
+                />
                 <Feed
                   posts={homePosts}
                   handles={handles}
                   onReply={startReply}
                   onOpenProfile={openProfile}
                   onOpenPost={openPost}
+                  onQuote={startQuote}
                   loading={isLoading}
                   error={error}
                   empty={
@@ -152,7 +166,7 @@ export default function App() {
             )}
 
             {view === "search" && (
-              <SearchView posts={posts} handles={handles} onReply={startReply} onOpenProfile={openProfile} onOpenPost={openPost} loading={isLoading} error={error} />
+              <SearchView posts={posts} handles={handles} onReply={startReply} onOpenProfile={openProfile} onOpenPost={openPost} onQuote={startQuote} loading={isLoading} error={error} />
             )}
 
             {view === "republic" && (
@@ -162,7 +176,7 @@ export default function App() {
             )}
 
             {view === "profile" && (
-              <ProfileView address={profileAddress} posts={posts} handles={handles} onReply={startReply} onOpenProfile={openProfile} onOpenPost={openPost} loading={isLoading} error={error} />
+              <ProfileView address={profileAddress} posts={posts} handles={handles} onReply={startReply} onOpenProfile={openProfile} onOpenPost={openPost} onQuote={startQuote} loading={isLoading} error={error} />
             )}
 
             {view === "post" &&
@@ -172,6 +186,8 @@ export default function App() {
                   handles={handles}
                   onReply={startReply}
                   onOpenProfile={openProfile}
+                  onOpenPost={openPost}
+                  onQuote={startQuote}
                   loading={isLoading}
                   error={error}
                   empty={<Notice>Nothing here.</Notice>}

@@ -13,6 +13,7 @@ export function Feed({
   onReply,
   onOpenProfile,
   onOpenPost,
+  onQuote,
   loading,
   error,
   empty,
@@ -22,6 +23,7 @@ export function Feed({
   onReply?: (post: TimelinePost) => void;
   onOpenProfile?: (address: `0x${string}`) => void;
   onOpenPost?: (post: TimelinePost) => void;
+  onQuote?: (post: TimelinePost) => void;
   loading?: boolean;
   error?: unknown;
   empty?: ReactNode;
@@ -31,6 +33,7 @@ export function Feed({
     posts.map((p) => p.id),
     address,
   );
+  const byId = new Map(posts.map((p) => [p.id, p]));
 
   // Whether the viewer can moderate (president or a custodian). Reads dedupe across cards.
   const mod = { address: bitchanAddress, abi: bitchanAbi, chainId: chain.id } as const;
@@ -70,9 +73,11 @@ export function Feed({
           onReply={onReply}
           onOpenProfile={onOpenProfile}
           onOpenPost={onOpenPost}
+          onQuote={onQuote}
           canModerate={canModerate}
           eng={engagement?.[p.id]}
           handles={handles}
+          quotedPost={p.quotedId !== "0" ? (byId.get(p.quotedId) ?? null) : null}
         />
       ))}
     </ul>

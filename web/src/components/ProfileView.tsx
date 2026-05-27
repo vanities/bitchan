@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { useAccount, useReadContract, useSignTypedData, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 import { keccak256, stringToBytes } from "viem";
 import type { TimelinePost, Handles } from "../lib/useTimeline";
-import { bitchanAbi, bitchanAddress, chain } from "../lib/contract";
+import { bitchanAbi, bitchanAddress, chain, explorerAddress } from "../lib/contract";
+import { useEnsName } from "../lib/ens";
 import { submitReaction, useFollowing } from "../lib/engagement";
 import { Feed, Notice } from "./Feed";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,7 @@ export function ProfileView({
   onReply,
   onOpenProfile,
   onOpenPost,
+  onQuote,
   loading,
   error,
 }: {
@@ -23,6 +25,7 @@ export function ProfileView({
   onReply?: (post: TimelinePost) => void;
   onOpenProfile?: (address: `0x${string}`) => void;
   onOpenPost?: (post: TimelinePost) => void;
+  onQuote?: (post: TimelinePost) => void;
   loading?: boolean;
   error?: unknown;
 }) {
@@ -39,6 +42,7 @@ export function ProfileView({
   }, [isSuccess]);
 
   const { data: followingArr } = useFollowing(viewerAddr);
+  const { data: ensName } = useEnsName(address);
 
   // Pre-check handle availability (debounced) so we error before signing a tx that
   // would revert HandleTaken. Key matches the contract: keccak256(bytes(handle)).
@@ -59,6 +63,7 @@ export function ProfileView({
   if (!address) return <Notice>No profile selected.</Notice>;
 
   const addr = address.toLowerCase();
+  const explorer = explorerAddress(address);
   const viewer = viewerAddr?.toLowerCase();
   const isSelf = !!viewer && viewer === addr;
   const handle = handles.get(addr) ?? null;
@@ -92,13 +97,24 @@ export function ProfileView({
       <div className="border-b border-line px-5 py-5">
         <div className="flex items-center gap-3">
           <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-seal text-xl font-bold text-white">
-            {(handle ?? "a")[0]!.toUpperCase()}
+            {(handle ?? ensName ?? "a")[0]!.toUpperCase()}
           </div>
           <div className="min-w-0">
-            <div className="truncate text-xl font-bold tracking-tight text-bone">{handle ?? "anonymous"}</div>
-            <div className="font-mono text-xs text-bone-dim">
-              {address.slice(0, 10)}…{address.slice(-6)}
-            </div>
+            <div className="truncate text-xl font-bold tracking-tight text-bone">{handle ?? ensName ?? "anonymous"}</div>
+            {explorer ? (
+              <a
+                href={explorer}
+                target="_blank"
+                rel="noreferrer"
+                className="font-mono text-xs text-bone-dim transition hover:text-brass hover:underline"
+              >
+                {address.slice(0, 10)}…{address.slice(-6)} ↗
+              </a>
+            ) : (
+              <div className="font-mono text-xs text-bone-dim">
+                {address.slice(0, 10)}…{address.slice(-6)}
+              </div>
+            )}
           </div>
           <div className="ml-auto flex items-center gap-4">
             <div className="text-right">
@@ -153,6 +169,7 @@ export function ProfileView({
         onReply={onReply}
         onOpenProfile={onOpenProfile}
         onOpenPost={onOpenPost}
+        onQuote={onQuote}
         loading={loading}
         error={error}
         empty={<Notice>{isSelf ? "You haven't posted yet — head to The Square." : "No posts yet."}</Notice>}
