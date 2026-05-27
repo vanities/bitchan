@@ -35,6 +35,27 @@ export const list = query({
   },
 });
 
+/// Look up an account by handle (case-insensitive) — used by the OG/link-preview
+/// function for /@handle profile links. Low-frequency, so a scan is fine.
+export const getByHandle = query({
+  args: { handle: v.string() },
+  returns: v.union(
+    v.object({
+      address: v.string(),
+      handle: v.union(v.string(), v.null()),
+      avatar: v.union(v.string(), v.null()),
+    }),
+    v.null(),
+  ),
+  handler: async (ctx, { handle }) => {
+    const want = handle.toLowerCase();
+    const rows = await ctx.db.query("accounts").take(1000);
+    const r = rows.find((a) => a.handle && a.handle.toLowerCase() === want);
+    if (!r) return null;
+    return { address: r.address, handle: r.handle ?? null, avatar: r.avatar ?? null };
+  },
+});
+
 /// Set an account's avatar (the media hash). Verified + called by the avatar action.
 export const recordAvatar = internalMutation({
   args: { address: v.string(), avatar: v.string() },

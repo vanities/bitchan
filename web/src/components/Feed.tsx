@@ -17,6 +17,7 @@ export function Feed({
   loading,
   error,
   empty,
+  depths,
 }: {
   posts: TimelinePost[];
   handles: Handles;
@@ -27,6 +28,8 @@ export function Feed({
   loading?: boolean;
   error?: unknown;
   empty?: ReactNode;
+  // Optional reply-nesting depth per post id (thread view); 0/absent = top level.
+  depths?: Map<string, number>;
 }) {
   const { address } = useAccount();
   const { data: engagement } = useEngagement(
@@ -53,8 +56,7 @@ export function Feed({
   if (error) {
     return (
       <Notice>
-        the backend is unreachable — check{" "}
-        <code className="font-mono text-bone">VITE_CONVEX_URL</code>
+        the backend is unreachable — check <code className="font-mono text-bone">VITE_CONVEX_URL</code>
       </Notice>
     );
   }
@@ -78,6 +80,7 @@ export function Feed({
           eng={engagement?.[p.id]}
           handles={handles}
           quotedPost={p.quotedId !== "0" ? (byId.get(p.quotedId) ?? null) : null}
+          depth={depths?.get(p.id) ?? 0}
         />
       ))}
     </ul>

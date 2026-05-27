@@ -1,0 +1,11 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "functions": {
+    "api/og-page.js": { "includeFiles": "dist/index.html", "maxDuration": 10 }
+  },
+  "rewrites": [
+    { "source": "/post/:id", "destination": "/api/og-page?type=post&id=:id" },
+    { "source": "/@:handle", "destination": "/api/og-page?type=profile&handle=:handle" },
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
+  ]
+}

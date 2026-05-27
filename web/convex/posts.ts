@@ -78,12 +78,44 @@ export const setHidden = internalMutation({
   },
 });
 
+/// A single post by its on-chain id — used by the OG/link-preview function.
+export const getById = query({
+  args: { id: v.string() },
+  returns: v.union(v.object(postShape), v.null()),
+  handler: async (ctx, { id }) => {
+    const p = await ctx.db
+      .query("posts")
+      .withIndex("by_onchainId", (q) => q.eq("onchainId", id))
+      .unique();
+    if (!p) return null;
+    return {
+      id: p.onchainId,
+      author: p.author,
+      text: p.text,
+      mediaHash: p.mediaHash,
+      parentId: p.parentId,
+      quotedId: p.quotedId,
+      likeCount: p.likeCount,
+      repostCount: p.repostCount,
+      replyCount: p.replyCount,
+      hidden: p.hidden,
+      hiddenReason: p.hiddenReason ?? null,
+      hiddenBy: p.hiddenBy ?? null,
+      createdAt: p.createdAt,
+    };
+  },
+});
+
 /// The timeline read model — newest first.
 export const timeline = query({
   args: { limit: v.optional(v.number()) },
   returns: v.array(v.object(postShape)),
   handler: async (ctx, { limit }) => {
-    const rows = await ctx.db.query("posts").withIndex("by_createdAt").order("desc").take(limit ?? 100);
+    const rows = await ctx.db
+      .query("posts")
+      .withIndex("by_createdAt")
+      .order("desc")
+      .take(limit ?? 100);
     return rows.map((p) => ({
       id: p.onchainId,
       author: p.author,

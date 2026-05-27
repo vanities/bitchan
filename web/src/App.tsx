@@ -31,12 +31,49 @@ const TITLES: Record<View, string> = {
   notifications: "Notifications",
 };
 
+type NavState = {
+  view: View;
+  profileAddress?: string | null;
+  profileHandle?: string | null;
+  postId?: string | null;
+};
+
+// Real, shareable URLs (so a pasted link loads the right view + gets a link preview).
+function pathFor(s: NavState): string {
+  switch (s.view) {
+    case "post":
+      return s.postId ? `/post/${s.postId}` : "/";
+    case "profile":
+      return s.profileHandle ? `/@${s.profileHandle}` : s.profileAddress ? `/u/${s.profileAddress}` : "/";
+    case "search":
+      return "/search";
+    case "republic":
+      return "/republic";
+    case "notifications":
+      return "/notifications";
+    default:
+      return "/";
+  }
+}
+
+function parsePath(path: string): NavState {
+  if (path.startsWith("/post/")) return { view: "post", postId: decodeURIComponent(path.slice(6)) };
+  if (path.startsWith("/@")) return { view: "profile", profileHandle: decodeURIComponent(path.slice(2)) };
+  if (path.startsWith("/u/")) return { view: "profile", profileAddress: path.slice(3) };
+  if (path === "/search") return { view: "search" };
+  if (path === "/republic") return { view: "republic" };
+  if (path === "/notifications") return { view: "notifications" };
+  return { view: "home" };
+}
+
 export default function App() {
   const [view, setView] = useState<View>("home");
   const [homeFilter, setHomeFilter] = useState<"all" | "following">("all");
   const [replyTo, setReplyTo] = useState<ReplyTarget | null>(null);
   const [quoteTo, setQuoteTo] = useState<ReplyTarget | null>(null);
   const [profileAddress, setProfileAddress] = useState<string | null>(null);
+  // A handle from a /@handle URL awaiting address resolution (accounts load async).
+  const [pendingHandle, setPendingHandle] = useState<string | null>(null);
   const [postId, setPostId] = useState<string | null>(null);
   const { posts, handles, avatars, isLoading, error } = useTimeline();
   const { address } = useAccount();
@@ -54,40 +91,79 @@ export default function App() {
     homeFilter === "following" ? topLevel.filter((p) => followingSet.has(p.author.toLowerCase())) : topLevel;
 
   const threadRoot = view === "post" && postId ? (posts.find((p) => p.id === postId) ?? null) : null;
-  const threadReplies = threadRoot
-    ? posts
-        .filter((p) => p.parentId === threadRoot.id)
-        .sort((a, b) => Number(a.createdAt) - Number(b.createdAt))
-    : [];
+  // Full reply subtree under the focal post, flattened depth-first with a depth per
+  // node so the thread view can indent nested replies (replies-to-replies).
+  const thread = useMemo(() => {
+    if (!threadRoot) return { list: [] as TimelinePost[], depths: new Map<string, number>() };
+    const byParent = new Map<string, TimelinePost[]>();
+    for (const p of posts) {
+      if (p.parentId === "0") continue;
+      const siblings = byParent.get(p.parentId);
+      if (siblings) siblings.push(p);
+      else byParent.set(p.parentId, [p]);
+    }
+    for (const arr of byParent.values()) arr.sort((a, b) => Number(a.createdAt) - Number(b.createdAt));
+    const list: TimelinePost[] = [];
+    const depths = new Map<string, number>();
+    const walk = (id: string, depth: number) => {
+      for (const child of byParent.get(id) ?? []) {
+        depths.set(child.id, depth);
+        list.push(child);
+        walk(child.id, depth + 1);
+      }
+    };
+    walk(threadRoot.id, 1);
+    return { list, depths };
+  }, [threadRoot, posts]);
 
-  // Drive navigation through the History API so trackpad swipe-back and the
-  // browser back/forward buttons work (state-only nav leaves no history entry).
+  // Drive navigation through the History API with real paths so links are shareable
+  // and trackpad swipe-back / browser back-forward work. On first load we parse the
+  // URL so a pasted /post/:id or /@handle boots straight into that view.
   useEffect(() => {
-    history.replaceState({ view: "home", profileAddress: null, postId: null }, "");
-    function onPop(e: PopStateEvent) {
-      const s = (e.state ?? null) as {
-        view?: View;
-        profileAddress?: string | null;
-        postId?: string | null;
-      } | null;
+    function apply(s: NavState | null) {
       setView(s?.view ?? "home");
       setProfileAddress(s?.profileAddress ?? null);
       setPostId(s?.postId ?? null);
+      setPendingHandle(s?.profileAddress ? null : (s?.profileHandle ?? null));
+    }
+    const initial = parsePath(window.location.pathname);
+    history.replaceState(initial, "", pathFor(initial));
+    apply(initial);
+    function onPop(e: PopStateEvent) {
+      apply((e.state as NavState | null) ?? parsePath(window.location.pathname));
     }
     window.addEventListener("popstate", onPop);
     return () => window.removeEventListener("popstate", onPop);
   }, []);
 
-  function go(next: { view: View; profileAddress?: string | null; postId?: string | null }) {
-    const entry = {
+  // Resolve a /@handle URL to an address once the accounts list has loaded.
+  useEffect(() => {
+    if (!pendingHandle || handles.size === 0) return;
+    for (const [addr, h] of handles) {
+      if (h && h.toLowerCase() === pendingHandle.toLowerCase()) {
+        setProfileAddress(addr);
+        break;
+      }
+    }
+    setPendingHandle(null); // found or not, stop waiting once accounts are loaded
+  }, [pendingHandle, handles]);
+
+  function go(next: NavState) {
+    const profileHandle =
+      next.view === "profile" && next.profileAddress
+        ? (handles.get(next.profileAddress.toLowerCase()) ?? null)
+        : null;
+    const entry: NavState = {
       view: next.view,
       profileAddress: next.profileAddress ?? null,
+      profileHandle,
       postId: next.postId ?? null,
     };
-    history.pushState(entry, "");
+    history.pushState(entry, "", pathFor(entry));
     setView(entry.view);
-    setProfileAddress(entry.profileAddress);
-    setPostId(entry.postId);
+    setProfileAddress(entry.profileAddress ?? null);
+    setPostId(entry.postId ?? null);
+    setPendingHandle(null);
   }
   function openProfile(a: string) {
     go({ view: "profile", profileAddress: a });
@@ -220,25 +296,29 @@ export default function App() {
               </div>
             )}
 
-            {view === "profile" && (
-              <ProfileView
-                address={profileAddress}
-                posts={posts}
-                handles={handles}
-                avatars={avatars}
-                onReply={startReply}
-                onOpenProfile={openProfile}
-                onOpenPost={openPost}
-                onQuote={startQuote}
-                loading={isLoading}
-                error={error}
-              />
-            )}
+            {view === "profile" &&
+              (profileAddress || !pendingHandle ? (
+                <ProfileView
+                  address={profileAddress}
+                  posts={posts}
+                  handles={handles}
+                  avatars={avatars}
+                  onReply={startReply}
+                  onOpenProfile={openProfile}
+                  onOpenPost={openPost}
+                  onQuote={startQuote}
+                  loading={isLoading}
+                  error={error}
+                />
+              ) : (
+                <Notice>finding @{pendingHandle}…</Notice>
+              ))}
 
             {view === "post" &&
               (threadRoot ? (
                 <Feed
-                  posts={[threadRoot, ...threadReplies]}
+                  posts={[threadRoot, ...thread.list]}
+                  depths={thread.depths}
                   handles={handles}
                   onReply={startReply}
                   onOpenProfile={openProfile}

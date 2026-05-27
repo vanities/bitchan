@@ -21,6 +21,7 @@ export function PostCard({
   eng,
   handles,
   quotedPost,
+  depth = 0,
 }: {
   post: TimelinePost;
   handle: string | null;
@@ -33,6 +34,7 @@ export function PostCard({
   eng?: Engagement;
   handles?: Handles;
   quotedPost?: TimelinePost | null;
+  depth?: number;
 }) {
   const { address, isConnected } = useAccount();
   const { signTypedDataAsync } = useSignTypedData();
@@ -91,10 +93,15 @@ export function PostCard({
     setHiding(false);
   }
 
+  // Nested replies (thread view): indent + a left connector line per level, capped
+  // so deep threads stay readable on mobile.
+  const indent = Math.min(depth, 6);
   return (
     <li
-      className="animate-fade-up border-b border-line px-4 py-3.5 transition-colors hover:bg-ink-soft/40"
-      style={{ animationDelay: `${Math.min(index, 12) * 40}ms` }}
+      className={`animate-fade-up border-b border-line py-3.5 pr-4 transition-colors hover:bg-ink-soft/40 ${
+        depth > 0 ? "border-l-2 border-l-brass/40" : ""
+      }`}
+      style={{ animationDelay: `${Math.min(index, 12) * 40}ms`, paddingLeft: 16 + indent * 18 }}
     >
       <div className="flex items-baseline gap-2">
         <button
