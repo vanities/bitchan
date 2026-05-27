@@ -2,6 +2,7 @@ import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 
 export type Handles = Map<string, string | null>;
+export type Avatars = Map<string, string | null>;
 
 export type TimelinePost = {
   id: string;
@@ -27,7 +28,11 @@ export function useTimeline() {
   const accts = useQuery(api.accounts.list, {});
 
   const handles: Handles = new Map();
-  for (const a of accts ?? []) handles.set(a.address.toLowerCase(), a.handle);
+  const avatars: Avatars = new Map();
+  for (const a of accts ?? []) {
+    handles.set(a.address.toLowerCase(), a.handle);
+    avatars.set(a.address.toLowerCase(), a.avatar);
+  }
 
   const posts: TimelinePost[] = (rows ?? []).map((p) => ({
     id: p.id,
@@ -48,6 +53,7 @@ export function useTimeline() {
   return {
     posts,
     handles,
+    avatars,
     isLoading: rows === undefined,
     error: undefined as unknown,
   };

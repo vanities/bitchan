@@ -6,6 +6,7 @@ import { submitReaction, type Engagement } from "../lib/engagement";
 import { hasMedia, mediaUrl, useMediaInfo } from "../lib/media";
 import { bitchanAbi, bitchanAddress, chain } from "../lib/contract";
 import { useEnsName } from "../lib/ens";
+import { MENTION_SPLIT_RE } from "../lib/mentions";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 export function PostCard({
@@ -50,7 +51,8 @@ export function PostCard({
   const liked = optLike ?? eng?.likedByViewer ?? false;
   const reposted = optRepost ?? eng?.repostedByViewer ?? false;
   const likes = (eng?.likes ?? 0) + (optLike === null ? 0 : (optLike ? 1 : 0) - (eng?.likedByViewer ? 1 : 0));
-  const reposts = (eng?.reposts ?? 0) + (optRepost === null ? 0 : (optRepost ? 1 : 0) - (eng?.repostedByViewer ? 1 : 0));
+  const reposts =
+    (eng?.reposts ?? 0) + (optRepost === null ? 0 : (optRepost ? 1 : 0) - (eng?.repostedByViewer ? 1 : 0));
 
   useEffect(() => {
     if (optLike !== null && eng?.likedByViewer === optLike) setOptLike(null);
@@ -79,7 +81,13 @@ export function PostCard({
   function confirmHide() {
     const r = reason.trim();
     if (!r) return;
-    writeHide({ address: bitchanAddress, abi: bitchanAbi, functionName: "hide", args: [BigInt(post.id), r], chainId: chain.id });
+    writeHide({
+      address: bitchanAddress,
+      abi: bitchanAbi,
+      functionName: "hide",
+      args: [BigInt(post.id), r],
+      chainId: chain.id,
+    });
     setHiding(false);
   }
 
@@ -89,8 +97,13 @@ export function PostCard({
       style={{ animationDelay: `${Math.min(index, 12) * 40}ms` }}
     >
       <div className="flex items-baseline gap-2">
-        <button onClick={() => onOpenProfile?.(post.author)} className="group flex min-w-0 items-baseline gap-2">
-          <span className="truncate font-semibold text-bone group-hover:underline">{handle ?? ensName ?? "anon"}</span>
+        <button
+          onClick={() => onOpenProfile?.(post.author)}
+          className="group flex min-w-0 items-baseline gap-2"
+        >
+          <span className="truncate font-semibold text-bone group-hover:underline">
+            {handle ?? ensName ?? "anon"}
+          </span>
           <span className="font-mono text-xs text-bone-dim">{short(post.author)}</span>
         </button>
         <span className="text-bone-dim">·</span>
@@ -106,7 +119,10 @@ export function PostCard({
             hidden{post.hiddenBy ? ` by ${short(post.hiddenBy)}` : ""}
             {post.hiddenReason ? ` · ${post.hiddenReason}` : ""}
           </span>
-          <button onClick={() => setRevealed(true)} className="shrink-0 font-semibold text-brass hover:underline">
+          <button
+            onClick={() => setRevealed(true)}
+            className="shrink-0 font-semibold text-brass hover:underline"
+          >
             view anyway
           </button>
         </div>
@@ -134,7 +150,9 @@ export function PostCard({
               className="mt-2 block w-full rounded-xl border border-line bg-ink-soft/40 px-3 py-2 text-left transition hover:border-brass/50"
             >
               <div className="flex items-baseline gap-1.5 text-xs">
-                <span className="font-semibold text-bone">{handles?.get(quotedPost.author.toLowerCase()) ?? "anon"}</span>
+                <span className="font-semibold text-bone">
+                  {handles?.get(quotedPost.author.toLowerCase()) ?? "anon"}
+                </span>
                 <span className="font-mono text-bone-dim">{short(quotedPost.author)}</span>
               </div>
               <p className="mt-0.5 line-clamp-3 text-sm text-bone-dim">{quotedPost.text || "↳ media"}</p>
@@ -152,9 +170,30 @@ export function PostCard({
           disabled={!isConnected || !onReply}
           color="bone"
         />
-        <Action icon={Repeat2} label={reposts} onClick={() => react("repost")} disabled={!isConnected || busy !== null} active={reposted} color="brass" />
-        <Action icon={Heart} label={likes} onClick={() => react("like")} disabled={!isConnected || busy !== null} active={liked} filled={liked} color="seal" />
-        <Action icon={Quote} label={0} onClick={onQuote ? () => onQuote(post) : undefined} disabled={!isConnected || !onQuote} color="bone" />
+        <Action
+          icon={Repeat2}
+          label={reposts}
+          onClick={() => react("repost")}
+          disabled={!isConnected || busy !== null}
+          active={reposted}
+          color="brass"
+        />
+        <Action
+          icon={Heart}
+          label={likes}
+          onClick={() => react("like")}
+          disabled={!isConnected || busy !== null}
+          active={liked}
+          filled={liked}
+          color="seal"
+        />
+        <Action
+          icon={Quote}
+          label={0}
+          onClick={onQuote ? () => onQuote(post) : undefined}
+          disabled={!isConnected || !onQuote}
+          color="bone"
+        />
         {canModerate && !post.hidden && (
           <button
             onClick={() => setHiding((v) => !v)}
@@ -174,7 +213,10 @@ export function PostCard({
             placeholder="reason (logged on-chain)"
             className="min-w-0 flex-1 rounded-md border border-line bg-ink-soft px-2 py-1.5 text-xs focus:border-seal focus:outline-none"
           />
-          <button onClick={confirmHide} className="rounded-md bg-seal px-3 text-xs font-bold text-white transition hover:bg-seal-bright">
+          <button
+            onClick={confirmHide}
+            className="rounded-md bg-seal px-3 text-xs font-bold text-white transition hover:bg-seal-bright"
+          >
             hide
           </button>
           <button onClick={() => setHiding(false)} className="px-2 text-xs text-bone-dim hover:text-bone">
@@ -220,7 +262,10 @@ function MediaView({ hash }: { hash: `0x${string}` }) {
           />
         </button>
       </DialogTrigger>
-      <DialogContent aria-describedby={undefined} className="w-auto max-w-[96vw] border-0 bg-transparent p-0 shadow-none sm:max-w-[96vw]">
+      <DialogContent
+        aria-describedby={undefined}
+        className="w-auto max-w-[96vw] border-0 bg-transparent p-0 shadow-none sm:max-w-[96vw]"
+      >
         <DialogTitle className="sr-only">Expanded image</DialogTitle>
         <img src={url} alt="" className="max-h-[88vh] w-auto max-w-[96vw] rounded-lg object-contain" />
       </DialogContent>
@@ -245,7 +290,8 @@ function Action({
   filled?: boolean;
   color?: "seal" | "brass" | "bone";
 }) {
-  const hover = color === "seal" ? "hover:text-seal" : color === "brass" ? "hover:text-brass" : "hover:text-bone";
+  const hover =
+    color === "seal" ? "hover:text-seal" : color === "brass" ? "hover:text-brass" : "hover:text-bone";
   const activeCls = active
     ? color === "seal"
       ? "text-seal"
@@ -276,7 +322,7 @@ function renderText(text: string, handles: Handles | undefined, onOpenProfile?: 
   if (!handles || !text.includes("@")) return text;
   const rev = new Map<string, string>();
   for (const [addr, h] of handles) if (h) rev.set(h, addr);
-  return text.split(/(@[A-Za-z0-9_]{1,32})/g).map((part, i) => {
+  return text.split(MENTION_SPLIT_RE).map((part, i) => {
     if (part.startsWith("@")) {
       const addr = rev.get(part.slice(1));
       if (addr) {

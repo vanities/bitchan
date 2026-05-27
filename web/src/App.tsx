@@ -38,24 +38,26 @@ export default function App() {
   const [quoteTo, setQuoteTo] = useState<ReplyTarget | null>(null);
   const [profileAddress, setProfileAddress] = useState<string | null>(null);
   const [postId, setPostId] = useState<string | null>(null);
-  const { posts, handles, isLoading, error } = useTimeline();
+  const { posts, handles, avatars, isLoading, error } = useTimeline();
   const { address } = useAccount();
   const { data: followingArr } = useFollowing(address);
   const notifs = useNotifications(address, address ? handles.get(address.toLowerCase()) : undefined);
-  const [seenNotifAt, setSeenNotifAt] = useState<number>(() => Number(localStorage.getItem("bitchan.notif.seen") || 0));
+  const [seenNotifAt, setSeenNotifAt] = useState<number>(() =>
+    Number(localStorage.getItem("bitchan.notif.seen") || 0),
+  );
   const latestNotifAt = notifs?.[0]?.at ?? 0;
   const hasUnread = !!address && latestNotifAt > seenNotifAt;
 
   const topLevel = useMemo(() => posts.filter((p) => p.parentId === "0"), [posts]);
   const followingSet = new Set(followingArr ?? []);
   const homePosts =
-    homeFilter === "following"
-      ? topLevel.filter((p) => followingSet.has(p.author.toLowerCase()))
-      : topLevel;
+    homeFilter === "following" ? topLevel.filter((p) => followingSet.has(p.author.toLowerCase())) : topLevel;
 
   const threadRoot = view === "post" && postId ? (posts.find((p) => p.id === postId) ?? null) : null;
   const threadReplies = threadRoot
-    ? posts.filter((p) => p.parentId === threadRoot.id).sort((a, b) => Number(a.createdAt) - Number(b.createdAt))
+    ? posts
+        .filter((p) => p.parentId === threadRoot.id)
+        .sort((a, b) => Number(a.createdAt) - Number(b.createdAt))
     : [];
 
   // Drive navigation through the History API so trackpad swipe-back and the
@@ -63,7 +65,11 @@ export default function App() {
   useEffect(() => {
     history.replaceState({ view: "home", profileAddress: null, postId: null }, "");
     function onPop(e: PopStateEvent) {
-      const s = (e.state ?? null) as { view?: View; profileAddress?: string | null; postId?: string | null } | null;
+      const s = (e.state ?? null) as {
+        view?: View;
+        profileAddress?: string | null;
+        postId?: string | null;
+      } | null;
       setView(s?.view ?? "home");
       setProfileAddress(s?.profileAddress ?? null);
       setPostId(s?.postId ?? null);
@@ -73,7 +79,11 @@ export default function App() {
   }, []);
 
   function go(next: { view: View; profileAddress?: string | null; postId?: string | null }) {
-    const entry = { view: next.view, profileAddress: next.profileAddress ?? null, postId: next.postId ?? null };
+    const entry = {
+      view: next.view,
+      profileAddress: next.profileAddress ?? null,
+      postId: next.postId ?? null,
+    };
     history.pushState(entry, "");
     setView(entry.view);
     setProfileAddress(entry.profileAddress);
@@ -108,7 +118,7 @@ export default function App() {
   }
 
   const profileHandle = profileAddress ? handles.get(profileAddress.toLowerCase()) : null;
-  const headerTitle = view === "profile" ? profileHandle ?? "Profile" : TITLES[view];
+  const headerTitle = view === "profile" ? (profileHandle ?? "Profile") : TITLES[view];
 
   return (
     <div className="relative min-h-screen">
@@ -125,12 +135,18 @@ export default function App() {
 
           <div className="sticky top-0 z-20 hidden items-center gap-3 border-b border-line bg-ink/85 px-5 py-4 backdrop-blur lg:flex">
             {(view === "profile" || view === "post") && (
-              <button onClick={() => history.back()} className="text-bone-dim transition hover:text-bone" aria-label="back">
+              <button
+                onClick={() => history.back()}
+                className="text-bone-dim transition hover:text-bone"
+                aria-label="back"
+              >
                 <ArrowLeft size={20} strokeWidth={2.2} />
               </button>
             )}
             <h2 className="text-xl font-bold leading-none tracking-tight">{headerTitle}</h2>
-            {view === "home" && <span className="label-civic ml-auto text-[10px] text-bone-dim">live · chronological</span>}
+            {view === "home" && (
+              <span className="label-civic ml-auto text-[10px] text-bone-dim">live · chronological</span>
+            )}
           </div>
 
           <main className="flex-1 pb-20 lg:pb-0">
@@ -142,7 +158,9 @@ export default function App() {
                       key={f}
                       onClick={() => setHomeFilter(f)}
                       className={`flex-1 py-3 font-semibold transition ${
-                        homeFilter === f ? "border-b-2 border-seal text-bone" : "text-bone-dim hover:bg-ink-soft"
+                        homeFilter === f
+                          ? "border-b-2 border-seal text-bone"
+                          : "text-bone-dim hover:bg-ink-soft"
                       }`}
                     >
                       {f === "all" ? "For you" : "Following"}
@@ -167,10 +185,14 @@ export default function App() {
                   error={error}
                   empty={
                     homeFilter === "following" ? (
-                      <Notice>No posts yet from people you follow. Open someone's profile and hit Follow.</Notice>
+                      <Notice>
+                        No posts yet from people you follow. Open someone's profile and hit Follow.
+                      </Notice>
                     ) : (
                       <div className="px-5 py-16 text-center">
-                        <p className="font-display text-3xl font-extrabold tracking-tight text-bone">The square is silent.</p>
+                        <p className="font-display text-3xl font-extrabold tracking-tight text-bone">
+                          The square is silent.
+                        </p>
                         <p className="mt-2 text-sm text-bone-dim">Be the first citizen to speak.</p>
                       </div>
                     )
@@ -180,7 +202,16 @@ export default function App() {
             )}
 
             {view === "search" && (
-              <SearchView posts={posts} handles={handles} onReply={startReply} onOpenProfile={openProfile} onOpenPost={openPost} onQuote={startQuote} loading={isLoading} error={error} />
+              <SearchView
+                posts={posts}
+                handles={handles}
+                onReply={startReply}
+                onOpenProfile={openProfile}
+                onOpenPost={openPost}
+                onQuote={startQuote}
+                loading={isLoading}
+                error={error}
+              />
             )}
 
             {view === "republic" && (
@@ -190,7 +221,18 @@ export default function App() {
             )}
 
             {view === "profile" && (
-              <ProfileView address={profileAddress} posts={posts} handles={handles} onReply={startReply} onOpenProfile={openProfile} onOpenPost={openPost} onQuote={startQuote} loading={isLoading} error={error} />
+              <ProfileView
+                address={profileAddress}
+                posts={posts}
+                handles={handles}
+                avatars={avatars}
+                onReply={startReply}
+                onOpenProfile={openProfile}
+                onOpenPost={openPost}
+                onQuote={startQuote}
+                loading={isLoading}
+                error={error}
+              />
             )}
 
             {view === "post" &&

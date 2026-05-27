@@ -15,10 +15,14 @@ const HANDLE_SET = parseAbiItem("event HandleSet(address indexed account, string
 // Governance events (all emitted by the Republic contract). Election/recall/
 // judiciary live on separate per-instance contracts — not indexed here yet.
 const CITIZENSHIP_CLAIMED = parseAbiItem("event CitizenshipClaimed(address indexed who)");
-const INVITE_REDEEMED = parseAbiItem("event InviteRedeemed(address indexed who, address indexed inviter, bytes32 indexed code)");
+const INVITE_REDEEMED = parseAbiItem(
+  "event InviteRedeemed(address indexed who, address indexed inviter, bytes32 indexed code)",
+);
 const PRESIDENT_CHANGED = parseAbiItem("event PresidentChanged(address indexed newPresident)");
 const TREASURY_WITHDRAWN = parseAbiItem("event TreasuryWithdrawn(address indexed to, uint256 amount)");
-const DO_NOT_SERVED = parseAbiItem("event DoNotServed(uint256 indexed postId, address indexed by, string reason, uint256 until)");
+const DO_NOT_SERVED = parseAbiItem(
+  "event DoNotServed(uint256 indexed postId, address indexed by, string reason, uint256 until)",
+);
 const FOUNDING_TRANSITIONED = parseAbiItem("event FoundingTransitioned(uint256 atCount, uint256 atTime)");
 const POST_FEE_CHANGED = parseAbiItem("event PostFeeChanged(uint256 newFee)");
 const CITIZENSHIP_COST_CHANGED = parseAbiItem("event CitizenshipCostChanged(uint256 newCost)");
@@ -79,17 +83,29 @@ export const poll = internalAction({
     const latest = await client.getBlockNumber();
 
     const cursor = await ctx.runQuery(internal.indexer.getCursor, {});
-    let from = cursor === null ? start : BigInt(cursor) + 1n;
+    const from = cursor === null ? start : BigInt(cursor) + 1n;
     if (from > latest) return null;
     const to = from + CHUNK > latest ? latest : from + CHUNK;
 
     const logs = await client.getLogs({
       address,
       events: [
-        POSTED, HIDDEN, UNHIDDEN, HANDLE_SET,
-        CITIZENSHIP_CLAIMED, INVITE_REDEEMED, PRESIDENT_CHANGED, TREASURY_WITHDRAWN,
-        DO_NOT_SERVED, FOUNDING_TRANSITIONED, POST_FEE_CHANGED, CITIZENSHIP_COST_CHANGED,
-        AGE_THRESHOLD_CHANGED, SLASHED, ELECTION_SET, RECALL_SET,
+        POSTED,
+        HIDDEN,
+        UNHIDDEN,
+        HANDLE_SET,
+        CITIZENSHIP_CLAIMED,
+        INVITE_REDEEMED,
+        PRESIDENT_CHANGED,
+        TREASURY_WITHDRAWN,
+        DO_NOT_SERVED,
+        FOUNDING_TRANSITIONED,
+        POST_FEE_CHANGED,
+        CITIZENSHIP_COST_CHANGED,
+        AGE_THRESHOLD_CHANGED,
+        SLASHED,
+        ELECTION_SET,
+        RECALL_SET,
       ],
       fromBlock: from,
       toBlock: to,
@@ -149,13 +165,22 @@ export const poll = internalAction({
         case "InviteRedeemed": {
           const who = (a.who as string).toLowerCase();
           const inviter = (a.inviter as string).toLowerCase();
-          await ctx.runMutation(internal.governance.recordCitizen, { address: who, via: "invite", invitedBy: inviter, at });
+          await ctx.runMutation(internal.governance.recordCitizen, {
+            address: who,
+            via: "invite",
+            invitedBy: inviter,
+            at,
+          });
           await gov("citizen", `${short(who)} joined via invite from ${short(inviter)}`, who);
           break;
         }
         case "PresidentChanged": {
           const p = (a.newPresident as string).toLowerCase();
-          await gov("president", isZero(p) ? "president removed" : `president set to ${short(p)}`, isZero(p) ? undefined : p);
+          await gov(
+            "president",
+            isZero(p) ? "president removed" : `president set to ${short(p)}`,
+            isZero(p) ? undefined : p,
+          );
           break;
         }
         case "TreasuryWithdrawn": {
@@ -165,7 +190,11 @@ export const poll = internalAction({
         }
         case "DoNotServed": {
           const by = (a.by as string).toLowerCase();
-          await gov("moderation", `do-not-serve #${(a.postId as bigint).toString()}: ${a.reason as string}`, by);
+          await gov(
+            "moderation",
+            `do-not-serve #${(a.postId as bigint).toString()}: ${a.reason as string}`,
+            by,
+          );
           break;
         }
         case "FoundingTransitioned":

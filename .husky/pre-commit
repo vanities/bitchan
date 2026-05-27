@@ -1,0 +1,13 @@
+staged=$(git diff --cached --name-only)
+
+# Web: format + lint staged files, then typecheck and unit-test.
+if echo "$staged" | grep -q '^web/'; then
+  (cd web && bunx lint-staged) || exit 1
+  (cd web && bun run typecheck) || exit 1
+  (cd web && bun run test) || exit 1
+fi
+
+# Contracts: run the Foundry suite only when Solidity changed.
+if echo "$staged" | grep -qE '^contracts/.*\.sol$'; then
+  (cd contracts && FOUNDRY_DISABLE_NIGHTLY_WARNING=1 forge test) || exit 1
+fi

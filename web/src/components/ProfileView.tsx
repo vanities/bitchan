@@ -1,10 +1,18 @@
-import { useEffect, useState } from "react";
-import { useAccount, useReadContract, useSignTypedData, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
+import { useEffect, useRef, useState } from "react";
+import {
+  useAccount,
+  useReadContract,
+  useSignTypedData,
+  useWaitForTransactionReceipt,
+  useWriteContract,
+} from "wagmi";
 import { keccak256, stringToBytes } from "viem";
-import type { TimelinePost, Handles } from "../lib/useTimeline";
+import type { TimelinePost, Handles, Avatars } from "../lib/useTimeline";
 import { bitchanAbi, bitchanAddress, chain, explorerAddress } from "../lib/contract";
 import { useEnsName } from "../lib/ens";
 import { submitReaction, useFollowing, useFollowers } from "../lib/engagement";
+import { setAvatar } from "../lib/avatar";
+import { hasMedia, mediaUrl, uploadMedia } from "../lib/media";
 import { Feed, Notice } from "./Feed";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
@@ -13,6 +21,7 @@ export function ProfileView({
   address,
   posts,
   handles,
+  avatars,
   onReply,
   onOpenProfile,
   onOpenPost,
@@ -23,6 +32,7 @@ export function ProfileView({
   address: string | null;
   posts: TimelinePost[];
   handles: Handles;
+  avatars?: Avatars;
   onReply?: (post: TimelinePost) => void;
   onOpenProfile?: (address: `0x${string}`) => void;
   onOpenPost?: (post: TimelinePost) => void;
@@ -47,6 +57,8 @@ export function ProfileView({
   const { data: profileFollowing } = useFollowing(address ?? undefined);
   const { data: profileFollowers } = useFollowers(address ?? undefined);
   const [listView, setListView] = useState<"following" | "followers" | null>(null);
+  const avatarRef = useRef<HTMLInputElement>(null);
+  const [avatarBusy, setAvatarBusy] = useState(false);
 
   // Pre-check handle availability (debounced) so we error before signing a tx that
   // would revert HandleTaken. Key matches the contract: keccak256(bytes(handle)).
@@ -68,6 +80,7 @@ export function ProfileView({
 
   const addr = address.toLowerCase();
   const explorer = explorerAddress(address);
+  const profileAvatar = avatars?.get(addr) ?? null;
   const viewer = viewerAddr?.toLowerCase();
   const isSelf = !!viewer && viewer === addr;
   const handle = handles.get(addr) ?? null;
@@ -77,20 +90,49 @@ export function ProfileView({
   const followerCount = profileFollowers?.length ?? 0;
   const handleOwnerLc = typeof handleOwner === "string" ? handleOwner.toLowerCase() : null;
   const handleTaken =
-    !!handleOwnerLc && handleOwnerLc !== "0x0000000000000000000000000000000000000000" && handleOwnerLc !== addr;
+    !!handleOwnerLc &&
+    handleOwnerLc !== "0x0000000000000000000000000000000000000000" &&
+    handleOwnerLc !== addr;
   const handleFree = debouncedHandle.length > 0 && handleOwner !== undefined && !handleTaken;
 
   function claim() {
     const h = handleInput.trim();
     if (!h || handleTaken) return;
-    writeContract({ address: bitchanAddress, abi: bitchanAbi, functionName: "setHandle", args: [h], chainId: chain.id });
+    writeContract({
+      address: bitchanAddress,
+      abi: bitchanAbi,
+      functionName: "setHandle",
+      args: [h],
+      chainId: chain.id,
+    });
+  }
+
+  async function onPickAvatar(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !viewerAddr) return;
+    setAvatarBusy(true);
+    try {
+      const { hash } = await uploadMedia(file);
+      await setAvatar({ address: viewerAddr, avatar: hash, signTypedDataAsync });
+    } catch (err) {
+      console.error("avatar failed", err);
+    } finally {
+      setAvatarBusy(false);
+      if (avatarRef.current) avatarRef.current.value = "";
+    }
   }
 
   async function toggleFollow() {
     if (!viewerAddr || busyFollow) return;
     setBusyFollow(true);
     try {
-      await submitReaction({ signTypedDataAsync, address: viewerAddr, kind: "follow", target: addr, active: !isFollowing });
+      await submitReaction({
+        signTypedDataAsync,
+        address: viewerAddr,
+        kind: "follow",
+        target: addr,
+        active: !isFollowing,
+      });
     } catch (e) {
       console.error("follow failed", e);
     } finally {
@@ -102,11 +144,30 @@ export function ProfileView({
     <div>
       <div className="border-b border-line px-5 py-5">
         <div className="flex items-center gap-3">
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-seal text-xl font-bold text-white">
-            {(handle ?? ensName ?? "a")[0]!.toUpperCase()}
-          </div>
+          <button
+            onClick={isSelf ? () => avatarRef.current?.click() : undefined}
+            disabled={!isSelf || avatarBusy}
+            title={isSelf ? "change picture" : undefined}
+            className="group relative h-14 w-14 shrink-0 overflow-hidden rounded-full bg-seal"
+          >
+            {profileAvatar && hasMedia(profileAvatar) ? (
+              <img src={mediaUrl(profileAvatar)} alt="" className="h-full w-full object-cover" />
+            ) : (
+              <span className="grid h-full w-full place-items-center text-xl font-bold text-white">
+                {(handle ?? ensName ?? "a")[0]!.toUpperCase()}
+              </span>
+            )}
+            {isSelf && (
+              <span className="absolute inset-0 grid place-items-center bg-ink/60 text-[9px] font-semibold text-bone opacity-0 transition group-hover:opacity-100">
+                {avatarBusy ? "…" : "edit"}
+              </span>
+            )}
+          </button>
+          <input ref={avatarRef} type="file" accept="image/*" onChange={onPickAvatar} className="hidden" />
           <div className="min-w-0">
-            <div className="truncate text-xl font-bold tracking-tight text-bone">{handle ?? ensName ?? "anonymous"}</div>
+            <div className="truncate text-xl font-bold tracking-tight text-bone">
+              {handle ?? ensName ?? "anonymous"}
+            </div>
             {explorer ? (
               <a
                 href={explorer}
@@ -147,14 +208,16 @@ export function ProfileView({
             disabled={!followingCount}
             className="transition hover:underline disabled:opacity-50"
           >
-            <span className="font-bold text-bone">{followingCount}</span> <span className="text-bone-dim">Following</span>
+            <span className="font-bold text-bone">{followingCount}</span>{" "}
+            <span className="text-bone-dim">Following</span>
           </button>
           <button
             onClick={() => setListView("followers")}
             disabled={!followerCount}
             className="transition hover:underline disabled:opacity-50"
           >
-            <span className="font-bold text-bone">{followerCount}</span> <span className="text-bone-dim">Followers</span>
+            <span className="font-bold text-bone">{followerCount}</span>{" "}
+            <span className="text-bone-dim">Followers</span>
           </button>
         </div>
 
@@ -176,14 +239,14 @@ export function ProfileView({
             </button>
           </div>
         )}
-        {isSelf && handleTaken && <p className="mt-1.5 font-mono text-[11px] text-seal">that handle is taken</p>}
+        {isSelf && handleTaken && (
+          <p className="mt-1.5 font-mono text-[11px] text-seal">that handle is taken</p>
+        )}
         {isSelf && handleFree && <p className="mt-1.5 font-mono text-[11px] text-brass">available</p>}
         {isSelf && writeError && !/rejected|denied/i.test(writeError.message) && (
           <p className="mt-2 font-mono text-xs text-seal">{writeError.message.split("\n")[0]}</p>
         )}
-        {!isConnected && !isSelf && (
-          <p className="mt-3 text-xs text-bone-dim">Connect a wallet to follow.</p>
-        )}
+        {!isConnected && !isSelf && <p className="mt-3 text-xs text-bone-dim">Connect a wallet to follow.</p>}
       </div>
 
       <Feed
@@ -203,6 +266,7 @@ export function ProfileView({
           title={listView === "following" ? "Following" : "Followers"}
           addresses={listView === "following" ? (profileFollowing ?? []) : (profileFollowers ?? [])}
           handles={handles}
+          avatars={avatars}
           onOpenProfile={(a) => {
             setListView(null);
             onOpenProfile?.(a);
@@ -218,32 +282,48 @@ function FollowList({
   title,
   addresses,
   handles,
+  avatars,
   onOpenProfile,
   onClose,
 }: {
   title: string;
   addresses: string[];
   handles: Handles;
+  avatars?: Avatars;
   onOpenProfile?: (a: `0x${string}`) => void;
   onClose: () => void;
 }) {
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-sm border-line bg-ink p-0">
-        <DialogTitle className="border-b border-line px-4 py-3 text-sm font-bold text-bone">{title}</DialogTitle>
+        <DialogTitle className="border-b border-line px-4 py-3 text-sm font-bold text-bone">
+          {title}
+        </DialogTitle>
         <ul className="max-h-[60vh] overflow-y-auto">
-          {addresses.length === 0 && <li className="px-4 py-6 text-center text-sm text-bone-dim">Nobody yet.</li>}
+          {addresses.length === 0 && (
+            <li className="px-4 py-6 text-center text-sm text-bone-dim">Nobody yet.</li>
+          )}
           {addresses.map((a) => (
             <li key={a}>
               <button
                 onClick={() => onOpenProfile?.(a as `0x${string}`)}
                 className="flex w-full items-center gap-2 px-4 py-2.5 text-left transition hover:bg-ink-soft"
               >
-                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-seal text-xs font-bold text-white">
-                  {(handles.get(a.toLowerCase()) ?? "a")[0]!.toUpperCase()}
+                <span className="grid h-8 w-8 shrink-0 place-items-center overflow-hidden rounded-full bg-seal text-xs font-bold text-white">
+                  {avatars?.get(a.toLowerCase()) && hasMedia(avatars.get(a.toLowerCase())!) ? (
+                    <img
+                      src={mediaUrl(avatars.get(a.toLowerCase())!)}
+                      alt=""
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    (handles.get(a.toLowerCase()) ?? "a")[0]!.toUpperCase()
+                  )}
                 </span>
                 <span className="min-w-0">
-                  <span className="block truncate text-sm font-semibold text-bone">{handles.get(a.toLowerCase()) ?? "anon"}</span>
+                  <span className="block truncate text-sm font-semibold text-bone">
+                    {handles.get(a.toLowerCase()) ?? "anon"}
+                  </span>
                   <span className="block truncate font-mono text-[11px] text-bone-dim">
                     {a.slice(0, 10)}…{a.slice(-6)}
                   </span>

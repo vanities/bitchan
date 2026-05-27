@@ -8,6 +8,7 @@ export default defineSchema({
   accounts: defineTable({
     address: v.string(), // lowercased
     handle: v.optional(v.string()),
+    avatar: v.optional(v.string()), // media hash (off-chain, set via a signed mutation)
     firstSeenAt: v.number(),
   }).index("by_address", ["address"]),
 

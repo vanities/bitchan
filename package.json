@@ -16,9 +16,14 @@
     "contracts:test": "cd contracts && forge test -vvv",
     "contracts:deploy:local": "cd contracts && forge script script/Deploy.s.sol:Deploy --rpc-url http://127.0.0.1:8545 --broadcast",
     "convex:dev": "cd web && bunx convex dev",
-    "web:dev": "cd web && bun run dev"
+    "web:dev": "cd web && bun run dev",
+    "prepare": "husky"
   },
   "engines": {
     "bun": ">=1.3.0"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^17.0.5"
   }
 }
