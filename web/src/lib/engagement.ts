@@ -1,6 +1,8 @@
 import { useQuery } from "convex/react";
+import { privateKeyToAccount } from "viem/accounts";
 import { api } from "../../convex/_generated/api";
 import { convex } from "./convex";
+import { getSession } from "./session";
 import { chain } from "./contract";
 
 // Must match the Convex `reactions.react` action's domain/types exactly.
@@ -65,8 +67,12 @@ export async function submitReaction(opts: {
   target: string;
   active: boolean;
 }): Promise<void> {
+  // One wallet popup authorizes a browser session key; reactions after that are
+  // signed silently by the delegate key (no popup) until it expires.
+  const session = await getSession(opts.address, opts.signTypedDataAsync as unknown as Parameters<typeof getSession>[1]);
+  const delegate = privateKeyToAccount(session.privateKey);
   const nonce = BigInt(Date.now());
-  const signature = await opts.signTypedDataAsync({
+  const signature = await delegate.signTypedData({
     domain: engagementDomain,
     types: engagementTypes,
     primaryType: "Reaction",
@@ -80,5 +86,8 @@ export async function submitReaction(opts: {
     active: opts.active,
     nonce: nonce.toString(),
     signature,
+    delegate: session.delegate,
+    expiry: session.expiry.toString(),
+    delegationSig: session.delegationSig,
   });
 }

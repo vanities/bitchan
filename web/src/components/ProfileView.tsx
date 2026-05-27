@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { useAccount, useSignTypedData, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
+import { useAccount, useReadContract, useSignTypedData, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
+import { keccak256, stringToBytes } from "viem";
 import type { TimelinePost, Handles } from "../lib/useTimeline";
 import { bitchanAbi, bitchanAddress, chain } from "../lib/contract";
 import { submitReaction, useFollowing } from "../lib/engagement";
@@ -12,6 +13,7 @@ export function ProfileView({
   handles,
   onReply,
   onOpenProfile,
+  onOpenPost,
   loading,
   error,
 }: {
@@ -20,6 +22,7 @@ export function ProfileView({
   handles: Handles;
   onReply?: (post: TimelinePost) => void;
   onOpenProfile?: (address: `0x${string}`) => void;
+  onOpenPost?: (post: TimelinePost) => void;
   loading?: boolean;
   error?: unknown;
 }) {
@@ -29,13 +32,29 @@ export function ProfileView({
   const [busyFollow, setBusyFollow] = useState(false);
 
   const { data: hHash, writeContract, isPending, error: writeError } = useWriteContract();
-  const { isSuccess } = useWaitForTransactionReceipt({ hash: hHash });
+  const { isSuccess, isLoading: settling } = useWaitForTransactionReceipt({ hash: hHash });
   useEffect(() => {
     if (!isSuccess) return;
     setHandleInput("");
   }, [isSuccess]);
 
   const { data: followingArr } = useFollowing(viewerAddr);
+
+  // Pre-check handle availability (debounced) so we error before signing a tx that
+  // would revert HandleTaken. Key matches the contract: keccak256(bytes(handle)).
+  const [debouncedHandle, setDebouncedHandle] = useState("");
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedHandle(handleInput.trim()), 350);
+    return () => clearTimeout(t);
+  }, [handleInput]);
+  const { data: handleOwner } = useReadContract({
+    address: bitchanAddress,
+    abi: bitchanAbi,
+    functionName: "ownerOfHandle",
+    args: [keccak256(stringToBytes(debouncedHandle))],
+    chainId: chain.id,
+    query: { enabled: debouncedHandle.length > 0 },
+  });
 
   if (!address) return <Notice>No profile selected.</Notice>;
 
@@ -45,10 +64,14 @@ export function ProfileView({
   const handle = handles.get(addr) ?? null;
   const theirPosts = posts.filter((p) => p.author.toLowerCase() === addr);
   const isFollowing = new Set(followingArr ?? []).has(addr);
+  const handleOwnerLc = typeof handleOwner === "string" ? handleOwner.toLowerCase() : null;
+  const handleTaken =
+    !!handleOwnerLc && handleOwnerLc !== "0x0000000000000000000000000000000000000000" && handleOwnerLc !== addr;
+  const handleFree = debouncedHandle.length > 0 && handleOwner !== undefined && !handleTaken;
 
   function claim() {
     const h = handleInput.trim();
-    if (!h) return;
+    if (!h || handleTaken) return;
     writeContract({ address: bitchanAddress, abi: bitchanAbi, functionName: "setHandle", args: [h], chainId: chain.id });
   }
 
@@ -107,14 +130,16 @@ export function ProfileView({
             />
             <button
               onClick={claim}
-              disabled={!handleInput.trim() || isPending}
+              disabled={!handleInput.trim() || isPending || settling || handleTaken}
               className="rounded-md border border-brass px-4 py-2 text-sm font-semibold text-brass transition hover:bg-brass/10 disabled:opacity-40"
             >
-              {isPending ? "…" : handle ? "change" : "claim"}
+              {isPending ? "confirm…" : settling ? "saving…" : handle ? "change" : "claim"}
             </button>
           </div>
         )}
-        {isSelf && writeError && (
+        {isSelf && handleTaken && <p className="mt-1.5 font-mono text-[11px] text-seal">that handle is taken</p>}
+        {isSelf && handleFree && <p className="mt-1.5 font-mono text-[11px] text-brass">available</p>}
+        {isSelf && writeError && !/rejected|denied/i.test(writeError.message) && (
           <p className="mt-2 font-mono text-xs text-seal">{writeError.message.split("\n")[0]}</p>
         )}
         {!isConnected && !isSelf && (
@@ -127,6 +152,7 @@ export function ProfileView({
         handles={handles}
         onReply={onReply}
         onOpenProfile={onOpenProfile}
+        onOpenPost={onOpenPost}
         loading={loading}
         error={error}
         empty={<Notice>{isSelf ? "You haven't posted yet — head to The Square." : "No posts yet."}</Notice>}

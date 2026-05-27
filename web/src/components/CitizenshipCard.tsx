@@ -8,6 +8,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { formatEther, keccak256, stringToBytes } from "viem";
 import { ShieldCheck } from "lucide-react";
+import confetti from "canvas-confetti";
 import { bitchanAbi, bitchanAddress, chain } from "../lib/contract";
 
 const ZERO_ADDR = "0x0000000000000000000000000000000000000000" as const;
@@ -17,6 +18,8 @@ export function CitizenshipCard() {
   const qc = useQueryClient();
   const [inviteIn, setInviteIn] = useState("");
   const [mintedCode, setMintedCode] = useState<string | null>(null);
+  const [pending, setPending] = useState<"claim" | "mint" | "redeem" | null>(null);
+  const [pendingCode, setPendingCode] = useState<string | null>(null);
 
   const gated = { query: { enabled: isConnected && !!address } };
   const base = { address: bitchanAddress, abi: bitchanAbi, chainId: chain.id } as const;
@@ -31,13 +34,27 @@ export function CitizenshipCard() {
   const { isLoading: mining, isSuccess } = useWaitForTransactionReceipt({ hash });
 
   useEffect(() => {
-    if (!isSuccess) return;
+    if (!isSuccess || !pending) return;
     citizen.refetch();
     voter.refetch();
     regAt.refetch();
     qc.invalidateQueries({ queryKey: ["stats"] });
+    if (pending === "mint") setMintedCode(pendingCode); // reveal only after it actually minted
+    if (pending === "claim" || pending === "redeem") {
+      confetti({ particleCount: 140, spread: 75, origin: { y: 0.7 }, colors: ["#e5384e", "#d4a23c", "#f4ede4"] });
+    }
+    setPending(null);
+    setPendingCode(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSuccess]);
+
+  // A rejected/failed tx clears the pending action so we never reveal an un-minted code.
+  useEffect(() => {
+    if (error) {
+      setPending(null);
+      setPendingCode(null);
+    }
+  }, [error]);
 
   if (!isConnected) {
     return (
@@ -57,16 +74,21 @@ export function CitizenshipCard() {
   const busy = isPending || mining;
 
   function claim() {
+    setPending("claim");
+    setMintedCode(null);
     writeContract({ ...base, functionName: "claimCitizenship", value: (cost.data as bigint | undefined) ?? 0n });
   }
   function mint() {
     const code = keccak256(stringToBytes(`${address}-${Date.now()}-${Math.random()}`));
-    setMintedCode(code);
+    setPendingCode(code); // held until the tx confirms — revealed in the success effect
+    setPending("mint");
+    setMintedCode(null);
     writeContract({ ...base, functionName: "mintInvite", args: [code] });
   }
   function redeem() {
     const code = inviteIn.trim();
     if (!/^0x[0-9a-fA-F]{64}$/.test(code)) return;
+    setPending("redeem");
     writeContract({ ...base, functionName: "redeemInvite", args: [code as `0x${string}`] });
   }
 
@@ -126,7 +148,9 @@ export function CitizenshipCard() {
         </div>
       )}
 
-      {error && <p className="mt-2 font-mono text-[11px] text-seal">{error.message.split("\n")[0]}</p>}
+      {error && !/rejected|denied/i.test(error.message) && (
+        <p className="mt-2 font-mono text-[11px] text-seal">{error.message.split("\n")[0]}</p>
+      )}
     </Shell>
   );
 }

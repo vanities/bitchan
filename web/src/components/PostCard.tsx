@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useAccount, useSignTypedData, useWriteContract } from "wagmi";
 import { EyeOff, Heart, MessageCircle, Repeat2, type LucideIcon } from "lucide-react";
-import type { TimelinePost } from "../lib/useTimeline";
+import type { TimelinePost, Handles } from "../lib/useTimeline";
 import { submitReaction, type Engagement } from "../lib/engagement";
 import { hasMedia, mediaUrl, useMediaInfo } from "../lib/media";
 import { bitchanAbi, bitchanAddress, chain } from "../lib/contract";
@@ -13,16 +13,20 @@ export function PostCard({
   index = 0,
   onReply,
   onOpenProfile,
+  onOpenPost,
   canModerate,
   eng,
+  handles,
 }: {
   post: TimelinePost;
   handle: string | null;
   index?: number;
   onReply?: (post: TimelinePost) => void;
   onOpenProfile?: (address: `0x${string}`) => void;
+  onOpenPost?: (post: TimelinePost) => void;
   canModerate?: boolean;
   eng?: Engagement;
+  handles?: Handles;
 }) {
   const { address, isConnected } = useAccount();
   const { signTypedDataAsync } = useSignTypedData();
@@ -94,7 +98,12 @@ export function PostCard({
             </p>
           )}
           {post.text && (
-            <p className="mt-1 whitespace-pre-wrap break-words text-[15px] leading-normal text-bone">{post.text}</p>
+            <p
+              onClick={onOpenPost ? () => onOpenPost(post) : undefined}
+              className={`mt-1 whitespace-pre-wrap break-words text-[15px] leading-normal text-bone ${onOpenPost ? "cursor-pointer" : ""}`}
+            >
+              {renderText(post.text, handles, onOpenProfile)}
+            </p>
           )}
           {hasMedia(post.mediaHash) && <MediaView hash={post.mediaHash} />}
         </>
@@ -222,6 +231,35 @@ function Action({
 
 function short(addr: string) {
   return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
+}
+
+// Linkify @handle mentions → profile links. Resolves against the address→handle
+// map; unknown handles render as plain text. stopPropagation so a mention click
+// doesn't also open the post thread.
+function renderText(text: string, handles: Handles | undefined, onOpenProfile?: (a: `0x${string}`) => void) {
+  if (!handles || !text.includes("@")) return text;
+  const rev = new Map<string, string>();
+  for (const [addr, h] of handles) if (h) rev.set(h, addr);
+  return text.split(/(@[A-Za-z0-9_]{1,32})/g).map((part, i) => {
+    if (part.startsWith("@")) {
+      const addr = rev.get(part.slice(1));
+      if (addr) {
+        return (
+          <button
+            key={i}
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpenProfile?.(addr as `0x${string}`);
+            }}
+            className="text-brass hover:underline"
+          >
+            {part}
+          </button>
+        );
+      }
+    }
+    return part;
+  });
 }
 
 function timeAgo(secStr: string) {

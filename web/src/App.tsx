@@ -10,7 +10,7 @@ import { RepublicPanel } from "./components/RepublicPanel";
 import { useTimeline, type TimelinePost } from "./lib/useTimeline";
 import { useFollowing } from "./lib/engagement";
 
-type View = "home" | "search" | "republic" | "profile";
+type View = "home" | "search" | "republic" | "profile" | "post";
 
 const NAV = [
   { key: "home", label: "The Square", Icon: Landmark },
@@ -25,6 +25,7 @@ const TITLES: Record<View, string> = {
   search: "Search",
   republic: "The Republic",
   profile: "Profile",
+  post: "Thread",
 };
 
 export default function App() {
@@ -32,6 +33,7 @@ export default function App() {
   const [homeFilter, setHomeFilter] = useState<"all" | "following">("all");
   const [replyTo, setReplyTo] = useState<ReplyTarget | null>(null);
   const [profileAddress, setProfileAddress] = useState<string | null>(null);
+  const [postId, setPostId] = useState<string | null>(null);
   const { posts, handles, isLoading, error } = useTimeline();
   const { address } = useAccount();
   const { data: followingArr } = useFollowing(address);
@@ -43,27 +45,37 @@ export default function App() {
       ? topLevel.filter((p) => followingSet.has(p.author.toLowerCase()))
       : topLevel;
 
+  const threadRoot = view === "post" && postId ? (posts.find((p) => p.id === postId) ?? null) : null;
+  const threadReplies = threadRoot
+    ? posts.filter((p) => p.parentId === threadRoot.id).sort((a, b) => Number(a.createdAt) - Number(b.createdAt))
+    : [];
+
   // Drive navigation through the History API so trackpad swipe-back and the
   // browser back/forward buttons work (state-only nav leaves no history entry).
   useEffect(() => {
-    history.replaceState({ view: "home", profileAddress: null }, "");
+    history.replaceState({ view: "home", profileAddress: null, postId: null }, "");
     function onPop(e: PopStateEvent) {
-      const s = (e.state ?? null) as { view?: View; profileAddress?: string | null } | null;
+      const s = (e.state ?? null) as { view?: View; profileAddress?: string | null; postId?: string | null } | null;
       setView(s?.view ?? "home");
       setProfileAddress(s?.profileAddress ?? null);
+      setPostId(s?.postId ?? null);
     }
     window.addEventListener("popstate", onPop);
     return () => window.removeEventListener("popstate", onPop);
   }, []);
 
-  function go(next: { view: View; profileAddress?: string | null }) {
-    const entry = { view: next.view, profileAddress: next.profileAddress ?? null };
+  function go(next: { view: View; profileAddress?: string | null; postId?: string | null }) {
+    const entry = { view: next.view, profileAddress: next.profileAddress ?? null, postId: next.postId ?? null };
     history.pushState(entry, "");
     setView(entry.view);
     setProfileAddress(entry.profileAddress);
+    setPostId(entry.postId);
   }
   function openProfile(a: string) {
     go({ view: "profile", profileAddress: a });
+  }
+  function openPost(post: TimelinePost) {
+    go({ view: "post", postId: post.id });
   }
   function nav(key: NavKey) {
     if (key === "citizen") go({ view: "profile", profileAddress: address ?? null });
@@ -91,7 +103,7 @@ export default function App() {
           </header>
 
           <div className="sticky top-0 z-20 hidden items-center gap-3 border-b border-line bg-ink/85 px-5 py-4 backdrop-blur lg:flex">
-            {view === "profile" && (
+            {(view === "profile" || view === "post") && (
               <button onClick={() => history.back()} className="text-bone-dim transition hover:text-bone" aria-label="back">
                 <ArrowLeft size={20} strokeWidth={2.2} />
               </button>
@@ -122,6 +134,7 @@ export default function App() {
                   handles={handles}
                   onReply={startReply}
                   onOpenProfile={openProfile}
+                  onOpenPost={openPost}
                   loading={isLoading}
                   error={error}
                   empty={
@@ -139,7 +152,7 @@ export default function App() {
             )}
 
             {view === "search" && (
-              <SearchView posts={posts} handles={handles} onReply={startReply} onOpenProfile={openProfile} loading={isLoading} error={error} />
+              <SearchView posts={posts} handles={handles} onReply={startReply} onOpenProfile={openProfile} onOpenPost={openPost} loading={isLoading} error={error} />
             )}
 
             {view === "republic" && (
@@ -149,16 +162,30 @@ export default function App() {
             )}
 
             {view === "profile" && (
-              <ProfileView address={profileAddress} posts={posts} handles={handles} onReply={startReply} onOpenProfile={openProfile} loading={isLoading} error={error} />
+              <ProfileView address={profileAddress} posts={posts} handles={handles} onReply={startReply} onOpenProfile={openProfile} onOpenPost={openPost} loading={isLoading} error={error} />
             )}
+
+            {view === "post" &&
+              (threadRoot ? (
+                <Feed
+                  posts={[threadRoot, ...threadReplies]}
+                  handles={handles}
+                  onReply={startReply}
+                  onOpenProfile={openProfile}
+                  loading={isLoading}
+                  error={error}
+                  empty={<Notice>Nothing here.</Notice>}
+                />
+              ) : (
+                <Notice>{isLoading ? "loading…" : "Post not found."}</Notice>
+              ))}
           </main>
         </div>
 
-        {view !== "republic" && (
-          <aside className="sticky top-0 hidden h-screen w-[350px] shrink-0 overflow-y-auto px-6 py-5 xl:block">
-            <RepublicPanel onOpenProfile={openProfile} handles={handles} />
-          </aside>
-        )}
+        {/* Always render the rail (reserve its width) so navigating to Republic doesn't shift the layout. */}
+        <aside className="sticky top-0 hidden h-screen w-[350px] shrink-0 overflow-y-auto px-6 py-5 xl:block">
+          {view !== "republic" && <RepublicPanel onOpenProfile={openProfile} handles={handles} />}
+        </aside>
       </div>
 
       <BottomNav view={view} onNav={nav} />

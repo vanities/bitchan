@@ -12,6 +12,7 @@ export function Feed({
   handles,
   onReply,
   onOpenProfile,
+  onOpenPost,
   loading,
   error,
   empty,
@@ -20,6 +21,7 @@ export function Feed({
   handles: Handles;
   onReply?: (post: TimelinePost) => void;
   onOpenProfile?: (address: `0x${string}`) => void;
+  onOpenPost?: (post: TimelinePost) => void;
   loading?: boolean;
   error?: unknown;
   empty?: ReactNode;
@@ -67,8 +69,10 @@ export function Feed({
           index={i}
           onReply={onReply}
           onOpenProfile={onOpenProfile}
+          onOpenPost={onOpenPost}
           canModerate={canModerate}
           eng={engagement?.[p.id]}
+          handles={handles}
         />
       ))}
     </ul>
