@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useAccount, useSignTypedData, useWriteContract } from "wagmi";
 import { EyeOff, Heart, MessageCircle, Quote, Repeat2, type LucideIcon } from "lucide-react";
 import type { TimelinePost, Handles } from "../lib/useTimeline";
@@ -6,7 +6,9 @@ import { submitReaction, type Engagement } from "../lib/engagement";
 import { hasMedia, mediaUrl, useMediaInfo } from "../lib/media";
 import { bitchanAbi, bitchanAddress, chain } from "../lib/contract";
 import { useEnsName } from "../lib/ens";
-import { MENTION_SPLIT_RE } from "../lib/mentions";
+import { tokenize } from "../lib/links";
+import { firstEmbed } from "../lib/embeds";
+import { Embed } from "./Embed";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 export function PostCard({
@@ -49,6 +51,7 @@ export function PostCard({
   const { writeContract: writeHide } = useWriteContract();
 
   const isReply = post.parentId !== "0";
+  const embed = useMemo(() => firstEmbed(post.text), [post.text]);
   // Optimistic overrides for instant feedback; cleared once the reactive query catches up.
   const liked = optLike ?? eng?.likedByViewer ?? false;
   const reposted = optRepost ?? eng?.repostedByViewer ?? false;
@@ -166,6 +169,7 @@ export function PostCard({
             </button>
           )}
           {hasMedia(post.mediaHash) && <MediaView hash={post.mediaHash} />}
+          {embed && <Embed embed={embed} />}
         </>
       )}
 
@@ -322,16 +326,15 @@ function short(addr: string) {
   return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
 }
 
-// Linkify @handle mentions → profile links. Resolves against the address→handle
-// map; unknown handles render as plain text. stopPropagation so a mention click
-// doesn't also open the post thread.
+// Linkify @handle mentions (→ profile links, resolved against the address→handle
+// map) and URLs (→ new-tab links). stopPropagation so a link/mention click doesn't
+// also open the post thread.
 function renderText(text: string, handles: Handles | undefined, onOpenProfile?: (a: `0x${string}`) => void) {
-  if (!handles || !text.includes("@")) return text;
   const rev = new Map<string, string>();
-  for (const [addr, h] of handles) if (h) rev.set(h, addr);
-  return text.split(MENTION_SPLIT_RE).map((part, i) => {
-    if (part.startsWith("@")) {
-      const addr = rev.get(part.slice(1));
+  if (handles) for (const [addr, h] of handles) if (h) rev.set(h.toLowerCase(), addr);
+  return tokenize(text).map((tok, i) => {
+    if (tok.type === "mention") {
+      const addr = rev.get(tok.handle.toLowerCase());
       if (addr) {
         return (
           <button
@@ -342,12 +345,27 @@ function renderText(text: string, handles: Handles | undefined, onOpenProfile?: 
             }}
             className="text-brass hover:underline"
           >
-            {part}
+            @{tok.handle}
           </button>
         );
       }
+      return `@${tok.handle}`;
     }
-    return part;
+    if (tok.type === "url") {
+      return (
+        <a
+          key={i}
+          href={tok.href}
+          target="_blank"
+          rel="noopener noreferrer nofollow"
+          onClick={(e) => e.stopPropagation()}
+          className="break-words text-brass hover:underline"
+        >
+          {tok.href}
+        </a>
+      );
+    }
+    return tok.value;
   });
 }
 
