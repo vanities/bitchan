@@ -20,8 +20,9 @@ export const writeReaction = internalMutation({
         q.eq("account", a.account).eq("kind", a.kind).eq("target", a.target),
       )
       .unique();
-    if (existing) await ctx.db.patch(existing._id, { active: a.active });
-    else await ctx.db.insert("reactions", { account: a.account, kind: a.kind, target: a.target, active: a.active });
+    const at = Date.now();
+    if (existing) await ctx.db.patch(existing._id, { active: a.active, at });
+    else await ctx.db.insert("reactions", { account: a.account, kind: a.kind, target: a.target, active: a.active, at });
     console.log(`[react] ${a.active ? "+" : "-"}${a.kind} ${a.target} by ${a.account}`);
     return null;
   },

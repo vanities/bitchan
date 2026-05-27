@@ -58,6 +58,11 @@ export function useFollowers(account?: string) {
   return { data: res ? res.followers.map((a) => a.toLowerCase()) : undefined };
 }
 
+/** Live notifications for a viewer (replies/mentions/follows/likes/reposts). */
+export function useNotifications(viewer?: string, handle?: string | null) {
+  return useQuery(api.notifications.feed, viewer ? { viewer, handle: handle ?? undefined } : "skip");
+}
+
 type SignTypedDataAsync = (args: {
   domain: typeof engagementDomain;
   types: typeof engagementTypes;

@@ -1,21 +1,23 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAccount } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { ArrowLeft, CircleUser, Landmark, Scale, Search } from "lucide-react";
+import { ArrowLeft, Bell, CircleUser, Landmark, Scale, Search } from "lucide-react";
 import { Composer, type ReplyTarget } from "./components/Composer";
 import { Feed, Notice } from "./components/Feed";
 import { SearchView } from "./components/SearchView";
 import { ProfileView } from "./components/ProfileView";
 import { RepublicPanel } from "./components/RepublicPanel";
+import { NotificationsView } from "./components/NotificationsView";
 import { useTimeline, type TimelinePost } from "./lib/useTimeline";
-import { useFollowing } from "./lib/engagement";
+import { useFollowing, useNotifications } from "./lib/engagement";
 
-type View = "home" | "search" | "republic" | "profile" | "post";
+type View = "home" | "search" | "republic" | "profile" | "post" | "notifications";
 
 const NAV = [
   { key: "home", label: "The Square", Icon: Landmark },
   { key: "search", label: "Search", Icon: Search },
   { key: "republic", label: "Republic", Icon: Scale },
+  { key: "notifications", label: "Notifications", Icon: Bell },
   { key: "citizen", label: "Citizen", Icon: CircleUser },
 ] as const;
 type NavKey = (typeof NAV)[number]["key"];
@@ -26,6 +28,7 @@ const TITLES: Record<View, string> = {
   republic: "The Republic",
   profile: "Profile",
   post: "Thread",
+  notifications: "Notifications",
 };
 
 export default function App() {
@@ -38,6 +41,10 @@ export default function App() {
   const { posts, handles, isLoading, error } = useTimeline();
   const { address } = useAccount();
   const { data: followingArr } = useFollowing(address);
+  const notifs = useNotifications(address, address ? handles.get(address.toLowerCase()) : undefined);
+  const [seenNotifAt, setSeenNotifAt] = useState<number>(() => Number(localStorage.getItem("bitchan.notif.seen") || 0));
+  const latestNotifAt = notifs?.[0]?.at ?? 0;
+  const hasUnread = !!address && latestNotifAt > seenNotifAt;
 
   const topLevel = useMemo(() => posts.filter((p) => p.parentId === "0"), [posts]);
   const followingSet = new Set(followingArr ?? []);
@@ -78,9 +85,16 @@ export default function App() {
   function openPost(post: TimelinePost) {
     go({ view: "post", postId: post.id });
   }
+  function openPostId(id: string) {
+    go({ view: "post", postId: id });
+  }
   function nav(key: NavKey) {
     if (key === "citizen") go({ view: "profile", profileAddress: address ?? null });
-    else go({ view: key });
+    else if (key === "notifications") {
+      setSeenNotifAt(latestNotifAt);
+      localStorage.setItem("bitchan.notif.seen", String(latestNotifAt));
+      go({ view: "notifications" });
+    } else go({ view: key });
   }
   function startReply(post: TimelinePost) {
     setQuoteTo(null);
@@ -101,7 +115,7 @@ export default function App() {
       <div className="fixed inset-x-0 top-0 z-30 h-[3px] bg-gradient-to-r from-seal via-brass to-seal" />
 
       <div className="mx-auto flex w-full max-w-7xl justify-center">
-        <LeftRail view={view} onNav={nav} />
+        <LeftRail view={view} onNav={nav} unread={hasUnread} />
 
         <div className="flex min-h-screen w-full max-w-[600px] flex-col border-line sm:border-x">
           <header className="sticky top-0 z-20 flex items-center justify-between border-b border-line bg-ink/85 px-4 py-3 backdrop-blur lg:hidden">
@@ -195,6 +209,16 @@ export default function App() {
               ) : (
                 <Notice>{isLoading ? "loading…" : "Post not found."}</Notice>
               ))}
+
+            {view === "notifications" && (
+              <NotificationsView
+                items={notifs}
+                handles={handles}
+                onOpenProfile={openProfile}
+                onOpenPostId={openPostId}
+                loading={isLoading}
+              />
+            )}
           </main>
         </div>
 
@@ -204,7 +228,7 @@ export default function App() {
         </aside>
       </div>
 
-      <BottomNav view={view} onNav={nav} />
+      <BottomNav view={view} onNav={nav} unread={hasUnread} />
     </div>
   );
 }
@@ -221,7 +245,7 @@ function isActive(key: NavKey, view: View) {
   return key === "citizen" ? view === "profile" : view === key;
 }
 
-function LeftRail({ view, onNav }: { view: View; onNav: (k: NavKey) => void }) {
+function LeftRail({ view, onNav, unread }: { view: View; onNav: (k: NavKey) => void; unread?: boolean }) {
   return (
     <header className="sticky top-0 hidden h-screen w-[88px] shrink-0 flex-col justify-between px-2 py-5 lg:flex xl:w-[268px] xl:px-4">
       <div className="flex flex-col gap-7">
@@ -241,7 +265,12 @@ function LeftRail({ view, onNav }: { view: View; onNav: (k: NavKey) => void }) {
                   active ? "bg-ink-soft text-bone" : "text-bone-dim hover:bg-ink-soft hover:text-bone"
                 }`}
               >
-                <t.Icon size={22} strokeWidth={active ? 2.4 : 1.9} className={active ? "text-seal" : ""} />
+                <span className="relative">
+                  <t.Icon size={22} strokeWidth={active ? 2.4 : 1.9} className={active ? "text-seal" : ""} />
+                  {t.key === "notifications" && unread && (
+                    <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-seal" />
+                  )}
+                </span>
                 <span className="hidden text-base xl:inline">{t.label}</span>
               </button>
             );
@@ -255,7 +284,7 @@ function LeftRail({ view, onNav }: { view: View; onNav: (k: NavKey) => void }) {
   );
 }
 
-function BottomNav({ view, onNav }: { view: View; onNav: (k: NavKey) => void }) {
+function BottomNav({ view, onNav, unread }: { view: View; onNav: (k: NavKey) => void; unread?: boolean }) {
   return (
     <nav className="fixed inset-x-0 bottom-0 z-20 flex justify-around border-t border-line bg-ink/90 backdrop-blur lg:hidden">
       {NAV.map((t) => (
@@ -265,7 +294,12 @@ function BottomNav({ view, onNav }: { view: View; onNav: (k: NavKey) => void }) 
           onClick={() => onNav(t.key)}
           className={`flex flex-1 flex-col items-center py-3 ${isActive(t.key, view) ? "text-seal" : "text-bone-dim"}`}
         >
-          <t.Icon size={23} strokeWidth={isActive(t.key, view) ? 2.4 : 1.9} />
+          <span className="relative">
+            <t.Icon size={23} strokeWidth={isActive(t.key, view) ? 2.4 : 1.9} />
+            {t.key === "notifications" && unread && (
+              <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-seal" />
+            )}
+          </span>
         </button>
       ))}
     </nav>

@@ -36,6 +36,7 @@ export default defineSchema({
     account: v.string(), // lowercased signer
     target: v.string(), // postId (like/repost) or address (follow), lowercased
     active: v.boolean(),
+    at: v.optional(v.number()), // last write time (ms) — for the notifications feed
   })
     .index("by_account_kind_target", ["account", "kind", "target"])
     .index("by_kind_target", ["kind", "target"]),

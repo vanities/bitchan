@@ -17,6 +17,7 @@ import type * as http from "../http.js";
 import type * as indexer from "../indexer.js";
 import type * as media from "../media.js";
 import type * as mediaActions from "../mediaActions.js";
+import type * as notifications from "../notifications.js";
 import type * as posts from "../posts.js";
 import type * as reactions from "../reactions.js";
 import type * as stats from "../stats.js";
@@ -37,6 +38,7 @@ declare const fullApi: ApiFromModules<{
   indexer: typeof indexer;
   media: typeof media;
   mediaActions: typeof mediaActions;
+  notifications: typeof notifications;
   posts: typeof posts;
   reactions: typeof reactions;
   stats: typeof stats;
