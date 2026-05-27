@@ -1,8 +1,8 @@
 # bitchan — Architecture & Plan
 
 > An on-chain social republic. The censorship-resistant town square: posts live
-> forever on Ethereum + Arweave, governance is transparent and elected, and the
-> feed algorithm is yours to swap. Mobile-first.
+> forever on Ethereum (media off-chain), governance is transparent and elected,
+> and the feed algorithm is yours to swap. Mobile-first.
 
 **Status:** M0–M4 built. Posts, gasless social, and the full elected-government
 layer (roles, moderation, citizenship, treasury, elections, recall, judiciary)
@@ -19,8 +19,9 @@ The 4chan board model is largely dead; X/Twitter is the de-facto public square.
 bitchan rebuilds that square so that **no single party can delete speech or
 shadowban silently**:
 
-- **Immutable** — every post is an on-chain record + content on Arweave.
-  Permanent, content-addressed, tamper-evident.
+- **Immutable** — every post is an on-chain record. The text/ordering/authorship
+  are permanent and tamper-evident; media is off-chain and content-addressed by
+  its hash (the on-chain `mediaHash`). See §5 for the storage tradeoff.
 - **Transparent governance** — an elected President and deputized Custodians
   moderate in the open. They can *hide*, never *delete*. Every moderation
   action is an on-chain event.
@@ -34,8 +35,8 @@ shadowban silently**:
 
 | Concept | bitchan |
 |---|---|
-| Account | **Anonymous by default**; optionally claim a **handle** (4chan name / tripcode-style). Profile (avatar/bio) on Arweave |
-| Post | Short text + optional media (image/video → Arweave) |
+| Account | **Anonymous by default**; optionally claim a **handle** (4chan name / tripcode-style). Profile (avatar/banner/bio/website) off-chain in Convex, set by a signed message |
+| Post | Short text + optional media (image/video, up to 4 images as a gallery → Convex) |
 | Reply | Post with `parentId` → threaded conversations |
 | Repost / Quote | Repost event; quote = post with `quotedId` |
 | Like | Like event (counts materialized off-chain) |
@@ -98,14 +99,22 @@ Farcaster: on-chain anchor, off-chain signed social.
 - `Governance` — OZ `Governor` + `TimelockController` + `AccessControl`
 - `Treasury` — holds fees, disburses via governance
 
-Content hash = **Arweave TXID (`bytes32`)**. Flow: frontend uploads bytes to
-Arweave → gets TXID → submits TXID + metadata in the post tx.
+Media hash = **`sha256(content)` (`bytes32`)**. Flow: frontend uploads bytes to
+Convex (NSFW-screened) → the content-addressed `sha256` → submits that hash in
+the post tx. (Durable Arweave storage is a planned upgrade — §5, task #28.)
 
 ## 5. Off-chain architecture
 
-- **Arweave (via Irys / Turbo bundler):** images, video, long-form text,
-  profile assets. Pay-once, ~permanent, content-addressed, sub-cent per item.
-  Immutable — satisfies the one condition for going off-chain.
+- **Media — Convex (current):** images, video, multi-image galleries, and
+  profile assets are stored in Convex, content-addressed by the same `sha256`
+  that goes on-chain as `mediaHash`, **NSFW-screened on upload**, and **deletable**.
+  Deletability is deliberate: media you can't take down means permanently hosting
+  illegal/CSAM content with no remedy. The uncensorable promise is about
+  **speech/text** (on-chain, hide-never-delete); the media *attachment* being
+  removable is intentional. (See `CONTENTIONS.md` → Storage.)
+- **Arweave — planned (task #28):** for vetted, non-illegal durable media via the
+  ArDrive Turbo SDK; the txid fits the on-chain `bytes32`. Deferred until the
+  screening pipeline is solid.
 - **Convex (`web/convex/`):** the whole off-chain backend, in the cloud.
   - *Indexer cron* — a scheduled action polls the chain (viem `getLogs` for
     `Posted` / `Hidden` / `Unhidden` / `HandleSet`) and materializes the
@@ -117,12 +126,16 @@ Arweave → gets TXID → submits TXID + metadata in the post tx.
   Replaces the old Ponder indexer + Bun engagement server (both removed). Because
   Convex runs in the cloud it can only index a **public** chain, so the app dev
   loop runs against **Sepolia**, not local Anvil.
-- **Optional IPFS mirror** for fast gateway reads; Arweave is the durable copy.
+  - *Media + galleries + profiles* — content-addressed media (and the
+    manifest hash for multi-image galleries), served by a Convex HTTP action at
+    `/media/<hash>`; profile bio/banner/website set via signed actions.
+  - *Link previews* — a Vercel serverless function injects per-route OG tags for
+    `/post/:id` and `/@handle`, with a `@vercel/og` image.
 
 ## 6. Costs (real numbers)
 
 - **Post (event + fee):** ~25–40k gas → **$0.50–$1.60** at 5–15 gwei
-  (ETH ~$3k) + protocol fee + sub-cent Arweave upload.
+  (ETH ~$3k) + protocol fee. Media upload to Convex is free (no per-item cost).
 - **On-chain image (rejected):** $16 (5 KB) to $186 (20 KB) → off-chain instead.
 - **Like / follow / repost:** **free** — a gasless EIP-712 signature, no tx.
 - Implication: **higher-signal, lower-frequency** posting than X.
@@ -132,8 +145,8 @@ Arweave → gets TXID → submits TXID + metadata in the post tx.
 bitchan is designed mobile-first — the timeline is a phone experience.
 
 - **Responsive UI:** Tailwind CSS, single-column timeline, bottom tab bar
-  (Home / Search / Notifications / Profile), compose FAB — X-mobile layout.
-  Design at 375px first, scale up.
+  (The Square / Search / Republic / Notifications / Bookmarks / Citizen) —
+  X-mobile layout. Design at 375px first, scale up.
 - **PWA:** installable (add-to-home-screen), service worker caches the app shell
   + recent reads for instant loads and offline browsing of cached posts. Web
   Push for notifications (works on installed PWAs, incl. iOS 16.4+).
@@ -153,7 +166,7 @@ bitchan is designed mobile-first — the timeline is a phone experience.
 |---|---|
 | Monorepo | **Bun** workspaces (≥ 1.3) — runtime + package manager |
 | Contracts | Solidity 0.8.30, **Foundry 1.6**. OpenZeppelin v5 (AccessControl / Governor / Timelock) — the full governance layer is built + deployed |
-| Permanent storage | Arweave via Irys / Turbo SDK (media upload still being wired — task #17) |
+| Media storage | **Convex** — content-addressed (`sha256`), NSFW-screened, deletable. Arweave durable option deferred (#28) |
 | Backend | **Convex** (cloud): reactive read model, a chain-indexing cron, and a Node action that verifies gasless EIP-712 likes/reposts/follows |
 | Frontend | **Vite 6 + React 18 + TypeScript** SPA, **Tailwind v4** (mobile-first) |
 | Web3 | **viem 2 + wagmi 2 + RainbowKit 2** — pinned to v2; RainbowKit has no wagmi-v3 support yet, revisit when it ships |
@@ -174,16 +187,20 @@ bitchan/
 
 - **M0 — Skeleton.** ✅ *Done.* Foundry + Vite + backend wired via `bun run dev`;
   mobile-responsive shell; RainbowKit wallet connect.
-- **M1 — Post.** ✅ *Done* (except media): text posts, handles, `post()` + fee →
-  treasury, the global chronological timeline. Remaining: real **Arweave upload**
-  for images (the contract already carries a media hash; task #17).
-- **M2 — Social.** ✅ *Done.* Follow graph, Following timeline, replies / threads,
-  gasless likes / reposts.
+- **M1 — Post.** ✅ *Done.* Text posts, handles, `post()` + fee → treasury, the
+  global chronological timeline, **media in Convex** (images, video, up to 4-image
+  galleries; NSFW-screened). Arweave durable storage is the planned upgrade (#28).
+- **M2 — Social.** ✅ *Done.* Follow graph, Following timeline, replies / nested
+  threads, gasless likes / reposts (session key), quote posts.
 - **M3 — Governance.** ✅ *Done.* AccessControl roles, custodian hide / moderation,
   the founding-phase president, citizenship registry, rate-limited treasury.
 - **M4 — Elections.** ✅ *Done & deployed to Sepolia.* Governor + Timelock (per-citizen
-  `_getVotes`), election + recall + judiciary, voting eligibility.
-- **M5 — Polish.** Off-chain For You ranking, notifications (web push), search, profiles.
+  `_getVotes`), recurring calendar elections + recall + judiciary, voting eligibility.
+- **M5 — Polish.** ✅ *Largely done.* Search, notifications + unread count, profiles
+  (avatar/banner/bio/website, tabs, pinned post), @mentions, #hashtags + trending,
+  bookmarks, viewer-local block/mute, shareable URLs + OG link previews, YouTube/Vimeo
+  embeds, infinite scroll. Remaining: an off-chain **For You** ranking (the default
+  feed is chronological today) and surfacing recurring elections in the UI (#30).
 
 ## 11. Open decisions
 

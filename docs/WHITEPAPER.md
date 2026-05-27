@@ -42,7 +42,7 @@ and bitchan treats it as one.
 | **Bluesky / AT** | federated servers (not a chain) | composable labelers; company runs the app |
 | **DeSo** | bespoke L1 | node + app level |
 | **Reddit** *(centralized)* | private servers | volunteer mods, **self-appointed** via succession; paid admins above |
-| **bitchan** | **posts on Ethereum L1** + Arweave media | **elected, on-chain, recallable government** |
+| **bitchan** | **posts on Ethereum L1** + off-chain media | **elected, on-chain, recallable government** |
 
 The column that matters is the last one. Centralized platforms appoint moderators by
 fiat — and even Reddit's "community" mods are self-appointed through succession, never
@@ -57,12 +57,15 @@ contestable by any citizen before the judiciary.)
 
 ## 3. Architecture
 
-**Immutable substrate.** Posts and replies are written to Ethereum L1 (as events);
-media and long-form content live on **Arweave** (pay-once, permanent), with only the
-content hash anchored on-chain. Nothing can be deleted or edited — *moderation is a
-flag, never a grave.* Storing images on-chain is economically absurd ($16–186 each);
-the hash-on-chain + Arweave pattern is both cheaper and the correct legal posture
-(nodes hold opaque hashes, not media).
+**Immutable substrate.** Posts and replies are written to Ethereum L1 (as events) —
+their text, ordering, and authorship can never be deleted or edited; *moderation of
+speech is a flag, never a grave.* Media is stored **off-chain** (content-addressed by
+a `sha256` anchored on-chain) — storing images on-chain is economically absurd
+($16–186 each), and nodes holding opaque hashes rather than media is the correct legal
+posture. Media is deliberately **deletable**: a media attachment you can never take
+down means permanently hosting illegal/CSAM content with no remedy, so the
+no-erasure guarantee covers *speech*, while the media layer stays removable and
+NSFW-screened (today on Convex; durable Arweave storage for vetted media is planned).
 
 **Gasless engagement.** Likes, reposts, and follows are **EIP-712 signed messages** —
 no transaction, no gas, no wallet-popup cost — verified and stored by a small
@@ -167,16 +170,19 @@ not claim to be perfect — it claims to be **un-destroyable.**
 
 ## 7. Status & roadmap
 
-- **Built (M0–M2):** the monorepo, the `Bitchan` contract + tests, a **Convex** backend
-  (chain-indexing cron + gasless EIP-712 engagement), and a mobile-first React frontend —
-  posts, replies, gasless likes/reposts/follows, timelines, search, profiles. Verified
-  end-to-end.
+- **Built (M0–M2 + polish):** the monorepo, the `Bitchan` contract + tests, a **Convex**
+  backend (chain-indexing cron + gasless EIP-712 engagement via a 30-day session key), and
+  a mobile-first React frontend — posts, replies, nested threads, gasless likes/reposts,
+  quote posts, follows, timelines, search, profiles (avatar/banner/bio/website, tabs,
+  pinned post), @mentions, #hashtags + trending, bookmarks, viewer-local block/mute,
+  off-chain media (incl. multi-image galleries), shareable URLs + OG link previews, and
+  YouTube/Vimeo embeds. Verified end-to-end on Sepolia.
 - **Designed & ratified:** the constitution (this paper's governance section), passed by
   the full 42-framer convention.
 - **Built & deployed (M3–M4):** the governance contracts — roles, moderation, citizenship
-  registry, rate-limited treasury, the founder transition, elections, recall, and the
-  right-of-contest — built to the ratified spec with the immutable bounds enforced in the
-  non-upgradeable core, **live on Sepolia** behind a 97-test Foundry suite.
+  registry, rate-limited treasury, the founder transition, recurring elections, recall, and
+  the right-of-contest — built to the ratified spec with the immutable bounds enforced in
+  the non-upgradeable core, **live on Sepolia** behind a 109-test Foundry suite.
 
 ## Conclusion
 

@@ -5,9 +5,11 @@ build, plus the test strategy, the UI surface, and the backend logic it requires
 constitution says **why**; this says **what to build**. Concrete numbers come from the
 [Parameters table](CONSTITUTION.md#parameters).*
 
-> **Status (built):** Phase 1 + Phase 2 contracts are built, tested (97 Foundry tests),
-> and **deployed to Sepolia**; the Republic UI ships citizenship + elections. Remaining:
-> indexing governance events into Convex (task #21) and election-cadence automation.
+> **Status (built):** Phase 1 + Phase 2 contracts are built, tested (109 Foundry tests),
+> and **deployed to Sepolia**, with **recurring calendar elections**; governance events
+> are indexed into Convex and the Republic UI ships citizenship + the census/treasury/
+> activity surface. Remaining: surfacing the recurring election flow in the UI — the
+> `ElectionCard` still reads the old single-shot interface (task #30).
 
 ## The governing principle
 
