@@ -7,11 +7,14 @@ import {
   useWriteContract,
 } from "wagmi";
 import { keccak256, stringToBytes } from "viem";
+import { useQuery } from "convex/react";
+import { api } from "../../convex/_generated/api";
 import type { TimelinePost, Handles, Avatars } from "../lib/useTimeline";
 import { bitchanAbi, bitchanAddress, chain, explorerAddress } from "../lib/contract";
 import { useEnsName } from "../lib/ens";
 import { submitReaction, useFollowing, useFollowers } from "../lib/engagement";
 import { setAvatar } from "../lib/avatar";
+import { setProfile } from "../lib/profile";
 import { hasMedia, mediaUrl, uploadMedia } from "../lib/media";
 import { Feed, Notice } from "./Feed";
 import { Button } from "@/components/ui/button";
@@ -59,6 +62,8 @@ export function ProfileView({
   const [listView, setListView] = useState<"following" | "followers" | null>(null);
   const avatarRef = useRef<HTMLInputElement>(null);
   const [avatarBusy, setAvatarBusy] = useState(false);
+  const [editingProfile, setEditingProfile] = useState(false);
+  const profile = useQuery(api.accounts.getProfile, address ? { address: address.toLowerCase() } : "skip");
 
   // Pre-check handle availability (debounced) so we error before signing a tx that
   // would revert HandleTaken. Key matches the contract: keccak256(bytes(handle)).
@@ -142,111 +147,146 @@ export function ProfileView({
 
   return (
     <div>
-      <div className="border-b border-line px-5 py-5">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={isSelf ? () => avatarRef.current?.click() : undefined}
-            disabled={!isSelf || avatarBusy}
-            title={isSelf ? "change picture" : undefined}
-            className="group relative h-14 w-14 shrink-0 overflow-hidden rounded-full bg-seal"
-          >
-            {profileAvatar && hasMedia(profileAvatar) ? (
-              <img src={mediaUrl(profileAvatar)} alt="" className="h-full w-full object-cover" />
-            ) : (
-              <span className="grid h-full w-full place-items-center text-xl font-bold text-white">
-                {(handle ?? ensName ?? "a")[0]!.toUpperCase()}
-              </span>
-            )}
-            {isSelf && (
-              <span className="absolute inset-0 grid place-items-center bg-ink/60 text-[9px] font-semibold text-bone opacity-0 transition group-hover:opacity-100">
-                {avatarBusy ? "…" : "edit"}
-              </span>
-            )}
-          </button>
-          <input ref={avatarRef} type="file" accept="image/*" onChange={onPickAvatar} className="hidden" />
-          <div className="min-w-0">
-            <div className="truncate text-xl font-bold tracking-tight text-bone">
-              {handle ?? ensName ?? "anonymous"}
-            </div>
-            {explorer ? (
-              <a
-                href={explorer}
-                target="_blank"
-                rel="noreferrer"
-                className="font-mono text-xs text-bone-dim transition hover:text-brass hover:underline"
-              >
-                {address.slice(0, 10)}…{address.slice(-6)} ↗
-              </a>
-            ) : (
-              <div className="font-mono text-xs text-bone-dim">
-                {address.slice(0, 10)}…{address.slice(-6)}
-              </div>
-            )}
-          </div>
-          <div className="ml-auto flex items-center gap-4">
-            <div className="text-right">
-              <div className="text-xl font-bold tabular-nums text-bone">{theirPosts.length}</div>
-              <div className="label-civic text-[9px] text-bone-dim">dispatches</div>
-            </div>
-            {!isSelf && isConnected && (
-              <Button
-                onClick={toggleFollow}
-                disabled={busyFollow}
-                variant={isFollowing ? "outline" : "default"}
-                size="sm"
-                className={`rounded-full px-4 font-semibold ${isFollowing ? "border-brass text-brass hover:text-brass" : ""}`}
-              >
-                {busyFollow ? "…" : isFollowing ? "Following" : "Follow"}
-              </Button>
-            )}
-          </div>
-        </div>
-
-        <div className="mt-3 flex gap-4 text-sm">
-          <button
-            onClick={() => setListView("following")}
-            disabled={!followingCount}
-            className="transition hover:underline disabled:opacity-50"
-          >
-            <span className="font-bold text-bone">{followingCount}</span>{" "}
-            <span className="text-bone-dim">Following</span>
-          </button>
-          <button
-            onClick={() => setListView("followers")}
-            disabled={!followerCount}
-            className="transition hover:underline disabled:opacity-50"
-          >
-            <span className="font-bold text-bone">{followerCount}</span>{" "}
-            <span className="text-bone-dim">Followers</span>
-          </button>
-        </div>
-
-        {isSelf && (
-          <div className="mt-4 flex gap-2">
-            <input
-              value={handleInput}
-              onChange={(e) => setHandleInput(e.target.value)}
-              placeholder={handle ? "change your handle" : "claim a handle"}
-              maxLength={32}
-              className="flex-1 rounded-md border border-line bg-ink-soft px-3 py-2 text-sm focus:border-brass focus:outline-none"
-            />
+      <div className="border-b border-line">
+        {profile?.banner && hasMedia(profile.banner) ? (
+          <img
+            src={mediaUrl(profile.banner)}
+            alt=""
+            className="h-28 w-full bg-ink-soft object-cover sm:h-36"
+          />
+        ) : (
+          <div className="h-16 w-full bg-gradient-to-r from-seal/25 via-ink-soft to-brass/25 sm:h-20" />
+        )}
+        <div className="px-5 py-5">
+          <div className="flex items-center gap-3">
             <button
-              onClick={claim}
-              disabled={!handleInput.trim() || isPending || settling || handleTaken}
-              className="rounded-md border border-brass px-4 py-2 text-sm font-semibold text-brass transition hover:bg-brass/10 disabled:opacity-40"
+              onClick={isSelf ? () => avatarRef.current?.click() : undefined}
+              disabled={!isSelf || avatarBusy}
+              title={isSelf ? "change picture" : undefined}
+              className="group relative h-14 w-14 shrink-0 overflow-hidden rounded-full bg-seal"
             >
-              {isPending ? "confirm…" : settling ? "saving…" : handle ? "change" : "claim"}
+              {profileAvatar && hasMedia(profileAvatar) ? (
+                <img src={mediaUrl(profileAvatar)} alt="" className="h-full w-full object-cover" />
+              ) : (
+                <span className="grid h-full w-full place-items-center text-xl font-bold text-white">
+                  {(handle ?? ensName ?? "a")[0]!.toUpperCase()}
+                </span>
+              )}
+              {isSelf && (
+                <span className="absolute inset-0 grid place-items-center bg-ink/60 text-[9px] font-semibold text-bone opacity-0 transition group-hover:opacity-100">
+                  {avatarBusy ? "…" : "edit"}
+                </span>
+              )}
+            </button>
+            <input ref={avatarRef} type="file" accept="image/*" onChange={onPickAvatar} className="hidden" />
+            <div className="min-w-0">
+              <div className="truncate text-xl font-bold tracking-tight text-bone">
+                {handle ?? ensName ?? "anonymous"}
+              </div>
+              {explorer ? (
+                <a
+                  href={explorer}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="font-mono text-xs text-bone-dim transition hover:text-brass hover:underline"
+                >
+                  {address.slice(0, 10)}…{address.slice(-6)} ↗
+                </a>
+              ) : (
+                <div className="font-mono text-xs text-bone-dim">
+                  {address.slice(0, 10)}…{address.slice(-6)}
+                </div>
+              )}
+            </div>
+            <div className="ml-auto flex items-center gap-4">
+              <div className="text-right">
+                <div className="text-xl font-bold tabular-nums text-bone">{theirPosts.length}</div>
+                <div className="label-civic text-[9px] text-bone-dim">dispatches</div>
+              </div>
+              {!isSelf && isConnected && (
+                <Button
+                  onClick={toggleFollow}
+                  disabled={busyFollow}
+                  variant={isFollowing ? "outline" : "default"}
+                  size="sm"
+                  className={`rounded-full px-4 font-semibold ${isFollowing ? "border-brass text-brass hover:text-brass" : ""}`}
+                >
+                  {busyFollow ? "…" : isFollowing ? "Following" : "Follow"}
+                </Button>
+              )}
+              {isSelf && (
+                <Button
+                  onClick={() => setEditingProfile(true)}
+                  variant="outline"
+                  size="sm"
+                  className="rounded-full px-4 font-semibold"
+                >
+                  Edit profile
+                </Button>
+              )}
+            </div>
+          </div>
+
+          {profile?.bio && <p className="mt-3 whitespace-pre-wrap text-sm text-bone">{profile.bio}</p>}
+          {profile?.website && (
+            <a
+              href={withProtocol(profile.website)}
+              target="_blank"
+              rel="noopener noreferrer nofollow"
+              className="mt-1 inline-block text-sm text-brass hover:underline"
+            >
+              {prettyUrl(profile.website)}
+            </a>
+          )}
+
+          <div className="mt-3 flex gap-4 text-sm">
+            <button
+              onClick={() => setListView("following")}
+              disabled={!followingCount}
+              className="transition hover:underline disabled:opacity-50"
+            >
+              <span className="font-bold text-bone">{followingCount}</span>{" "}
+              <span className="text-bone-dim">Following</span>
+            </button>
+            <button
+              onClick={() => setListView("followers")}
+              disabled={!followerCount}
+              className="transition hover:underline disabled:opacity-50"
+            >
+              <span className="font-bold text-bone">{followerCount}</span>{" "}
+              <span className="text-bone-dim">Followers</span>
             </button>
           </div>
-        )}
-        {isSelf && handleTaken && (
-          <p className="mt-1.5 font-mono text-[11px] text-seal">that handle is taken</p>
-        )}
-        {isSelf && handleFree && <p className="mt-1.5 font-mono text-[11px] text-brass">available</p>}
-        {isSelf && writeError && !/rejected|denied/i.test(writeError.message) && (
-          <p className="mt-2 font-mono text-xs text-seal">{writeError.message.split("\n")[0]}</p>
-        )}
-        {!isConnected && !isSelf && <p className="mt-3 text-xs text-bone-dim">Connect a wallet to follow.</p>}
+
+          {isSelf && (
+            <div className="mt-4 flex gap-2">
+              <input
+                value={handleInput}
+                onChange={(e) => setHandleInput(e.target.value)}
+                placeholder={handle ? "change your handle" : "claim a handle"}
+                maxLength={32}
+                className="flex-1 rounded-md border border-line bg-ink-soft px-3 py-2 text-sm focus:border-brass focus:outline-none"
+              />
+              <button
+                onClick={claim}
+                disabled={!handleInput.trim() || isPending || settling || handleTaken}
+                className="rounded-md border border-brass px-4 py-2 text-sm font-semibold text-brass transition hover:bg-brass/10 disabled:opacity-40"
+              >
+                {isPending ? "confirm…" : settling ? "saving…" : handle ? "change" : "claim"}
+              </button>
+            </div>
+          )}
+          {isSelf && handleTaken && (
+            <p className="mt-1.5 font-mono text-[11px] text-seal">that handle is taken</p>
+          )}
+          {isSelf && handleFree && <p className="mt-1.5 font-mono text-[11px] text-brass">available</p>}
+          {isSelf && writeError && !/rejected|denied/i.test(writeError.message) && (
+            <p className="mt-2 font-mono text-xs text-seal">{writeError.message.split("\n")[0]}</p>
+          )}
+          {!isConnected && !isSelf && (
+            <p className="mt-3 text-xs text-bone-dim">Connect a wallet to follow.</p>
+          )}
+        </div>
       </div>
 
       <Feed
@@ -274,7 +314,135 @@ export function ProfileView({
           onClose={() => setListView(null)}
         />
       )}
+
+      {editingProfile && isSelf && viewerAddr && (
+        <ProfileEditDialog
+          address={viewerAddr}
+          current={{
+            bio: profile?.bio ?? "",
+            banner: profile?.banner ?? "",
+            website: profile?.website ?? "",
+          }}
+          onClose={() => setEditingProfile(false)}
+        />
+      )}
     </div>
+  );
+}
+
+function withProtocol(url: string) {
+  return /^https?:\/\//i.test(url) ? url : `https://${url}`;
+}
+function prettyUrl(url: string) {
+  return url.replace(/^https?:\/\//i, "").replace(/\/$/, "");
+}
+
+function ProfileEditDialog({
+  address,
+  current,
+  onClose,
+}: {
+  address: `0x${string}`;
+  current: { bio: string; banner: string; website: string };
+  onClose: () => void;
+}) {
+  const { signTypedDataAsync } = useSignTypedData();
+  const [bio, setBio] = useState(current.bio);
+  const [website, setWebsite] = useState(current.website);
+  const [banner, setBanner] = useState(current.banner);
+  const [uploading, setUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const bannerRef = useRef<HTMLInputElement>(null);
+
+  async function pickBanner(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    setErr(null);
+    try {
+      const { hash } = await uploadMedia(file);
+      setBanner(hash);
+    } catch (e2) {
+      setErr(e2 instanceof Error ? e2.message : "upload failed");
+    } finally {
+      setUploading(false);
+      if (bannerRef.current) bannerRef.current.value = "";
+    }
+  }
+
+  async function save() {
+    if (bio.length > 280 || website.length > 200) return;
+    setSaving(true);
+    setErr(null);
+    try {
+      await setProfile({ address, bio: bio.trim(), banner, website: website.trim(), signTypedDataAsync });
+      onClose();
+    } catch (e2) {
+      console.error("[profile] save failed", e2);
+      setErr(e2 instanceof Error ? e2.message.split("\n")[0] : "save failed");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-md border-line bg-ink p-0">
+        <DialogTitle className="border-b border-line px-4 py-3 text-sm font-bold text-bone">
+          Edit profile
+        </DialogTitle>
+        <div className="space-y-3 p-4">
+          <div>
+            <span className="label-civic text-[10px] text-bone-dim">banner</span>
+            <button
+              onClick={() => bannerRef.current?.click()}
+              disabled={uploading}
+              className="mt-1 block h-24 w-full overflow-hidden rounded-lg border border-line bg-ink-soft transition hover:border-brass/50"
+            >
+              {banner && hasMedia(banner) ? (
+                <img src={mediaUrl(banner)} alt="" className="h-full w-full object-cover" />
+              ) : (
+                <span className="grid h-full w-full place-items-center text-xs text-bone-dim">
+                  {uploading ? "uploading…" : "add a banner"}
+                </span>
+              )}
+            </button>
+            <input ref={bannerRef} type="file" accept="image/*" onChange={pickBanner} className="hidden" />
+          </div>
+          <div>
+            <span className="label-civic text-[10px] text-bone-dim">bio</span>
+            <textarea
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              maxLength={280}
+              rows={3}
+              placeholder="Say something about yourself"
+              className="mt-1 w-full resize-none rounded-md border border-line bg-ink-soft px-3 py-2 text-sm focus:border-brass focus:outline-none"
+            />
+          </div>
+          <div>
+            <span className="label-civic text-[10px] text-bone-dim">website</span>
+            <input
+              value={website}
+              onChange={(e) => setWebsite(e.target.value)}
+              maxLength={200}
+              placeholder="yoursite.xyz"
+              className="mt-1 w-full rounded-md border border-line bg-ink-soft px-3 py-2 text-sm focus:border-brass focus:outline-none"
+            />
+          </div>
+          {err && <p className="font-mono text-xs text-seal">{err}</p>}
+          <div className="flex justify-end gap-2 pt-1">
+            <button onClick={onClose} className="px-3 text-sm text-bone-dim hover:text-bone">
+              cancel
+            </button>
+            <Button onClick={save} disabled={saving || uploading} className="px-5 font-bold">
+              {saving ? "sign + save…" : "Save"}
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 

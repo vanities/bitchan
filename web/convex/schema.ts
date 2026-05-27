@@ -9,6 +9,9 @@ export default defineSchema({
     address: v.string(), // lowercased
     handle: v.optional(v.string()),
     avatar: v.optional(v.string()), // media hash (off-chain, set via a signed mutation)
+    bio: v.optional(v.string()), // off-chain, signed
+    banner: v.optional(v.string()), // media hash, off-chain, signed
+    website: v.optional(v.string()), // off-chain, signed
     firstSeenAt: v.number(),
   }).index("by_address", ["address"]),
 
