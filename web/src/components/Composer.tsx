@@ -1,14 +1,11 @@
-import { useEffect, useRef, useState } from "react";
-import {
-  useAccount,
-  useReadContract,
-  useWaitForTransactionReceipt,
-  useWriteContract,
-} from "wagmi";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useAccount, useReadContract, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 import { formatEther } from "viem";
 import { ImagePlus, X } from "lucide-react";
 import { bitchanAbi, bitchanAddress, chain, ZERO_BYTES32 } from "../lib/contract";
 import { mediaUrl, uploadMedia, type UploadResult } from "../lib/media";
+import { firstEmbed } from "../lib/embeds";
+import { Embed } from "./Embed";
 import { Button } from "@/components/ui/button";
 
 const MAX = 280;
@@ -54,6 +51,10 @@ export function Composer({
 
   const { data: hash, writeContract, isPending, error } = useWriteContract();
   const { isLoading: isMining, isSuccess } = useWaitForTransactionReceipt({ hash });
+
+  // Live preview of the first YouTube/Vimeo link as you type — same component the
+  // feed uses. (Hook stays above the early return below.)
+  const embed = useMemo(() => firstEmbed(text), [text]);
 
   useEffect(() => {
     if (!isSuccess) return;
@@ -109,8 +110,8 @@ export function Composer({
           Take your seat in the republic.
         </p>
         <p className="mx-auto mt-2 max-w-xs text-sm text-bone-dim">
-          Reading is free. You only pay to speak — a small fee keeps out spam and
-          funds the board instead of ads.
+          Reading is free. You only pay to speak — a small fee keeps out spam and funds the board instead of
+          ads.
         </p>
       </div>
     );
@@ -191,6 +192,8 @@ export function Composer({
       )}
       {mediaError && <p className="mt-1 font-mono text-xs text-seal">media: {mediaError}</p>}
 
+      {embed && <Embed embed={embed} />}
+
       <div className="mt-2 flex items-center justify-between gap-3">
         <div className="flex items-center gap-4">
           <button
@@ -218,13 +221,7 @@ export function Composer({
       </div>
       {error && <p className="mt-2 font-mono text-xs text-seal">{error.message.split("\n")[0]}</p>}
 
-      <input
-        ref={fileRef}
-        type="file"
-        accept="image/*,video/*"
-        onChange={onPickFile}
-        className="hidden"
-      />
+      <input ref={fileRef} type="file" accept="image/*,video/*" onChange={onPickFile} className="hidden" />
     </div>
   );
 }
