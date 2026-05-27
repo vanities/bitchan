@@ -1,5 +1,6 @@
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
+import { usePref } from "./prefs";
 
 export type Handles = Map<string, string | null>;
 export type Avatars = Map<string, string | null>;
@@ -26,6 +27,9 @@ export type AccountRow = { address: `0x${string}`; handle: string | null };
 export function useTimeline() {
   const rows = useQuery(api.posts.timeline, { limit: 100 });
   const accts = useQuery(api.accounts.list, {});
+  // Blocked authors (viewer-local) are removed everywhere; muted authors stay but
+  // their cards collapse (handled in PostCard). See [[bitchan-design-principles]].
+  const { list: blocked } = usePref("blocked");
 
   const handles: Handles = new Map();
   const avatars: Avatars = new Map();
@@ -34,21 +38,23 @@ export function useTimeline() {
     avatars.set(a.address.toLowerCase(), a.avatar);
   }
 
-  const posts: TimelinePost[] = (rows ?? []).map((p) => ({
-    id: p.id,
-    author: p.author as `0x${string}`,
-    text: p.text,
-    mediaHash: p.mediaHash as `0x${string}`,
-    parentId: p.parentId,
-    quotedId: p.quotedId,
-    likeCount: p.likeCount,
-    replyCount: p.replyCount,
-    repostCount: p.repostCount,
-    hidden: p.hidden,
-    hiddenReason: p.hiddenReason,
-    hiddenBy: p.hiddenBy as `0x${string}` | null,
-    createdAt: String(p.createdAt),
-  }));
+  const posts: TimelinePost[] = (rows ?? [])
+    .filter((p) => !blocked.includes(p.author.toLowerCase()))
+    .map((p) => ({
+      id: p.id,
+      author: p.author as `0x${string}`,
+      text: p.text,
+      mediaHash: p.mediaHash as `0x${string}`,
+      parentId: p.parentId,
+      quotedId: p.quotedId,
+      likeCount: p.likeCount,
+      replyCount: p.replyCount,
+      repostCount: p.repostCount,
+      hidden: p.hidden,
+      hiddenReason: p.hiddenReason,
+      hiddenBy: p.hiddenBy as `0x${string}` | null,
+      createdAt: String(p.createdAt),
+    }));
 
   return {
     posts,

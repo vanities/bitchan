@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAccount } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { ArrowLeft, Bell, CircleUser, Landmark, Scale, Search } from "lucide-react";
+import { ArrowLeft, Bell, Bookmark, CircleUser, Landmark, Scale, Search } from "lucide-react";
 import { Composer, type ReplyTarget } from "./components/Composer";
 import { Feed, Notice } from "./components/Feed";
 import { SearchView } from "./components/SearchView";
@@ -10,14 +10,16 @@ import { RepublicPanel } from "./components/RepublicPanel";
 import { NotificationsView } from "./components/NotificationsView";
 import { useTimeline, type TimelinePost } from "./lib/useTimeline";
 import { useFollowing, useNotifications } from "./lib/engagement";
+import { usePref } from "./lib/prefs";
 
-type View = "home" | "search" | "republic" | "profile" | "post" | "notifications";
+type View = "home" | "search" | "republic" | "profile" | "post" | "notifications" | "bookmarks";
 
 const NAV = [
   { key: "home", label: "The Square", Icon: Landmark },
   { key: "search", label: "Search", Icon: Search },
   { key: "republic", label: "Republic", Icon: Scale },
   { key: "notifications", label: "Notifications", Icon: Bell },
+  { key: "bookmarks", label: "Bookmarks", Icon: Bookmark },
   { key: "citizen", label: "Citizen", Icon: CircleUser },
 ] as const;
 type NavKey = (typeof NAV)[number]["key"];
@@ -29,6 +31,7 @@ const TITLES: Record<View, string> = {
   profile: "Profile",
   post: "Thread",
   notifications: "Notifications",
+  bookmarks: "Bookmarks",
 };
 
 type NavState = {
@@ -51,6 +54,8 @@ function pathFor(s: NavState): string {
       return "/republic";
     case "notifications":
       return "/notifications";
+    case "bookmarks":
+      return "/bookmarks";
     default:
       return "/";
   }
@@ -63,6 +68,7 @@ function parsePath(path: string): NavState {
   if (path === "/search") return { view: "search" };
   if (path === "/republic") return { view: "republic" };
   if (path === "/notifications") return { view: "notifications" };
+  if (path === "/bookmarks") return { view: "bookmarks" };
   return { view: "home" };
 }
 
@@ -89,6 +95,8 @@ export default function App() {
   const followingSet = new Set(followingArr ?? []);
   const homePosts =
     homeFilter === "following" ? topLevel.filter((p) => followingSet.has(p.author.toLowerCase())) : topLevel;
+  const { list: bookmarks } = usePref("bookmarks");
+  const bookmarkedPosts = useMemo(() => posts.filter((p) => bookmarks.includes(p.id)), [posts, bookmarks]);
 
   const threadRoot = view === "post" && postId ? (posts.find((p) => p.id === postId) ?? null) : null;
   // Full reply subtree under the focal post, flattened depth-first with a depth per
@@ -339,6 +347,20 @@ export default function App() {
                 onOpenProfile={openProfile}
                 onOpenPostId={openPostId}
                 loading={isLoading}
+              />
+            )}
+
+            {view === "bookmarks" && (
+              <Feed
+                posts={bookmarkedPosts}
+                handles={handles}
+                onReply={startReply}
+                onOpenProfile={openProfile}
+                onOpenPost={openPost}
+                onQuote={startQuote}
+                loading={isLoading}
+                error={error}
+                empty={<Notice>No bookmarks yet. Tap the ··· menu on any post and choose Bookmark.</Notice>}
               />
             )}
           </main>
