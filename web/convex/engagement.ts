@@ -1,6 +1,10 @@
 import { internalMutation, query, type QueryCtx } from "./_generated/server";
 import { v } from "convex/values";
 
+// Cap the engagement batch: each id triggers full reaction scans, so an unbounded
+// postIds[] is an attacker-controlled N×scan. A feed page shows far fewer than this.
+const MAX_ENGAGEMENT_BATCH = 100;
+
 // Gasless engagement read-model + writer, ported from the Bun/Hono server.
 // Signature verification lives in `reactions.ts` (a Node-runtime action) because
 // viem's verifyTypedData uses a dynamic import that the Convex runtime forbids;
@@ -60,6 +64,9 @@ export const engagement = query({
     }),
   ),
   handler: async (ctx, { postIds, viewer }) => {
+    if (postIds.length > MAX_ENGAGEMENT_BATCH) {
+      throw new Error(`too many postIds (max ${MAX_ENGAGEMENT_BATCH})`);
+    }
     const v0 = viewer ? viewer.toLowerCase() : "";
     const out = [];
     for (const id of postIds) {

@@ -23,6 +23,11 @@ const UPLOAD_TYPES = {
 const MAX_BYTES = 5 * 1024 * 1024; // 5 MB — keeps us under Convex's arg limit
 const REJECT_CATEGORIES = ["sexual", "sexual/minors"] as const;
 
+// Per-address upload budget (anti storage/moderation-cost abuse). Generous for
+// legit posting (galleries are ≤4 images), tight enough to bound a spammer.
+const UPLOAD_MAX_PER_WINDOW = 40;
+const UPLOAD_WINDOW_MS = 10 * 60 * 1000; // 10 minutes
+
 async function sha256Hex(bytes: ArrayBuffer): Promise<string> {
   const digest = await crypto.subtle.digest("SHA-256", bytes);
   return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
@@ -116,6 +121,14 @@ export const upload = action({
     // Same content already stored? Return it — no re-screen, no duplicate blob.
     const existing = await ctx.runQuery(internal.media.byHash, { hash });
     if (existing) return { hash, mime: existing.mime, size };
+
+    // Only NEW content reaches here (re-uploads are deduped above, free). Charge it
+    // against the uploader's rate-limit budget before any storage / moderation spend.
+    await ctx.runMutation(internal.rateLimit.consume, {
+      key: `upload:${signer}`,
+      max: UPLOAD_MAX_PER_WINDOW,
+      windowMs: UPLOAD_WINDOW_MS,
+    });
 
     const reason = await screenImage(`data:${mime};base64,${toBase64(bytes)}`);
     if (reason) throw new Error(reason);

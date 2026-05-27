@@ -26,6 +26,7 @@ import type * as mediaActions from "../mediaActions.js";
 import type * as notifications from "../notifications.js";
 import type * as posts from "../posts.js";
 import type * as profile from "../profile.js";
+import type * as rateLimit from "../rateLimit.js";
 import type * as reactions from "../reactions.js";
 import type * as stats from "../stats.js";
 
@@ -54,6 +55,7 @@ declare const fullApi: ApiFromModules<{
   notifications: typeof notifications;
   posts: typeof posts;
   profile: typeof profile;
+  rateLimit: typeof rateLimit;
   reactions: typeof reactions;
   stats: typeof stats;
 }>;

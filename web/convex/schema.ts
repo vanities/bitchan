@@ -89,4 +89,12 @@ export default defineSchema({
     size: v.number(),
     createdAt: v.number(),
   }).index("by_hash", ["hash"]),
+
+  // Fixed-window rate limiting (one row per key, e.g. "upload:<address>"). Bounds
+  // abuse of the expensive authenticated actions; see convex/rateLimit.ts.
+  rateLimits: defineTable({
+    key: v.string(),
+    windowStart: v.number(), // ms
+    count: v.number(),
+  }).index("by_key", ["key"]),
 });

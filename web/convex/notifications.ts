@@ -13,6 +13,11 @@ const notifType = v.union(
   v.literal("repost"),
 );
 
+// `viewer` is an arbitrary arg, so the like/repost loop below scans reactions for
+// each of the viewer's posts — bound it to recent posts so querying a high-activity
+// account can't be used to amplify the read into a DoS.
+const MAX_OWN_POSTS = 200;
+
 export const feed = query({
   args: { viewer: v.string(), handle: v.optional(v.string()), limit: v.optional(v.number()) },
   returns: v.array(
@@ -31,7 +36,8 @@ export const feed = query({
     const myPosts = await ctx.db
       .query("posts")
       .withIndex("by_author", (q) => q.eq("author", me))
-      .collect();
+      .order("desc")
+      .take(MAX_OWN_POSTS);
     const myPostIds = new Set(myPosts.map((p) => p.onchainId));
     const textOf = new Map(myPosts.map((p) => [p.onchainId, p.text]));
 
@@ -54,7 +60,8 @@ export const feed = query({
       .withIndex("by_kind_target", (q) => q.eq("kind", "follow").eq("target", me))
       .collect();
     for (const r of follows) {
-      if (r.active && r.account !== me) out.push({ type: "follow", from: r.account, postId: null, text: "", at: r.at ?? 0 });
+      if (r.active && r.account !== me)
+        out.push({ type: "follow", from: r.account, postId: null, text: "", at: r.at ?? 0 });
     }
 
     // Likes/reposts of my posts.
@@ -66,7 +73,13 @@ export const feed = query({
           .collect();
         for (const r of rs) {
           if (r.active && r.account !== me) {
-            out.push({ type: kind, from: r.account, postId: pid, text: textOf.get(pid) ?? "", at: r.at ?? 0 });
+            out.push({
+              type: kind,
+              from: r.account,
+              postId: pid,
+              text: textOf.get(pid) ?? "",
+              at: r.at ?? 0,
+            });
           }
         }
       }
