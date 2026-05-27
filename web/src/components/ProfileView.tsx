@@ -319,6 +319,7 @@ export function ProfileView({
       <Feed
         posts={tabPosts}
         handles={handles}
+        pinnedId={tab === "posts" ? (profile?.pinnedPostId ?? undefined) : undefined}
         onReply={onReply}
         onOpenProfile={onOpenProfile}
         onOpenPost={onOpenPost}

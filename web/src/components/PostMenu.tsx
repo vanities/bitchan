@@ -1,31 +1,40 @@
 import { useState } from "react";
-import { Bookmark, Copy, EyeOff, MoreHorizontal, Ban } from "lucide-react";
+import { Bookmark, Copy, EyeOff, MoreHorizontal, Ban, Pin } from "lucide-react";
 import { togglePref, usePref } from "../lib/prefs";
 
-// Per-post overflow menu: bookmark, mute/block the author (viewer-local), copy a
-// shareable link. A click-outside backdrop closes it; all clicks stopPropagation
-// so they don't also open the thread.
+// Per-post overflow menu: bookmark, mute/block the author (viewer-local), pin (own
+// posts), copy a shareable link. A click-outside backdrop closes it; all clicks
+// stopPropagation so they don't also open the thread.
 export function PostMenu({
   postId,
   author,
   handle,
+  onPin,
+  pinned,
 }: {
   postId: string;
   author: string;
   handle?: string | null;
+  onPin?: () => void; // present only on your own posts
+  pinned?: boolean; // is this the viewer's currently-pinned post (profile view)
 }) {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const { has: hasBookmark } = usePref("bookmarks");
   const { has: hasMute } = usePref("muted");
   const { has: hasBlock } = usePref("blocked");
+  const bookmarked = hasBookmark(postId);
   const who = handle ? `@${handle}` : "this account";
 
   function copyLink() {
     navigator.clipboard?.writeText(`${location.origin}/post/${postId}`).then(
       () => {
         setCopied(true);
-        setTimeout(() => setCopied(false), 1200);
+        // Show "Copied!" briefly, then close the menu.
+        setTimeout(() => {
+          setOpen(false);
+          setCopied(false);
+        }, 900);
       },
       () => {},
     );
@@ -60,13 +69,26 @@ export function PostMenu({
           >
             <Item
               icon={Bookmark}
+              filled={bookmarked}
               onClick={() => {
                 togglePref("bookmarks", postId);
                 setOpen(false);
               }}
             >
-              {hasBookmark(postId) ? "Remove bookmark" : "Bookmark"}
+              {bookmarked ? "Remove bookmark" : "Bookmark"}
             </Item>
+            {onPin && (
+              <Item
+                icon={Pin}
+                filled={pinned}
+                onClick={() => {
+                  onPin();
+                  setOpen(false);
+                }}
+              >
+                {pinned ? "Unpin from profile" : "Pin to profile"}
+              </Item>
+            )}
             <Item
               icon={EyeOff}
               onClick={() => {
@@ -101,11 +123,13 @@ function Item({
   children,
   onClick,
   danger,
+  filled,
 }: {
   icon: typeof Copy;
   children: React.ReactNode;
   onClick: () => void;
   danger?: boolean;
+  filled?: boolean;
 }) {
   return (
     <button
@@ -117,7 +141,7 @@ function Item({
         danger ? "text-seal" : "text-bone"
       }`}
     >
-      <Icon size={15} />
+      <Icon size={15} fill={filled ? "currentColor" : "none"} />
       {children}
     </button>
   );

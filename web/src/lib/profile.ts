@@ -40,3 +40,25 @@ export async function setProfile(opts: {
     signature,
   });
 }
+
+const pinTypes = { Pin: [{ name: "postId", type: "string" }] } as const;
+
+/** Pin a post (or unpin with postId="") to your profile. Signs Pin{postId}. */
+export async function setPin(opts: {
+  address: `0x${string}`;
+  postId: string;
+  signTypedDataAsync: (args: {
+    domain: typeof domain;
+    types: typeof pinTypes;
+    primaryType: "Pin";
+    message: { postId: string };
+  }) => Promise<`0x${string}`>;
+}): Promise<void> {
+  const signature = await opts.signTypedDataAsync({
+    domain,
+    types: pinTypes,
+    primaryType: "Pin",
+    message: { postId: opts.postId },
+  });
+  await convex.action(api.profile.pin, { address: opts.address, postId: opts.postId, signature });
+}

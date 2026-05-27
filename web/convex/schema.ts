@@ -12,6 +12,7 @@ export default defineSchema({
     bio: v.optional(v.string()), // off-chain, signed
     banner: v.optional(v.string()), // media hash, off-chain, signed
     website: v.optional(v.string()), // off-chain, signed
+    pinnedPostId: v.optional(v.string()), // post id pinned to the profile, off-chain, signed
     firstSeenAt: v.number(),
   }).index("by_address", ["address"]),
 
@@ -68,6 +69,15 @@ export default defineSchema({
     blockNumber: v.number(),
     at: v.number(),
   }).index("by_at", ["at"]),
+
+  // Multi-image posts without a contract change: the on-chain mediaHash is the
+  // sha256 of a manifest (the ordered list of image hashes). Each image is a
+  // normal (screened) media row; this table maps the manifest hash → its images.
+  galleries: defineTable({
+    hash: v.string(), // "0x" + sha256(JSON.stringify(images)) — the on-chain mediaHash
+    images: v.array(v.string()), // member media hashes, in order
+    createdAt: v.number(),
+  }).index("by_hash", ["hash"]),
 
   // Media: content-addressed by sha256 (= the on-chain bytes32 mediaHash). Bytes
   // live in Convex file storage (deletable, so illegal content can be taken down —

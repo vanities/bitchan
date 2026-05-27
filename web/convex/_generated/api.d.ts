@@ -13,6 +13,7 @@ import type * as admin from "../admin.js";
 import type * as avatar from "../avatar.js";
 import type * as crons from "../crons.js";
 import type * as engagement from "../engagement.js";
+import type * as galleries from "../galleries.js";
 import type * as governance from "../governance.js";
 import type * as http from "../http.js";
 import type * as indexer from "../indexer.js";
@@ -32,6 +33,7 @@ declare const fullApi: ApiFromModules<{
   avatar: typeof avatar;
   crons: typeof crons;
   engagement: typeof engagement;
+  galleries: typeof galleries;
   governance: typeof governance;
   http: typeof http;
   indexer: typeof indexer;

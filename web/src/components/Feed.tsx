@@ -21,6 +21,7 @@ export function Feed({
   depths,
   onLoadMore,
   canLoadMore,
+  pinnedId,
 }: {
   posts: TimelinePost[];
   handles: Handles;
@@ -37,6 +38,8 @@ export function Feed({
   // Infinite scroll (home feed only): called when the sentinel scrolls into view.
   onLoadMore?: () => void;
   canLoadMore?: boolean;
+  // Float this post id to the top with a "Pinned" badge (profile Posts tab).
+  pinnedId?: string;
 }) {
   const { address } = useAccount();
   const { data: engagement } = useEngagement(
@@ -71,9 +74,14 @@ export function Feed({
     return <>{empty ?? <Notice>Nothing here yet.</Notice>}</>;
   }
 
+  const ordered =
+    pinnedId && posts.some((p) => p.id === pinnedId)
+      ? [posts.find((p) => p.id === pinnedId)!, ...posts.filter((p) => p.id !== pinnedId)]
+      : posts;
+
   return (
     <ul>
-      {posts.map((p, i) => (
+      {ordered.map((p, i) => (
         <PostCard
           key={p.id}
           post={p}
@@ -89,6 +97,7 @@ export function Feed({
           handles={handles}
           quotedPost={p.quotedId !== "0" ? (byId.get(p.quotedId) ?? null) : null}
           depth={depths?.get(p.id) ?? 0}
+          pinned={p.id === pinnedId}
         />
       ))}
       {onLoadMore && canLoadMore && <LoadMoreSentinel onLoadMore={onLoadMore} />}

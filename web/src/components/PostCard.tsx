@@ -1,14 +1,16 @@
 import { useState, useEffect, useMemo } from "react";
 import { useAccount, useSignTypedData, useWriteContract } from "wagmi";
-import { EyeOff, Heart, MessageCircle, Quote, Repeat2, type LucideIcon } from "lucide-react";
+import { EyeOff, Heart, MessageCircle, Pin, Quote, Repeat2, type LucideIcon } from "lucide-react";
 import type { TimelinePost, Handles } from "../lib/useTimeline";
 import { submitReaction, useReactors, type Engagement } from "../lib/engagement";
 import { hasMedia, mediaUrl, useMediaInfo } from "../lib/media";
+import { useGallery } from "../lib/gallery";
 import { bitchanAbi, bitchanAddress, chain } from "../lib/contract";
 import { useEnsName } from "../lib/ens";
 import { tokenize } from "../lib/links";
 import { firstEmbed } from "../lib/embeds";
 import { usePref } from "../lib/prefs";
+import { setPin } from "../lib/profile";
 import { Embed } from "./Embed";
 import { PostMenu } from "./PostMenu";
 import { AccountList } from "./AccountList";
@@ -28,6 +30,7 @@ export function PostCard({
   handles,
   quotedPost,
   depth = 0,
+  pinned = false,
 }: {
   post: TimelinePost;
   handle: string | null;
@@ -42,6 +45,7 @@ export function PostCard({
   handles?: Handles;
   quotedPost?: TimelinePost | null;
   depth?: number;
+  pinned?: boolean;
 }) {
   const { address, isConnected } = useAccount();
   const { signTypedDataAsync } = useSignTypedData();
@@ -60,6 +64,16 @@ export function PostCard({
   const { has: isMuted } = usePref("muted");
   const muted = isMuted(post.author);
   const [mutedShown, setMutedShown] = useState(false);
+  const isOwn = !!address && address.toLowerCase() === post.author.toLowerCase();
+  async function pin() {
+    if (!address) return;
+    try {
+      // On your own profile the pinned card toggles off; elsewhere it pins this post.
+      await setPin({ address, postId: pinned ? "" : post.id, signTypedDataAsync });
+    } catch (e) {
+      console.error("pin failed", e);
+    }
+  }
   const [reactorList, setReactorList] = useState<"like" | "repost" | null>(null);
   const { data: reactorAddrs } = useReactors(post.id, reactorList ?? "like", reactorList !== null);
   // Optimistic overrides for instant feedback; cleared once the reactive query catches up.
@@ -116,6 +130,11 @@ export function PostCard({
       }`}
       style={{ animationDelay: `${Math.min(index, 12) * 40}ms`, paddingLeft: 16 + indent * 18 }}
     >
+      {pinned && (
+        <p className="mb-1 flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-bone-dim">
+          <Pin size={11} /> Pinned
+        </p>
+      )}
       <div className="flex items-baseline gap-2">
         <button
           onClick={() => onOpenProfile?.(post.author)}
@@ -131,7 +150,13 @@ export function PostCard({
         {isReply && <span className="font-mono text-[10px] text-bone-dim">↳ re #{post.parentId}</span>}
         <div className="ml-auto flex items-center gap-1.5">
           <span className="font-mono text-[10px] text-bone-dim/60">#{post.id}</span>
-          <PostMenu postId={post.id} author={post.author} handle={handle} />
+          <PostMenu
+            postId={post.id}
+            author={post.author}
+            handle={handle}
+            onPin={isOwn ? pin : undefined}
+            pinned={pinned}
+          />
         </div>
       </div>
 
@@ -282,8 +307,47 @@ export function PostCard({
 }
 
 function MediaView({ hash }: { hash: `0x${string}` }) {
+  const gallery = useGallery(hash);
   const info = useMediaInfo(hash);
   const url = mediaUrl(hash);
+
+  // A hash that maps to a gallery is a multi-image post.
+  if (gallery === undefined) {
+    return <div className="mt-2 h-40 animate-pulse rounded-xl border border-line bg-ink-soft/50" />;
+  }
+  if (gallery && gallery.length > 0) {
+    return (
+      <div
+        className={`mt-2 grid gap-1 overflow-hidden rounded-xl border border-line ${gallery.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}
+      >
+        {gallery.map((h, i) => (
+          <Dialog key={h + i}>
+            <DialogTrigger asChild>
+              <button type="button" className="overflow-hidden">
+                <img
+                  src={mediaUrl(h)}
+                  alt=""
+                  loading="lazy"
+                  className="h-full max-h-72 w-full cursor-zoom-in bg-ink-soft object-cover transition hover:opacity-90"
+                />
+              </button>
+            </DialogTrigger>
+            <DialogContent
+              aria-describedby={undefined}
+              className="w-auto max-w-[96vw] border-0 bg-transparent p-0 shadow-none sm:max-w-[96vw]"
+            >
+              <DialogTitle className="sr-only">Expanded image</DialogTitle>
+              <img
+                src={mediaUrl(h)}
+                alt=""
+                className="max-h-[88vh] w-auto max-w-[96vw] rounded-lg object-contain"
+              />
+            </DialogContent>
+          </Dialog>
+        ))}
+      </div>
+    );
+  }
 
   if (info === undefined) {
     return <div className="mt-2 h-40 animate-pulse rounded-xl border border-line bg-ink-soft/50" />;

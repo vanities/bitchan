@@ -4,6 +4,7 @@ import { formatEther } from "viem";
 import { ImagePlus, X } from "lucide-react";
 import { bitchanAbi, bitchanAddress, chain, ZERO_BYTES32 } from "../lib/contract";
 import { mediaUrl, uploadMedia, type UploadResult } from "../lib/media";
+import { recordGallery } from "../lib/gallery";
 import { firstEmbed } from "../lib/embeds";
 import { Embed } from "./Embed";
 import { Button } from "@/components/ui/button";
@@ -29,7 +30,7 @@ export function Composer({
   const { address, isConnected } = useAccount();
   const [text, setText] = useState("");
   const [showStamp, setShowStamp] = useState(false);
-  const [media, setMedia] = useState<UploadResult | null>(null);
+  const [media, setMedia] = useState<UploadResult[]>([]); // up to 4; >1 posts as a gallery
   const [uploading, setUploading] = useState(false);
   const [mediaError, setMediaError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -59,7 +60,7 @@ export function Composer({
   useEffect(() => {
     if (!isSuccess) return;
     setText("");
-    setMedia(null);
+    setMedia([]);
     setShowStamp(true);
     onClearReply?.();
     onClearQuote?.();
@@ -67,37 +68,46 @@ export function Composer({
     return () => clearTimeout(t);
   }, [isSuccess, onClearReply, onClearQuote]);
 
-  async function onPickFile(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  async function onPickFiles(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = [...(e.target.files ?? [])].slice(0, 4 - media.length);
+    if (fileRef.current) fileRef.current.value = "";
+    if (files.length === 0) return;
     setMediaError(null);
     setUploading(true);
     try {
-      const r = await uploadMedia(file);
-      setMedia(r);
-      console.log("[media] uploaded", r.hash, r.mime, `${r.size}b`);
+      for (const file of files) {
+        const r = await uploadMedia(file);
+        setMedia((m) => (m.length < 4 ? [...m, r] : m));
+        console.log("[media] uploaded", r.hash, r.mime, `${r.size}b`);
+      }
     } catch (err) {
       console.error("[media] upload failed", err);
       setMediaError(err instanceof Error ? err.message : "upload failed");
     } finally {
       setUploading(false);
-      if (fileRef.current) fileRef.current.value = "";
     }
   }
 
-  function submit() {
+  async function submit() {
     const body = text.trim();
-    if ((!body && !media && !quoteTo) || uploading) return;
+    if ((!body && media.length === 0 && !quoteTo) || uploading) return;
+    // 0 → none, 1 → that image, >1 → a gallery (manifest hash).
+    let mediaHash: `0x${string}` = ZERO_BYTES32;
+    if (media.length === 1) mediaHash = media[0]!.hash;
+    else if (media.length > 1) {
+      try {
+        mediaHash = await recordGallery(media.map((m) => m.hash));
+      } catch (err) {
+        console.error("[media] gallery record failed", err);
+        setMediaError("couldn't save the gallery");
+        return;
+      }
+    }
     writeContract({
       address: bitchanAddress,
       abi: bitchanAbi,
       functionName: "post",
-      args: [
-        body,
-        (media?.hash ?? ZERO_BYTES32) as `0x${string}`,
-        replyTo ? BigInt(replyTo.id) : 0n,
-        quoteTo ? BigInt(quoteTo.id) : 0n,
-      ],
+      args: [body, mediaHash, replyTo ? BigInt(replyTo.id) : 0n, quoteTo ? BigInt(quoteTo.id) : 0n],
       value: (postFee as bigint | undefined) ?? 0n,
       chainId: chain.id,
     });
@@ -174,20 +184,24 @@ export function Composer({
         className="w-full resize-none bg-transparent text-lg leading-snug placeholder:text-bone-dim/60 focus:outline-none"
       />
 
-      {media && (
-        <div className="relative mt-2 overflow-hidden rounded-xl border border-line">
-          <button
-            onClick={() => setMedia(null)}
-            className="absolute right-2 top-2 z-10 grid h-7 w-7 place-items-center rounded-full bg-ink/80 text-bone transition hover:text-seal"
-            aria-label="remove media"
-          >
-            <X size={16} strokeWidth={2.4} />
-          </button>
-          {media.mime.startsWith("video/") ? (
-            <video src={mediaUrl(media.hash)} controls className="max-h-72 w-full bg-black" />
-          ) : (
-            <img src={mediaUrl(media.hash)} alt="" className="max-h-72 w-full bg-ink-soft object-contain" />
-          )}
+      {media.length > 0 && (
+        <div className={`mt-2 grid gap-1.5 ${media.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}>
+          {media.map((m, i) => (
+            <div key={m.hash + i} className="relative overflow-hidden rounded-xl border border-line">
+              <button
+                onClick={() => setMedia((arr) => arr.filter((_, j) => j !== i))}
+                className="absolute right-2 top-2 z-10 grid h-7 w-7 place-items-center rounded-full bg-ink/80 text-bone transition hover:text-seal"
+                aria-label="remove media"
+              >
+                <X size={16} strokeWidth={2.4} />
+              </button>
+              {m.mime.startsWith("video/") ? (
+                <video src={mediaUrl(m.hash)} controls className="max-h-72 w-full bg-black" />
+              ) : (
+                <img src={mediaUrl(m.hash)} alt="" className="max-h-72 w-full bg-ink-soft object-cover" />
+              )}
+            </div>
+          ))}
         </div>
       )}
       {mediaError && <p className="mt-1 font-mono text-xs text-seal">media: {mediaError}</p>}
@@ -198,11 +212,11 @@ export function Composer({
         <div className="flex items-center gap-4">
           <button
             onClick={() => fileRef.current?.click()}
-            disabled={uploading}
+            disabled={uploading || media.length >= 4}
             className="flex items-center gap-1.5 text-sm text-bone-dim transition hover:text-brass disabled:opacity-50"
           >
             <ImagePlus size={18} strokeWidth={2} />
-            {uploading ? "uploading…" : "image / video"}
+            {uploading ? "uploading…" : media.length >= 4 ? "max 4" : "image / video"}
           </button>
           <span className="font-mono text-[11px] text-bone-dim">{fee} ETH · funds the board</span>
         </div>
@@ -212,7 +226,7 @@ export function Composer({
           </span>
           <Button
             onClick={submit}
-            disabled={(!text.trim() && !media) || over || uploading || isPending || isMining}
+            disabled={(!text.trim() && media.length === 0) || over || uploading || isPending || isMining}
             className="px-5 font-bold"
           >
             {isPending ? "confirm…" : isMining ? "sealing…" : replyTo ? "Reply" : "Post"}
@@ -221,7 +235,14 @@ export function Composer({
       </div>
       {error && <p className="mt-2 font-mono text-xs text-seal">{error.message.split("\n")[0]}</p>}
 
-      <input ref={fileRef} type="file" accept="image/*,video/*" onChange={onPickFile} className="hidden" />
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/*,video/*"
+        multiple
+        onChange={onPickFiles}
+        className="hidden"
+      />
     </div>
   );
 }

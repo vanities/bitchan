@@ -67,6 +67,7 @@ export const getProfile = query({
       bio: v.union(v.string(), v.null()),
       banner: v.union(v.string(), v.null()),
       website: v.union(v.string(), v.null()),
+      pinnedPostId: v.union(v.string(), v.null()),
     }),
     v.null(),
   ),
@@ -83,7 +84,24 @@ export const getProfile = query({
       bio: r.bio ?? null,
       banner: r.banner ?? null,
       website: r.website ?? null,
+      pinnedPostId: r.pinnedPostId ?? null,
     };
+  },
+});
+
+/// Pin (or clear, with "") a post on an account's profile. Verified by the pin action.
+export const recordPin = internalMutation({
+  args: { address: v.string(), postId: v.string() },
+  returns: v.null(),
+  handler: async (ctx, { address, postId }) => {
+    const existing = await ctx.db
+      .query("accounts")
+      .withIndex("by_address", (q) => q.eq("address", address))
+      .unique();
+    const pinnedPostId = postId === "" ? undefined : postId;
+    if (existing) await ctx.db.patch(existing._id, { pinnedPostId });
+    else await ctx.db.insert("accounts", { address, firstSeenAt: 0, pinnedPostId });
+    return null;
   },
 });
 
