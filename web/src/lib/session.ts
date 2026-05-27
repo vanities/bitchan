@@ -1,5 +1,5 @@
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
-import { chain } from "./contract";
+import { signingDomain } from "./contract";
 
 // A "session key" for gasless engagement: the user signs ONE delegation (one
 // wallet popup), authorizing a browser-generated key to sign their reactions for
@@ -8,7 +8,7 @@ import { chain } from "./contract";
 // Reaction messages our backend honors for this user; it can't touch funds or
 // the chain. See [[bitchan-design-principles]] (defend with structure, not tedium).
 
-const domain = { name: "bitchan", version: "1", chainId: chain.id } as const;
+const domain = signingDomain;
 const DELEGATION_TYPES = {
   Delegation: [
     { name: "delegate", type: "address" },

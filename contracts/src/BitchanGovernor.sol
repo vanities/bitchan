@@ -36,16 +36,16 @@ contract BitchanGovernor is Governor, GovernorSettings, GovernorCountingSimple, 
     }
 
     // ── The heart: one vote per eligible citizen at the snapshot, never per token.
-    //    This single line is the wall between bitchan and a token-weighted DAO.
+    //    Evaluated AS OF `timepoint` (the proposal snapshot), not live, so the
+    //    citizen rolls can't be edited mid-proposal to add/remove votes (finding #4).
     function _getVotes(address account, uint256 timepoint, bytes memory) internal view override returns (uint256) {
-        uint64 reg = republic.registeredAt(account);
-        if (!republic.isCitizen(account) || reg == 0) return 0;
-        return uint256(reg) + republic.ageThreshold() <= timepoint ? 1 : 0;
+        return republic.canVoteAt(account, timepoint) ? 1 : 0;
     }
 
-    // ── Quorum: 25% of citizens must weigh in ────────────────────────────────
-    function quorum(uint256) public view override returns (uint256) {
-        return republic.citizenCount() / 4;
+    // ── Quorum: 25% of citizens AS OF the snapshot must weigh in ─────────────
+    //    Snapshotted, not live — a post-vote flood or slash can't move the bar.
+    function quorum(uint256 timepoint) public view override returns (uint256) {
+        return republic.citizenCountAt(timepoint) / 4;
     }
 
     // ── A 2/3 supermajority of decisive (For + Against) votes to pass ────────

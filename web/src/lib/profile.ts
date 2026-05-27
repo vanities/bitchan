@@ -1,16 +1,17 @@
 import { convex } from "./convex";
 import { api } from "../../convex/_generated/api";
-import { chain } from "./contract";
+import { signingDomain, signatureDeadline } from "./contract";
 
 // Off-chain profile (bio/banner/website): the owner signs the fields and the
 // backend records them on their account. Infrequent → a direct wallet signature
 // (not the session key). Mirrors lib/avatar.ts.
-const domain = { name: "bitchan", version: "1", chainId: chain.id } as const;
+const domain = signingDomain;
 const types = {
   Profile: [
     { name: "bio", type: "string" },
     { name: "banner", type: "string" },
     { name: "website", type: "string" },
+    { name: "deadline", type: "uint256" },
   ],
 } as const;
 
@@ -23,27 +24,34 @@ export async function setProfile(opts: {
     domain: typeof domain;
     types: typeof types;
     primaryType: "Profile";
-    message: { bio: string; banner: string; website: string };
+    message: { bio: string; banner: string; website: string; deadline: bigint };
   }) => Promise<`0x${string}`>;
 }): Promise<void> {
+  const deadline = BigInt(signatureDeadline());
   const signature = await opts.signTypedDataAsync({
     domain,
     types,
     primaryType: "Profile",
-    message: { bio: opts.bio, banner: opts.banner, website: opts.website },
+    message: { bio: opts.bio, banner: opts.banner, website: opts.website, deadline },
   });
   await convex.action(api.profile.set, {
     address: opts.address,
     bio: opts.bio,
     banner: opts.banner,
     website: opts.website,
+    deadline: deadline.toString(),
     signature,
   });
 }
 
-const pinTypes = { Pin: [{ name: "postId", type: "string" }] } as const;
+const pinTypes = {
+  Pin: [
+    { name: "postId", type: "string" },
+    { name: "deadline", type: "uint256" },
+  ],
+} as const;
 
-/** Pin a post (or unpin with postId="") to your profile. Signs Pin{postId}. */
+/** Pin a post (or unpin with postId="") to your profile. Signs Pin{postId,deadline}. */
 export async function setPin(opts: {
   address: `0x${string}`;
   postId: string;
@@ -51,14 +59,20 @@ export async function setPin(opts: {
     domain: typeof domain;
     types: typeof pinTypes;
     primaryType: "Pin";
-    message: { postId: string };
+    message: { postId: string; deadline: bigint };
   }) => Promise<`0x${string}`>;
 }): Promise<void> {
+  const deadline = BigInt(signatureDeadline());
   const signature = await opts.signTypedDataAsync({
     domain,
     types: pinTypes,
     primaryType: "Pin",
-    message: { postId: opts.postId },
+    message: { postId: opts.postId, deadline },
   });
-  await convex.action(api.profile.pin, { address: opts.address, postId: opts.postId, signature });
+  await convex.action(api.profile.pin, {
+    address: opts.address,
+    postId: opts.postId,
+    deadline: deadline.toString(),
+    signature,
+  });
 }

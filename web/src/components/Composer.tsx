@@ -1,5 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useAccount, useReadContract, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
+import {
+  useAccount,
+  useReadContract,
+  useSignTypedData,
+  useWaitForTransactionReceipt,
+  useWriteContract,
+} from "wagmi";
 import { formatEther } from "viem";
 import { ImagePlus, X } from "lucide-react";
 import { bitchanAbi, bitchanAddress, chain, ZERO_BYTES32 } from "../lib/contract";
@@ -28,6 +34,7 @@ export function Composer({
   onGoProfile?: () => void;
 }) {
   const { address, isConnected } = useAccount();
+  const { signTypedDataAsync } = useSignTypedData();
   const [text, setText] = useState("");
   const [showStamp, setShowStamp] = useState(false);
   const [media, setMedia] = useState<UploadResult[]>([]); // up to 4; >1 posts as a gallery
@@ -71,12 +78,12 @@ export function Composer({
   async function onPickFiles(e: React.ChangeEvent<HTMLInputElement>) {
     const files = [...(e.target.files ?? [])].slice(0, 4 - media.length);
     if (fileRef.current) fileRef.current.value = "";
-    if (files.length === 0) return;
+    if (files.length === 0 || !address) return;
     setMediaError(null);
     setUploading(true);
     try {
       for (const file of files) {
-        const r = await uploadMedia(file);
+        const r = await uploadMedia(file, { address, signTypedDataAsync });
         setMedia((m) => (m.length < 4 ? [...m, r] : m));
         console.log("[media] uploaded", r.hash, r.mime, `${r.size}b`);
       }
@@ -90,13 +97,16 @@ export function Composer({
 
   async function submit() {
     const body = text.trim();
-    if ((!body && media.length === 0 && !quoteTo) || uploading) return;
+    if ((!body && media.length === 0 && !quoteTo) || uploading || !address) return;
     // 0 → none, 1 → that image, >1 → a gallery (manifest hash).
     let mediaHash: `0x${string}` = ZERO_BYTES32;
     if (media.length === 1) mediaHash = media[0]!.hash;
     else if (media.length > 1) {
       try {
-        mediaHash = await recordGallery(media.map((m) => m.hash));
+        mediaHash = await recordGallery(
+          media.map((m) => m.hash),
+          { address, signTypedDataAsync },
+        );
       } catch (err) {
         console.error("[media] gallery record failed", err);
         setMediaError("couldn't save the gallery");

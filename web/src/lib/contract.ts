@@ -20,8 +20,23 @@ export const bitchanAddress = (import.meta.env.VITE_BITCHAN_ADDRESS ??
 /// The active election contract (per-instance; "" = none on this network).
 export const electionAddress = (import.meta.env.VITE_ELECTION_ADDRESS ?? "") as string;
 
-export const ZERO_BYTES32 =
-  "0x0000000000000000000000000000000000000000000000000000000000000000" as const;
+export const ZERO_BYTES32 = "0x0000000000000000000000000000000000000000000000000000000000000000" as const;
+
+// EIP-712 domain shared by every off-chain signer (reactions, profile, avatar,
+// galleries, media uploads). Bound to the chain AND the BitchanRepublic deployment
+// (verifyingContract) so signatures can't be replayed across chains or forks. Must
+// match the backend's bitchanDomain() (convex/lib/eip712.ts) exactly.
+export const signingDomain = {
+  name: "bitchan",
+  version: "1",
+  chainId: chain.id,
+  verifyingContract: bitchanAddress,
+} as const;
+
+// Per-action signatures carry a short deadline so a captured one can't be replayed
+// indefinitely. 10 minutes is ample for sign-then-submit.
+export const SIGNATURE_TTL_SECONDS = 600;
+export const signatureDeadline = () => Math.floor(Date.now() / 1000) + SIGNATURE_TTL_SECONDS;
 
 /// Block explorer for the active chain (null on Anvil — no explorer to link to).
 export const explorerBase = chain.blockExplorers?.default.url ?? null;

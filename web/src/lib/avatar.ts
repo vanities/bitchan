@@ -1,12 +1,17 @@
 import { convex } from "./convex";
 import { api } from "../../convex/_generated/api";
-import { chain } from "./contract";
+import { signingDomain, signatureDeadline } from "./contract";
 
 // Off-chain avatar: upload an image (media), then sign the resulting hash so the
 // backend can record it on your account. Infrequent action → a direct wallet
 // signature (not the session key).
-const domain = { name: "bitchan", version: "1", chainId: chain.id } as const;
-const types = { Avatar: [{ name: "avatar", type: "string" }] } as const;
+const domain = signingDomain;
+const types = {
+  Avatar: [
+    { name: "avatar", type: "string" },
+    { name: "deadline", type: "uint256" },
+  ],
+} as const;
 
 export async function setAvatar(opts: {
   address: `0x${string}`;
@@ -15,14 +20,20 @@ export async function setAvatar(opts: {
     domain: typeof domain;
     types: typeof types;
     primaryType: "Avatar";
-    message: { avatar: string };
+    message: { avatar: string; deadline: bigint };
   }) => Promise<`0x${string}`>;
 }): Promise<void> {
+  const deadline = BigInt(signatureDeadline());
   const signature = await opts.signTypedDataAsync({
     domain,
     types,
     primaryType: "Avatar",
-    message: { avatar: opts.avatar },
+    message: { avatar: opts.avatar, deadline },
   });
-  await convex.action(api.avatar.set, { address: opts.address, avatar: opts.avatar, signature });
+  await convex.action(api.avatar.set, {
+    address: opts.address,
+    avatar: opts.avatar,
+    deadline: deadline.toString(),
+    signature,
+  });
 }

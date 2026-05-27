@@ -130,7 +130,7 @@ export function ProfileView({
     if (!file || !viewerAddr) return;
     setAvatarBusy(true);
     try {
-      const { hash } = await uploadMedia(file);
+      const { hash } = await uploadMedia(file, { address: viewerAddr, signTypedDataAsync });
       await setAvatar({ address: viewerAddr, avatar: hash, signTypedDataAsync });
     } catch (err) {
       console.error("avatar failed", err);
@@ -402,7 +402,7 @@ function ProfileEditDialog({
     setUploading(true);
     setErr(null);
     try {
-      const { hash } = await uploadMedia(file);
+      const { hash } = await uploadMedia(file, { address, signTypedDataAsync });
       setBanner(hash);
     } catch (e2) {
       setErr(e2 instanceof Error ? e2.message : "upload failed");

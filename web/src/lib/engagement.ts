@@ -3,16 +3,17 @@ import { privateKeyToAccount } from "viem/accounts";
 import { api } from "../../convex/_generated/api";
 import { convex } from "./convex";
 import { getSession } from "./session";
-import { chain } from "./contract";
+import { signingDomain, signatureDeadline } from "./contract";
 
 // Must match the Convex `reactions.react` action's domain/types exactly.
-export const engagementDomain = { name: "bitchan", version: "1", chainId: chain.id } as const;
+export const engagementDomain = signingDomain;
 export const engagementTypes = {
   Reaction: [
     { name: "kind", type: "string" },
     { name: "target", type: "string" },
     { name: "active", type: "bool" },
     { name: "nonce", type: "uint256" },
+    { name: "deadline", type: "uint256" },
   ],
 } as const;
 
@@ -76,7 +77,7 @@ type SignTypedDataAsync = (args: {
   domain: typeof engagementDomain;
   types: typeof engagementTypes;
   primaryType: "Reaction";
-  message: { kind: ReactionKind; target: string; active: boolean; nonce: bigint };
+  message: { kind: ReactionKind; target: string; active: boolean; nonce: bigint; deadline: bigint };
 }) => Promise<`0x${string}`>;
 
 /** Sign an engagement toggle (gasless — a signature, not a transaction) and submit it to Convex. */
@@ -95,11 +96,12 @@ export async function submitReaction(opts: {
   );
   const delegate = privateKeyToAccount(session.privateKey);
   const nonce = BigInt(Date.now());
+  const deadline = BigInt(signatureDeadline());
   const signature = await delegate.signTypedData({
     domain: engagementDomain,
     types: engagementTypes,
     primaryType: "Reaction",
-    message: { kind: opts.kind, target: opts.target, active: opts.active, nonce },
+    message: { kind: opts.kind, target: opts.target, active: opts.active, nonce, deadline },
   });
 
   await convex.action(api.reactions.react, {
@@ -108,6 +110,7 @@ export async function submitReaction(opts: {
     target: opts.target,
     active: opts.active,
     nonce: nonce.toString(),
+    deadline: deadline.toString(),
     signature,
     delegate: session.delegate,
     expiry: session.expiry.toString(),

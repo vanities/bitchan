@@ -4,6 +4,7 @@ pragma solidity 0.8.30;
 import {Bitchan} from "./Bitchan.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import {Checkpoints} from "@openzeppelin/contracts/utils/structs/Checkpoints.sol";
 
 /// @title BitchanRepublic — Phase 1 governance (founding executive + registry)
 /// @notice The minimal, non-upgradeable governance core over the social feed:
@@ -14,6 +15,8 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol
 /// @dev    GOVERNANCE_ROLE is granted to the Phase-2 Timelock; during the founding
 ///         phase no one holds it, so the governable levers are inert by design.
 contract BitchanRepublic is Bitchan, AccessControl, ReentrancyGuard {
+    using Checkpoints for Checkpoints.Trace208;
+
     // ── Roles ───────────────────────────────────────────────────────────────
     bytes32 public constant CUSTODIAN_ROLE = keccak256("CUSTODIAN");
     bytes32 public constant GOVERNANCE_ROLE = keccak256("GOVERNANCE");
@@ -43,6 +46,16 @@ contract BitchanRepublic is Bitchan, AccessControl, ReentrancyGuard {
     uint256 public citizenCount;
     uint64 public ageThreshold;
     uint256 public citizenshipCost;
+
+    // ── Governance snapshot history (finding #4) ──────────────────────────────
+    // The Governor reads voting power and the quorum denominator AS OF a proposal's
+    // snapshot, never live — so the citizen population (a slash, or a flood of
+    // claims) can't be changed after votes are locked to freeze a passed proposal
+    // or force a borderline one through. Keyed by block.timestamp (the Governor's
+    // clock). registeredAt is immutable once set, so it needs no history.
+    Checkpoints.Trace208 private _citizenCountHistory;
+    Checkpoints.Trace208 private _ageThresholdHistory;
+    mapping(address => Checkpoints.Trace208) private _citizenHistory;
 
     // ── Invite graph (free path; the release valve) ──────────────────────────
     mapping(address => uint256) public invitesMinted;
@@ -108,6 +121,7 @@ contract BitchanRepublic is Bitchan, AccessControl, ReentrancyGuard {
         T = _T;
         deployedAt = block.timestamp;
         ageThreshold = AGE_FLOOR;
+        _ageThresholdHistory.push(uint48(block.timestamp), AGE_FLOOR); // seed history so lookups before any change return the floor
         if (_governance != address(0)) _grantRole(GOVERNANCE_ROLE, _governance);
     }
 
@@ -120,6 +134,7 @@ contract BitchanRepublic is Bitchan, AccessControl, ReentrancyGuard {
         _register(msg.sender);
         isCitizen[msg.sender] = true;
         citizenCount++;
+        _recordCitizen(msg.sender, true);
         emit CitizenshipClaimed(msg.sender);
     }
 
@@ -142,6 +157,7 @@ contract BitchanRepublic is Bitchan, AccessControl, ReentrancyGuard {
         _register(msg.sender);
         isCitizen[msg.sender] = true;
         citizenCount++;
+        _recordCitizen(msg.sender, true);
         emit InviteRedeemed(msg.sender, inviter, code);
     }
 
@@ -289,6 +305,7 @@ contract BitchanRepublic is Bitchan, AccessControl, ReentrancyGuard {
     function setAgeThreshold(uint64 a) external onlyRole(GOVERNANCE_ROLE) {
         if (a < AGE_FLOOR || a > AGE_CEIL || a < ageThreshold) revert OutOfBounds(); // ratchet up only
         ageThreshold = a;
+        _ageThresholdHistory.push(uint48(block.timestamp), a);
         emit AgeThresholdChanged(a);
     }
 
@@ -296,6 +313,40 @@ contract BitchanRepublic is Bitchan, AccessControl, ReentrancyGuard {
         if (!isCitizen[a]) revert NotCitizen();
         isCitizen[a] = false;
         citizenCount--;
+        _recordCitizen(a, false);
         emit Slashed(a);
+    }
+
+    // ── Governance snapshot history (finding #4) ──────────────────────────────
+
+    /// @dev Record an account's citizenship transition + the new total, both keyed
+    ///      by the current timestamp, for as-of-snapshot reads by the Governor.
+    function _recordCitizen(address a, bool status) internal {
+        _citizenHistory[a].push(uint48(block.timestamp), status ? 1 : 0);
+        _citizenCountHistory.push(uint48(block.timestamp), uint208(citizenCount));
+    }
+
+    /// @notice Total citizens as of `timepoint` — the quorum denominator the Governor uses.
+    function citizenCountAt(uint256 timepoint) public view returns (uint256) {
+        return _citizenCountHistory.upperLookup(uint48(timepoint));
+    }
+
+    /// @notice The age threshold in effect as of `timepoint` (it only ratchets up).
+    function ageThresholdAt(uint256 timepoint) public view returns (uint64) {
+        uint208 a = _ageThresholdHistory.upperLookup(uint48(timepoint));
+        return a == 0 ? AGE_FLOOR : uint64(a);
+    }
+
+    /// @notice Whether `a` was a citizen as of `timepoint`.
+    function wasCitizenAt(address a, uint256 timepoint) public view returns (bool) {
+        return _citizenHistory[a].upperLookup(uint48(timepoint)) == 1;
+    }
+
+    /// @notice The franchise predicate evaluated AS OF `timepoint` (a proposal's
+    ///         snapshot). registeredAt is immutable once set, so it's read live;
+    ///         citizenship and the age threshold are read from history.
+    function canVoteAt(address a, uint256 timepoint) public view returns (bool) {
+        uint64 reg = registeredAt[a];
+        return wasCitizenAt(a, timepoint) && reg != 0 && uint256(reg) + ageThresholdAt(timepoint) <= timepoint;
     }
 }

@@ -1,11 +1,16 @@
-import { mutation, query } from "./_generated/server";
+import { internalMutation, query } from "./_generated/server";
 import { v } from "convex/values";
 
 // Galleries map a manifest hash (the on-chain mediaHash of a multi-image post) to
 // its ordered member image hashes. Content-addressed + idempotent: the hash is
 // sha256 of the image list, so re-recording the same set is a no-op. The member
 // images are normal media rows (already NSFW-screened on upload).
-export const record = mutation({
+
+// INTERNAL writer. The public entry point is the signed `galleryActions.record`
+// action, which verifies authorship + manifest integrity before calling this — so
+// the row can only ever hold a gallery some author actually signed for. (Previously
+// a public `mutation` anyone could call; see review finding #1.)
+export const insert = internalMutation({
   args: { hash: v.string(), images: v.array(v.string()) },
   returns: v.null(),
   handler: async (ctx, { hash, images }) => {
