@@ -10,9 +10,11 @@ import type { Handles } from "../lib/useTimeline";
 export function RepublicPanel({
   onOpenProfile,
   handles,
+  onOpenCharter,
 }: {
   onOpenProfile?: (address: `0x${string}`) => void;
   handles?: Handles;
+  onOpenCharter?: (doc?: string) => void;
 }) {
   const stats = useConvexQuery(api.stats.stats, {});
   const activity = useConvexQuery(api.governance.recent, { limit: 8 });
@@ -106,7 +108,9 @@ export function RepublicPanel({
           <ul className="divide-y divide-line">
             {activity.map((e, i) => (
               <li key={i} className="flex items-start gap-2.5 px-4 py-2.5">
-                <span className={`mt-1 inline-block h-1.5 w-1.5 shrink-0 rounded-full ${kindColor(e.kind)}`} />
+                <span
+                  className={`mt-1 inline-block h-1.5 w-1.5 shrink-0 rounded-full ${kindColor(e.kind)}`}
+                />
                 <div className="min-w-0 flex-1">
                   <p className="text-xs leading-snug text-bone">{e.summary}</p>
                   <p className="label-civic mt-0.5 text-[9px] text-bone-dim">
@@ -122,8 +126,8 @@ export function RepublicPanel({
       <section className="rounded-lg border border-line p-4">
         <h2 className="text-lg font-bold text-bone">The republic</h2>
         <p className="mt-1.5 text-sm leading-relaxed text-bone-dim">
-          A censorship-resistant timeline on Ethereum. Every post is written to the
-          chain — <span className="text-bone">immutable</span>, owned by no platform.
+          A censorship-resistant timeline on Ethereum. Every post is written to the chain —{" "}
+          <span className="text-bone">immutable</span>, owned by no platform.
         </p>
         <ul className="mt-3 space-y-1.5 text-xs text-bone-dim">
           <li>
@@ -145,6 +149,29 @@ export function RepublicPanel({
           >
             view contract on-chain ↗
           </a>
+        )}
+        {onOpenCharter && (
+          <div className="mt-3 border-t border-line pt-3">
+            <p className="label-civic text-[9px] text-bone-dim">founding documents</p>
+            <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+              {[
+                ["WHITEPAPER", "White Paper"],
+                ["CONSTITUTION", "Constitution"],
+                ["CONTENTIONS", "Contentions"],
+              ].map(([slug, label]) => (
+                <button
+                  key={slug}
+                  onClick={() => onOpenCharter(slug)}
+                  className="text-brass transition hover:underline"
+                >
+                  {label}
+                </button>
+              ))}
+              <button onClick={() => onOpenCharter()} className="text-bone-dim transition hover:text-bone">
+                all →
+              </button>
+            </div>
+          </div>
         )}
       </section>
 

@@ -8,12 +8,22 @@ import { SearchView } from "./components/SearchView";
 import { ProfileView } from "./components/ProfileView";
 import { RepublicPanel } from "./components/RepublicPanel";
 import { NotificationsView } from "./components/NotificationsView";
+import { CharterView } from "./components/CharterView";
 import { useTimeline, type TimelinePost } from "./lib/useTimeline";
 import { useFollowing, useNotifications } from "./lib/engagement";
 import { usePref } from "./lib/prefs";
 import { tokenize } from "./lib/links";
 
-type View = "home" | "search" | "republic" | "profile" | "post" | "notifications" | "bookmarks" | "tag";
+type View =
+  | "home"
+  | "search"
+  | "republic"
+  | "profile"
+  | "post"
+  | "notifications"
+  | "bookmarks"
+  | "tag"
+  | "charter";
 
 const NAV = [
   { key: "home", label: "The Square", Icon: Landmark },
@@ -34,6 +44,7 @@ const TITLES: Record<View, string> = {
   notifications: "Notifications",
   bookmarks: "Bookmarks",
   tag: "Topic",
+  charter: "Charter",
 };
 
 type NavState = {
@@ -42,6 +53,7 @@ type NavState = {
   profileHandle?: string | null;
   postId?: string | null;
   tagParam?: string | null;
+  charterDoc?: string | null;
 };
 
 // Real, shareable URLs (so a pasted link loads the right view + gets a link preview).
@@ -61,6 +73,8 @@ function pathFor(s: NavState): string {
       return "/bookmarks";
     case "tag":
       return s.tagParam ? `/tag/${s.tagParam}` : "/";
+    case "charter":
+      return s.charterDoc ? `/charter/${s.charterDoc}` : "/charter";
     default:
       return "/";
   }
@@ -75,6 +89,8 @@ function parsePath(path: string): NavState {
   if (path === "/notifications") return { view: "notifications" };
   if (path === "/bookmarks") return { view: "bookmarks" };
   if (path.startsWith("/tag/")) return { view: "tag", tagParam: decodeURIComponent(path.slice(5)) };
+  if (path.startsWith("/charter/")) return { view: "charter", charterDoc: decodeURIComponent(path.slice(9)) };
+  if (path === "/charter") return { view: "charter" };
   return { view: "home" };
 }
 
@@ -88,6 +104,7 @@ export default function App() {
   const [pendingHandle, setPendingHandle] = useState<string | null>(null);
   const [postId, setPostId] = useState<string | null>(null);
   const [tagParam, setTagParam] = useState<string | null>(null);
+  const [charterDoc, setCharterDoc] = useState<string | null>(null);
   const { posts, handles, avatars, isLoading, error, loadMore, canLoadMore } = useTimeline();
   const { address } = useAccount();
   const { data: followingArr } = useFollowing(address);
@@ -147,6 +164,7 @@ export default function App() {
       setProfileAddress(s?.profileAddress ?? null);
       setPostId(s?.postId ?? null);
       setTagParam(s?.tagParam ?? null);
+      setCharterDoc(s?.charterDoc ?? null);
       setPendingHandle(s?.profileAddress ? null : (s?.profileHandle ?? null));
     }
     const initial = parsePath(window.location.pathname);
@@ -182,12 +200,14 @@ export default function App() {
       profileHandle,
       postId: next.postId ?? null,
       tagParam: next.tagParam ?? null,
+      charterDoc: next.charterDoc ?? null,
     };
     history.pushState(entry, "", pathFor(entry));
     setView(entry.view);
     setProfileAddress(entry.profileAddress ?? null);
     setPostId(entry.postId ?? null);
     setTagParam(entry.tagParam ?? null);
+    setCharterDoc(entry.charterDoc ?? null);
     setPendingHandle(null);
   }
   function openProfile(a: string) {
@@ -198,6 +218,9 @@ export default function App() {
   }
   function openTag(tag: string) {
     go({ view: "tag", tagParam: tag });
+  }
+  function openCharter(doc?: string) {
+    go({ view: "charter", charterDoc: doc ?? null });
   }
   function openPostId(id: string) {
     go({ view: "post", postId: id });
@@ -239,7 +262,7 @@ export default function App() {
           </header>
 
           <div className="sticky top-0 z-20 hidden items-center gap-3 border-b border-line bg-ink/85 px-5 py-4 backdrop-blur lg:flex">
-            {(view === "profile" || view === "post" || view === "tag") && (
+            {(view === "profile" || view === "post" || view === "tag" || view === "charter") && (
               <button
                 onClick={() => history.back()}
                 className="text-bone-dim transition hover:text-bone"
@@ -325,7 +348,7 @@ export default function App() {
 
             {view === "republic" && (
               <div className="px-4 py-5">
-                <RepublicPanel onOpenProfile={openProfile} handles={handles} />
+                <RepublicPanel onOpenProfile={openProfile} handles={handles} onOpenCharter={openCharter} />
               </div>
             )}
 
@@ -406,12 +429,16 @@ export default function App() {
                 empty={<Notice>No posts with #{tagParam} yet.</Notice>}
               />
             )}
+
+            {view === "charter" && <CharterView slug={charterDoc} onOpenDoc={openCharter} />}
           </main>
         </div>
 
         {/* Always render the rail (reserve its width) so navigating to Republic doesn't shift the layout. */}
         <aside className="sticky top-0 hidden h-screen w-[350px] shrink-0 overflow-y-auto px-6 py-5 xl:block">
-          {view !== "republic" && <RepublicPanel onOpenProfile={openProfile} handles={handles} />}
+          {view !== "republic" && (
+            <RepublicPanel onOpenProfile={openProfile} handles={handles} onOpenCharter={openCharter} />
+          )}
         </aside>
       </div>
 
