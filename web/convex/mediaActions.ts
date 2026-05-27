@@ -45,8 +45,18 @@ function toBase64(bytes: ArrayBuffer): string {
 async function screenImage(dataUrl: string): Promise<string | null> {
   const key = process.env.OPENAI_API_KEY;
   if (!key) {
-    console.warn("[media] OPENAI_API_KEY not set — uploads are UNSCREENED. Set it to enable the NSFW check.");
-    return null;
+    // Fail closed: without a moderation key we can't screen, so refuse — unless a
+    // deploy explicitly opts out for local dev. Production must set OPENAI_API_KEY.
+    if (process.env.ALLOW_UNSCREENED_UPLOADS === "true") {
+      console.warn(
+        "[media] OPENAI_API_KEY unset + ALLOW_UNSCREENED_UPLOADS=true — skipping NSFW check (dev only)",
+      );
+      return null;
+    }
+    console.error(
+      "[media] OPENAI_API_KEY unset — refusing upload. Set the key, or ALLOW_UNSCREENED_UPLOADS=true for local dev.",
+    );
+    return "image moderation is unavailable — try again later";
   }
   let res: Response;
   try {

@@ -27,8 +27,13 @@ const UPLOAD_TYPES = {
 const future = () => Math.floor(Date.now() / 1000) + 600;
 
 // The NSFW screen calls the OpenAI moderation API over fetch. Stub it so tests are
-// hermetic (and don't depend on / spend a real OPENAI_API_KEY): always "allowed".
+// hermetic; and pin OPENAI_API_KEY present so screening takes the (stubbed) fetch
+// path deterministically regardless of the ambient env (CI may not set it).
+let savedKey: string | undefined;
 beforeEach(() => {
+  savedKey = process.env.OPENAI_API_KEY;
+  process.env.OPENAI_API_KEY = "test-key";
+  delete process.env.ALLOW_UNSCREENED_UPLOADS;
   vi.stubGlobal(
     "fetch",
     vi.fn(
@@ -40,7 +45,12 @@ beforeEach(() => {
     ),
   );
 });
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  if (savedKey === undefined) delete process.env.OPENAI_API_KEY;
+  else process.env.OPENAI_API_KEY = savedKey;
+  delete process.env.ALLOW_UNSCREENED_UPLOADS;
+  vi.unstubAllGlobals();
+});
 
 function newAccount() {
   return privateKeyToAccount(generatePrivateKey());
@@ -200,6 +210,44 @@ describe("mediaActions.upload (authenticated + content-typed)", () => {
       delegate: delegate.address,
       expiry: expiry.toString(),
       delegationSig,
+    });
+    expect(res.hash).toBe(hash);
+  });
+});
+
+describe("mediaActions.upload — moderation fail-closed", () => {
+  it("REJECTS an upload when OPENAI_API_KEY is unset (no silent unscreened pass)", async () => {
+    delete process.env.OPENAI_API_KEY;
+    const t = convexTest(schema, modules);
+    const author = newAccount();
+    const bytes = pngBytes();
+    const hash = await sha256Hex(bytes);
+    const deadline = future();
+    const signature = await sign(author, hash, bytes.byteLength, deadline);
+    await expect(
+      t.action(api.mediaActions.upload, {
+        bytes,
+        address: author.address,
+        signature,
+        deadline: deadline.toString(),
+      }),
+    ).rejects.toThrow();
+  });
+
+  it("ALLOWS an upload only when unscreened uploads are explicitly opted in (local dev)", async () => {
+    delete process.env.OPENAI_API_KEY;
+    process.env.ALLOW_UNSCREENED_UPLOADS = "true";
+    const t = convexTest(schema, modules);
+    const author = newAccount();
+    const bytes = pngBytes();
+    const hash = await sha256Hex(bytes);
+    const deadline = future();
+    const signature = await sign(author, hash, bytes.byteLength, deadline);
+    const res = await t.action(api.mediaActions.upload, {
+      bytes,
+      address: author.address,
+      signature,
+      deadline: deadline.toString(),
     });
     expect(res.hash).toBe(hash);
   });

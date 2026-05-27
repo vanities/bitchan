@@ -3,6 +3,7 @@ pragma solidity 0.8.30;
 
 import {Script, console2} from "forge-std/Script.sol";
 import {BitchanRepublic} from "../src/BitchanRepublic.sol";
+import {DeployGuard} from "./DeployGuard.sol";
 
 /// @notice Deploys BitchanRepublic (the social feed + Phase-1 governance core).
 ///   Defaults target a local Anvil node:
@@ -12,12 +13,9 @@ import {BitchanRepublic} from "../src/BitchanRepublic.sol";
 ///   - CITIZEN_TARGET (T) defaults to 10 (small, so the founding bar is legible locally)
 ///   - GOVERNANCE         defaults to address(0) — no GOVERNANCE_ROLE holder during founding
 contract Deploy is Script {
-    // Anvil's well-known account #0 (local dev only — never use on a real network).
-    uint256 internal constant ANVIL_PK =
-        0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80;
-
     function run() external returns (BitchanRepublic bc) {
-        uint256 pk = vm.envOr("DEPLOYER_PK", ANVIL_PK);
+        uint256 pk = vm.envOr("DEPLOYER_PK", DeployGuard.ANVIL_PK);
+        DeployGuard.requireRealKey(pk, block.chainid);
         uint256 fee = vm.envOr("POST_FEE_WEI", uint256(0.0001 ether));
         uint256 cost = vm.envOr("CITIZENSHIP_WEI", uint256(0.003 ether));
         uint256 t = vm.envOr("CITIZEN_TARGET", uint256(10));

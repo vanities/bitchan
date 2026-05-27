@@ -202,6 +202,32 @@ contract BitchanElectionsTest is Test {
         assertEq(republic.president(), bob, "2028 winner replaces 2027's");
     }
 
+    // ── a stale, never-finalized year cannot overwrite a newer president ──────
+
+    function test_finalize_cannotReinstallStaleYearOverNewerPresident() public {
+        // 2027 runs but is NEVER finalized (alice would have won).
+        vm.warp(_date(2027, 12, 20));
+        _nominate(alice);
+        vm.warp(_date(2027, 12, 28));
+        _vote(bob, alice);
+        _vote(carol, alice);
+
+        // 2028 runs and IS finalized → bob is the sitting president.
+        vm.warp(_date(2028, 12, 20));
+        _nominate(bob);
+        vm.warp(_date(2028, 12, 28));
+        _vote(alice, bob);
+        _vote(carol, bob);
+        vm.warp(_date(2029, 1, 2));
+        elections.finalize(2028);
+        assertEq(republic.president(), bob, "2028 winner installed");
+
+        // The attack: finalize the older, skipped 2027 to reinstall alice over bob.
+        vm.expectRevert(BitchanElections.StaleYear.selector);
+        elections.finalize(2027);
+        assertEq(republic.president(), bob, "a stale year cannot reinstall an old winner");
+    }
+
     // ── founding blocks the recurring election ────────────────────────────────
 
     function test_nominate_blockedDuringFounding() public {

@@ -7,6 +7,7 @@ import {BitchanRepublic} from "../src/BitchanRepublic.sol";
 import {BitchanGovernor} from "../src/BitchanGovernor.sol";
 import {BitchanJudiciary} from "../src/BitchanJudiciary.sol";
 import {BitchanElections} from "../src/BitchanElections.sol";
+import {DeployGuard} from "./DeployGuard.sol";
 
 /// @notice Deploys + wires the full persistent governance stack:
 ///   Timelock -> Republic(governance = timelock) -> Governor -> Judiciary.
@@ -18,9 +19,6 @@ import {BitchanElections} from "../src/BitchanElections.sol";
 /// Env (all optional; defaults target local Anvil):
 ///   DEPLOYER_PK · POST_FEE_WEI · CITIZENSHIP_WEI · CITIZEN_TARGET · TIMELOCK_DELAY
 contract DeployAll is Script {
-    uint256 internal constant ANVIL_PK =
-        0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80;
-
     function run()
         external
         returns (
@@ -31,7 +29,8 @@ contract DeployAll is Script {
             BitchanElections elections
         )
     {
-        uint256 pk = vm.envOr("DEPLOYER_PK", ANVIL_PK);
+        uint256 pk = vm.envOr("DEPLOYER_PK", DeployGuard.ANVIL_PK);
+        DeployGuard.requireRealKey(pk, block.chainid);
         uint256 fee = vm.envOr("POST_FEE_WEI", uint256(0.0001 ether));
         uint256 cost = vm.envOr("CITIZENSHIP_WEI", uint256(0.003 ether));
         uint256 t = vm.envOr("CITIZEN_TARGET", uint256(10));

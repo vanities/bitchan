@@ -36,6 +36,11 @@ contract BitchanElections {
 
     mapping(uint256 => Cycle) private cycles;
 
+    /// @notice Highest year ever finalized. finalize() only moves forward, so a
+    ///         skipped older year can't be finalized later to reinstall a stale
+    ///         winner over the sitting president.
+    uint256 public lastFinalizedYear;
+
     event Nominated(uint256 indexed year, address indexed candidate);
     event Voted(uint256 indexed year, address indexed voter, address indexed candidate);
     event Finalized(uint256 indexed year, address indexed winner, uint256 votes);
@@ -50,6 +55,7 @@ contract BitchanElections {
     error AlreadyFinalized();
     error NoCandidates();
     error FoundingActive();
+    error StaleYear();
 
     constructor(BitchanRepublic _republic) {
         republic = _republic;
@@ -103,12 +109,14 @@ contract BitchanElections {
     ///         rejects installPresident until founding ends).
     function finalize(uint256 y) external {
         if (block.timestamp < DT.timestampFromDate(y + 1, 1, 1)) revert NotClosed();
+        if (y < lastFinalizedYear) revert StaleYear();
         Cycle storage c = cycles[y];
         if (c.finalized) revert AlreadyFinalized();
         if (c.candidates.length == 0) revert NoCandidates();
         address win = c.leader == address(0) ? c.candidates[0] : c.leader; // unopposed/no votes → first
         c.finalized = true;
         c.winner = win;
+        lastFinalizedYear = y;
         republic.installPresident(win);
         emit Finalized(y, win, c.leaderVotes);
     }
