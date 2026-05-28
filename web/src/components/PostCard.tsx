@@ -16,6 +16,10 @@ import { PostMenu } from "./PostMenu";
 import { AccountList } from "./AccountList";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
+// The whole post card is clickable (opens the thread). Clicks landing on these
+// interactive descendants keep their own behavior instead of opening the post.
+const INTERACTIVE = 'a, button, input, textarea, select, video, label, [role="dialog"], [role="menu"]';
+
 export function PostCard({
   post,
   handle,
@@ -139,9 +143,20 @@ export function PostCard({
   return (
     <li
       ref={cardRef}
+      onClick={
+        onOpenPost
+          ? (e) => {
+              // Open the post on a bare card click, but don't hijack clicks on
+              // interactive children (buttons, links, media, menus) or a text drag.
+              if ((e.target as HTMLElement).closest(INTERACTIVE)) return;
+              if (window.getSelection()?.toString()) return;
+              onOpenPost(post);
+            }
+          : undefined
+      }
       className={`animate-fade-up border-b border-line py-3.5 pr-4 transition-colors hover:bg-ink-soft/40 ${
         depth > 0 ? "border-l-2 border-l-brass/40" : ""
-      }${focused ? " bg-brass/[0.07]" : ""}`}
+      }${focused ? " bg-brass/[0.07]" : ""}${onOpenPost ? " cursor-pointer" : ""}`}
       style={{ animationDelay: `${Math.min(index, 12) * 40}ms`, paddingLeft: 16 + indent * 18 }}
     >
       {pinned && (
@@ -241,10 +256,7 @@ export function PostCard({
                 </p>
               )}
               {post.text && (
-                <p
-                  onClick={onOpenPost ? () => onOpenPost(post) : undefined}
-                  className={`mt-1 whitespace-pre-wrap break-words text-[15px] leading-normal text-bone ${onOpenPost ? "cursor-pointer" : ""}`}
-                >
+                <p className="mt-1 whitespace-pre-wrap break-words text-[15px] leading-normal text-bone">
                   {renderText(post.text, handles, onOpenProfile, onOpenTag)}
                 </p>
               )}
