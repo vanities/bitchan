@@ -115,10 +115,11 @@ export default function App() {
   const latestNotifAt = notifs?.[0]?.at ?? 0;
   const unreadCount = address ? (notifs?.filter((n) => n.at > seenNotifAt).length ?? 0) : 0;
 
-  const topLevel = useMemo(() => posts.filter((p) => p.parentId === "0"), [posts]);
   const followingSet = new Set(followingArr ?? []);
+  // The timeline shows replies too, each paired with the original above it (the Feed
+  // resolves + renders the parent via showReplyContext). "Following" filters by author.
   const homePosts =
-    homeFilter === "following" ? topLevel.filter((p) => followingSet.has(p.author.toLowerCase())) : topLevel;
+    homeFilter === "following" ? posts.filter((p) => followingSet.has(p.author.toLowerCase())) : posts;
   const { list: bookmarks } = usePref("bookmarks");
   const bookmarkedPosts = useMemo(() => posts.filter((p) => bookmarks.includes(p.id)), [posts, bookmarks]);
   const tagPosts = useMemo(() => {
@@ -129,9 +130,23 @@ export default function App() {
     );
   }, [posts, tagParam]);
 
-  const threadRoot = view === "post" && postId ? (posts.find((p) => p.id === postId) ?? null) : null;
-  // Full reply subtree under the focal post, flattened depth-first with a depth per
-  // node so the thread view can indent nested replies (replies-to-replies).
+  // The post the permalink/click points at (the "focal" post).
+  const focalPost = view === "post" && postId ? (posts.find((p) => p.id === postId) ?? null) : null;
+  // A reply's permalink shows the WHOLE conversation: walk parentId up to the original
+  // post so the thread renders from the top (scroll up to the original + sibling comments).
+  const threadRoot = useMemo(() => {
+    if (!focalPost) return null;
+    const byId = new Map(posts.map((p) => [p.id, p]));
+    let root = focalPost;
+    for (let hops = 0; hops < 256 && root.parentId !== "0"; hops++) {
+      const parent = byId.get(root.parentId);
+      if (!parent) break; // parent not in the loaded timeline — stop at the highest we have
+      root = parent;
+    }
+    return root;
+  }, [focalPost, posts]);
+  // Full reply subtree under the root, flattened depth-first with a depth per node so
+  // the thread view can indent nested replies (replies-to-replies).
   const thread = useMemo(() => {
     if (!threadRoot) return { list: [] as TimelinePost[], depths: new Map<string, number>() };
     const byParent = new Map<string, TimelinePost[]>();
@@ -304,6 +319,7 @@ export default function App() {
                 />
                 <Feed
                   posts={homePosts}
+                  showReplyContext
                   handles={handles}
                   onReply={startReply}
                   onOpenProfile={openProfile}
@@ -376,6 +392,7 @@ export default function App() {
                 <Feed
                   posts={[threadRoot, ...thread.list]}
                   depths={thread.depths}
+                  focusId={focalPost?.id}
                   handles={handles}
                   onReply={startReply}
                   onOpenProfile={openProfile}

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useAccount, useSignTypedData, useWriteContract } from "wagmi";
 import { EyeOff, Heart, MessageCircle, Pin, Quote, Repeat2, type LucideIcon } from "lucide-react";
 import type { TimelinePost, Handles } from "../lib/useTimeline";
@@ -29,8 +29,11 @@ export function PostCard({
   eng,
   handles,
   quotedPost,
+  parentPost,
+  showReplyContext,
   depth = 0,
   pinned = false,
+  focused = false,
 }: {
   post: TimelinePost;
   handle: string | null;
@@ -44,8 +47,13 @@ export function PostCard({
   eng?: Engagement;
   handles?: Handles;
   quotedPost?: TimelinePost | null;
+  // In flat feeds (home/replies), the post this is a reply to — shown above as context.
+  parentPost?: TimelinePost | null;
+  showReplyContext?: boolean;
   depth?: number;
   pinned?: boolean;
+  // The focal post of a thread permalink: highlight it and scroll it into view.
+  focused?: boolean;
 }) {
   const { address, isConnected } = useAccount();
   const { signTypedDataAsync } = useSignTypedData();
@@ -60,6 +68,11 @@ export function PostCard({
   const { writeContract: writeHide } = useWriteContract();
 
   const isReply = post.parentId !== "0";
+  const cardRef = useRef<HTMLLIElement>(null);
+  // Scroll the focal post (a thread permalink target) into view once on open.
+  useEffect(() => {
+    if (focused) cardRef.current?.scrollIntoView({ block: "center" });
+  }, [focused]);
   const embed = useMemo(() => firstEmbed(post.text), [post.text]);
   const { has: isMuted } = usePref("muted");
   const muted = isMuted(post.author);
@@ -125,9 +138,10 @@ export function PostCard({
   const indent = Math.min(depth, 6);
   return (
     <li
+      ref={cardRef}
       className={`animate-fade-up border-b border-line py-3.5 pr-4 transition-colors hover:bg-ink-soft/40 ${
         depth > 0 ? "border-l-2 border-l-brass/40" : ""
-      }`}
+      }${focused ? " bg-brass/[0.07]" : ""}`}
       style={{ animationDelay: `${Math.min(index, 12) * 40}ms`, paddingLeft: 16 + indent * 18 }}
     >
       {pinned && (
@@ -135,6 +149,36 @@ export function PostCard({
           <Pin size={11} /> Pinned
         </p>
       )}
+      {showReplyContext &&
+        isReply &&
+        (parentPost ? (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpenPost?.(parentPost);
+            }}
+            className="mb-1.5 block w-full rounded-xl border border-line bg-ink-soft/40 px-3 py-2 text-left transition hover:border-brass/50"
+          >
+            <div className="flex items-baseline gap-1.5 text-xs">
+              <span className="text-bone-dim">↳ replying to</span>
+              <span className="truncate font-semibold text-bone">
+                {handles?.get(parentPost.author.toLowerCase()) ?? "anon"}
+              </span>
+              <span className="font-mono text-bone-dim">#{parentPost.id}</span>
+            </div>
+            <p className="mt-0.5 line-clamp-2 text-sm text-bone-dim">{parentPost.text || "↳ media"}</p>
+          </button>
+        ) : (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpenPost?.(post);
+            }}
+            className="mb-1.5 block text-xs text-bone-dim hover:underline"
+          >
+            ↳ replying to #{post.parentId}
+          </button>
+        ))}
       <div className="flex items-baseline gap-2">
         <button
           onClick={() => onOpenProfile?.(post.author)}
@@ -147,7 +191,9 @@ export function PostCard({
         </button>
         <span className="text-bone-dim">·</span>
         <span className="font-mono text-xs text-bone-dim">{timeAgo(post.createdAt)}</span>
-        {isReply && <span className="font-mono text-[10px] text-bone-dim">↳ re #{post.parentId}</span>}
+        {isReply && !showReplyContext && (
+          <span className="font-mono text-[10px] text-bone-dim">↳ re #{post.parentId}</span>
+        )}
         <div className="ml-auto flex items-center gap-1.5">
           <span className="font-mono text-[10px] text-bone-dim/60">#{post.id}</span>
           <PostMenu

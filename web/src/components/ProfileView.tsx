@@ -85,7 +85,10 @@ export function ProfileView({
     query: { enabled: debouncedHandle.length > 0 },
   });
 
-  if (!address) return <Notice>No profile selected.</Notice>;
+  if (!address)
+    return (
+      <Notice>{isConnected ? "No citizen selected." : "Connect a wallet to see your citizen page."}</Notice>
+    );
 
   const addr = address.toLowerCase();
   const explorer = explorerAddress(address);

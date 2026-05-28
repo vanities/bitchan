@@ -22,6 +22,8 @@ export function Feed({
   onLoadMore,
   canLoadMore,
   pinnedId,
+  focusId,
+  showReplyContext,
 }: {
   posts: TimelinePost[];
   handles: Handles;
@@ -40,6 +42,10 @@ export function Feed({
   canLoadMore?: boolean;
   // Float this post id to the top with a "Pinned" badge (profile Posts tab).
   pinnedId?: string;
+  // Highlight + scroll to this post id (thread view: the reply the permalink points at).
+  focusId?: string;
+  // Render each reply with its parent shown above as context (flat feeds: home/replies).
+  showReplyContext?: boolean;
 }) {
   const { address } = useAccount();
   const { data: engagement } = useEngagement(
@@ -96,8 +102,11 @@ export function Feed({
           eng={engagement?.[p.id]}
           handles={handles}
           quotedPost={p.quotedId !== "0" ? (byId.get(p.quotedId) ?? null) : null}
+          parentPost={showReplyContext && p.parentId !== "0" ? (byId.get(p.parentId) ?? null) : null}
+          showReplyContext={showReplyContext}
           depth={depths?.get(p.id) ?? 0}
           pinned={p.id === pinnedId}
+          focused={p.id === focusId}
         />
       ))}
       {onLoadMore && canLoadMore && <LoadMoreSentinel onLoadMore={onLoadMore} />}
