@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from "react";
+import { Fragment, useEffect, useRef, type ReactNode } from "react";
 import { useAccount, useReadContract } from "wagmi";
 import type { TimelinePost, Handles } from "../lib/useTimeline";
 import { useEngagement } from "../lib/engagement";
@@ -52,10 +52,15 @@ export function Feed({
   lookup?: Map<string, TimelinePost>;
 }) {
   const { address } = useAccount();
-  const { data: engagement } = useEngagement(
-    posts.map((p) => p.id),
-    address,
-  );
+  // Include the parents of any rendered replies — their full cards are shown above
+  // the reply (showReplyContext) and need engagement counts too.
+  const engIds = [
+    ...new Set([
+      ...posts.map((p) => p.id),
+      ...(showReplyContext ? posts.flatMap((p) => (p.parentId !== "0" ? [p.parentId] : [])) : []),
+    ]),
+  ];
+  const { data: engagement } = useEngagement(engIds, address);
   const byId = new Map(posts.map((p) => [p.id, p]));
   // Resolve a referenced post (quoted / reply parent) from the optional global lookup
   // first, then the rendered page.
@@ -94,28 +99,51 @@ export function Feed({
 
   return (
     <ul>
-      {ordered.map((p, i) => (
-        <PostCard
-          key={p.id}
-          post={p}
-          handle={handles.get(p.author.toLowerCase()) ?? null}
-          index={i}
-          onReply={onReply}
-          onOpenProfile={onOpenProfile}
-          onOpenPost={onOpenPost}
-          onOpenTag={onOpenTag}
-          onQuote={onQuote}
-          canModerate={canModerate}
-          eng={engagement?.[p.id]}
-          handles={handles}
-          quotedPost={p.quotedId !== "0" ? find(p.quotedId) : null}
-          parentPost={showReplyContext && p.parentId !== "0" ? find(p.parentId) : null}
-          showReplyContext={showReplyContext}
-          depth={depths?.get(p.id) ?? 0}
-          pinned={p.id === pinnedId}
-          focused={p.id === focusId}
-        />
-      ))}
+      {ordered.map((p, i) => {
+        // In flat feeds, render the original in full directly above the reply (a
+        // connected pair) rather than a compact snippet. null when not loaded — the
+        // reply then keeps its "↳ re #N" marker as a fallback.
+        const parent = showReplyContext && p.parentId !== "0" ? find(p.parentId) : null;
+        return (
+          <Fragment key={p.id}>
+            {parent && (
+              <PostCard
+                post={parent}
+                handle={handles.get(parent.author.toLowerCase()) ?? null}
+                index={i}
+                onReply={onReply}
+                onOpenProfile={onOpenProfile}
+                onOpenPost={onOpenPost}
+                onOpenTag={onOpenTag}
+                onQuote={onQuote}
+                canModerate={canModerate}
+                eng={engagement?.[parent.id]}
+                handles={handles}
+                quotedPost={parent.quotedId !== "0" ? find(parent.quotedId) : null}
+                connectedBelow
+              />
+            )}
+            <PostCard
+              post={p}
+              handle={handles.get(p.author.toLowerCase()) ?? null}
+              index={i}
+              onReply={onReply}
+              onOpenProfile={onOpenProfile}
+              onOpenPost={onOpenPost}
+              onOpenTag={onOpenTag}
+              onQuote={onQuote}
+              canModerate={canModerate}
+              eng={engagement?.[p.id]}
+              handles={handles}
+              quotedPost={p.quotedId !== "0" ? find(p.quotedId) : null}
+              depth={depths?.get(p.id) ?? 0}
+              pinned={p.id === pinnedId}
+              focused={p.id === focusId}
+              connectedAbove={!!parent}
+            />
+          </Fragment>
+        );
+      })}
       {onLoadMore && canLoadMore && <LoadMoreSentinel onLoadMore={onLoadMore} />}
     </ul>
   );

@@ -33,11 +33,11 @@ export function PostCard({
   eng,
   handles,
   quotedPost,
-  parentPost,
-  showReplyContext,
   depth = 0,
   pinned = false,
   focused = false,
+  connectedAbove = false,
+  connectedBelow = false,
 }: {
   post: TimelinePost;
   handle: string | null;
@@ -51,13 +51,15 @@ export function PostCard({
   eng?: Engagement;
   handles?: Handles;
   quotedPost?: TimelinePost | null;
-  // In flat feeds (home/replies), the post this is a reply to — shown above as context.
-  parentPost?: TimelinePost | null;
-  showReplyContext?: boolean;
   depth?: number;
   pinned?: boolean;
   // The focal post of a thread permalink: highlight it and scroll it into view.
   focused?: boolean;
+  // Part of a reply pair in a flat feed: the original is rendered directly below
+  // (connectedBelow = this is the original) or above (connectedAbove = this is the
+  // reply). Draws a shared left rail and drops the divider between the two cards.
+  connectedAbove?: boolean;
+  connectedBelow?: boolean;
 }) {
   const { address, isConnected } = useAccount();
   const { signTypedDataAsync } = useSignTypedData();
@@ -154,8 +156,14 @@ export function PostCard({
             }
           : undefined
       }
-      className={`animate-fade-up border-b border-line py-3.5 pr-4 transition-colors hover:bg-ink-soft/40 ${
-        depth > 0 ? "border-l-2 border-l-brass/40" : ""
+      className={`animate-fade-up py-3.5 pr-4 transition-colors hover:bg-ink-soft/40 ${
+        connectedBelow ? "" : "border-b border-line"
+      } ${
+        depth > 0
+          ? "border-l-2 border-l-brass/40"
+          : connectedAbove || connectedBelow
+            ? "border-l-2 border-l-brass/30"
+            : ""
       }${focused ? " bg-brass/[0.07]" : ""}${onOpenPost ? " cursor-pointer" : ""}`}
       style={{ animationDelay: `${Math.min(index, 12) * 40}ms`, paddingLeft: 16 + indent * 18 }}
     >
@@ -164,36 +172,6 @@ export function PostCard({
           <Pin size={11} /> Pinned
         </p>
       )}
-      {showReplyContext &&
-        isReply &&
-        (parentPost ? (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onOpenPost?.(parentPost);
-            }}
-            className="mb-1.5 block w-full rounded-xl border border-line bg-ink-soft/40 px-3 py-2 text-left transition hover:border-brass/50"
-          >
-            <div className="flex items-baseline gap-1.5 text-xs">
-              <span className="text-bone-dim">↳ replying to</span>
-              <span className="truncate font-semibold text-bone">
-                {handles?.get(parentPost.author.toLowerCase()) ?? "anon"}
-              </span>
-              <span className="font-mono text-bone-dim">#{parentPost.id}</span>
-            </div>
-            <p className="mt-0.5 line-clamp-2 text-sm text-bone-dim">{parentPost.text || "↳ media"}</p>
-          </button>
-        ) : (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onOpenPost?.(post);
-            }}
-            className="mb-1.5 block text-xs text-bone-dim hover:underline"
-          >
-            ↳ replying to #{post.parentId}
-          </button>
-        ))}
       <div className="flex items-baseline gap-2">
         <button
           onClick={() => onOpenProfile?.(post.author)}
@@ -206,7 +184,7 @@ export function PostCard({
         </button>
         <span className="text-bone-dim">·</span>
         <span className="font-mono text-xs text-bone-dim">{timeAgo(post.createdAt)}</span>
-        {isReply && !showReplyContext && (
+        {isReply && !connectedAbove && (
           <span className="font-mono text-[10px] text-bone-dim">↳ re #{post.parentId}</span>
         )}
         <div className="ml-auto flex items-center gap-1.5">
