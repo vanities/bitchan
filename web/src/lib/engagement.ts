@@ -2,7 +2,7 @@ import { useQuery } from "convex/react";
 import { privateKeyToAccount } from "viem/accounts";
 import { api } from "../../convex/_generated/api";
 import { convex } from "./convex";
-import { getSession } from "./session";
+import { getSession, clearSession } from "./session";
 import { signingDomain, signatureDeadline } from "./contract";
 
 // Must match the Convex `reactions.react` action's domain/types exactly.
@@ -88,32 +88,43 @@ export async function submitReaction(opts: {
   target: string;
   active: boolean;
 }): Promise<void> {
+  const sign = opts.signTypedDataAsync as unknown as Parameters<typeof getSession>[1];
   // One wallet popup authorizes a browser session key; reactions after that are
   // signed silently by the delegate key (no popup) until it expires.
-  const session = await getSession(
-    opts.address,
-    opts.signTypedDataAsync as unknown as Parameters<typeof getSession>[1],
-  );
-  const delegate = privateKeyToAccount(session.privateKey);
-  const nonce = BigInt(Date.now());
-  const deadline = BigInt(signatureDeadline());
-  const signature = await delegate.signTypedData({
-    domain: engagementDomain,
-    types: engagementTypes,
-    primaryType: "Reaction",
-    message: { kind: opts.kind, target: opts.target, active: opts.active, nonce, deadline },
-  });
-
-  await convex.action(api.reactions.react, {
-    address: opts.address,
-    kind: opts.kind,
-    target: opts.target,
-    active: opts.active,
-    nonce: nonce.toString(),
-    deadline: deadline.toString(),
-    signature,
-    delegate: session.delegate,
-    expiry: session.expiry.toString(),
-    delegationSig: session.delegationSig,
-  });
+  const attempt = async () => {
+    const session = await getSession(opts.address, sign);
+    const delegate = privateKeyToAccount(session.privateKey);
+    const nonce = BigInt(Date.now());
+    const deadline = BigInt(signatureDeadline());
+    const signature = await delegate.signTypedData({
+      domain: engagementDomain,
+      types: engagementTypes,
+      primaryType: "Reaction",
+      message: { kind: opts.kind, target: opts.target, active: opts.active, nonce, deadline },
+    });
+    await convex.action(api.reactions.react, {
+      address: opts.address,
+      kind: opts.kind,
+      target: opts.target,
+      active: opts.active,
+      nonce: nonce.toString(),
+      deadline: deadline.toString(),
+      signature,
+      delegate: session.delegate,
+      expiry: session.expiry.toString(),
+      delegationSig: session.delegationSig,
+    });
+  };
+  try {
+    await attempt();
+  } catch (e) {
+    // A stale session (e.g. minted against a prior contract deployment) is rejected
+    // by the backend. Drop it and re-authorize once so the reaction still goes through.
+    if (/invalid signature/i.test(String((e as Error)?.message ?? e))) {
+      clearSession(opts.address);
+      await attempt();
+    } else {
+      throw e;
+    }
+  }
 }

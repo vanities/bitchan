@@ -31,7 +31,22 @@ type DelegationSigner = (args: {
   message: { delegate: `0x${string}`; expiry: bigint };
 }) => Promise<`0x${string}`>;
 
-const storeKey = (user: string) => `bitchan.session.${user.toLowerCase()}`;
+// Namespace the cached session by chain + contract. The session delegation is an
+// EIP-712 message signed against `verifyingContract`; a Sepolia redeploy changes
+// that address, so a session minted against an old deployment can never verify on
+// the new one. Keying by domain means a redeploy (or chain switch) starts a fresh
+// session instead of silently failing every reaction with a stale delegation.
+const DOMAIN_NS = `${domain.chainId}.${String(domain.verifyingContract ?? "").toLowerCase()}`;
+const storeKey = (user: string) => `bitchan.session.${DOMAIN_NS}.${user.toLowerCase()}`;
+
+/** Drop the cached session (e.g. after the backend rejects its delegation). */
+export function clearSession(user: string): void {
+  try {
+    localStorage.removeItem(storeKey(user));
+  } catch {
+    // ignore (no localStorage)
+  }
+}
 
 function load(user: string): Session | null {
   try {
