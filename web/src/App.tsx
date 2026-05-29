@@ -120,6 +120,9 @@ export default function App() {
   // resolves + renders the parent via showReplyContext). "Following" filters by author.
   const homePosts =
     homeFilter === "following" ? posts.filter((p) => followingSet.has(p.author.toLowerCase())) : posts;
+  // id → post over the whole loaded timeline, so any feed (even one rendering a
+  // filtered subset) can resolve a reply's parent or a quoted post.
+  const postsById = useMemo(() => new Map(posts.map((p) => [p.id, p])), [posts]);
   const { list: bookmarks } = usePref("bookmarks");
   const bookmarkedPosts = useMemo(() => posts.filter((p) => bookmarks.includes(p.id)), [posts, bookmarks]);
   const tagPosts = useMemo(() => {
@@ -320,6 +323,7 @@ export default function App() {
                 <Feed
                   posts={homePosts}
                   showReplyContext
+                  lookup={postsById}
                   handles={handles}
                   onReply={startReply}
                   onOpenProfile={openProfile}
@@ -420,6 +424,8 @@ export default function App() {
             {view === "bookmarks" && (
               <Feed
                 posts={bookmarkedPosts}
+                showReplyContext
+                lookup={postsById}
                 handles={handles}
                 onReply={startReply}
                 onOpenProfile={openProfile}
@@ -435,6 +441,8 @@ export default function App() {
             {view === "tag" && (
               <Feed
                 posts={tagPosts}
+                showReplyContext
+                lookup={postsById}
                 handles={handles}
                 onReply={startReply}
                 onOpenProfile={openProfile}

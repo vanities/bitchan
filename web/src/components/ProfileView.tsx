@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   useAccount,
   useReadContract,
@@ -68,6 +68,9 @@ export function ProfileView({
   const [tab, setTab] = useState<"posts" | "replies" | "media" | "likes">("posts");
   const profile = useQuery(api.accounts.getProfile, address ? { address: address.toLowerCase() } : "skip");
   const { data: likedPostIds } = useLikedPosts(address?.toLowerCase());
+  // Lets the Feed resolve a reply's parent (often by another author, not in this
+  // profile's posts) so replies show the original above them, as on the timeline.
+  const postsById = useMemo(() => new Map(posts.map((p) => [p.id, p])), [posts]);
 
   // Pre-check handle availability (debounced) so we error before signing a tx that
   // would revert HandleTaken. Key matches the contract: keccak256(bytes(handle)).
@@ -321,6 +324,8 @@ export function ProfileView({
 
       <Feed
         posts={tabPosts}
+        showReplyContext
+        lookup={postsById}
         handles={handles}
         pinnedId={tab === "posts" ? (profile?.pinnedPostId ?? undefined) : undefined}
         onReply={onReply}

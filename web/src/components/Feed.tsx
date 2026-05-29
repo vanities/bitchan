@@ -24,6 +24,7 @@ export function Feed({
   pinnedId,
   focusId,
   showReplyContext,
+  lookup,
 }: {
   posts: TimelinePost[];
   handles: Handles;
@@ -46,6 +47,9 @@ export function Feed({
   focusId?: string;
   // Render each reply with its parent shown above as context (flat feeds: home/replies).
   showReplyContext?: boolean;
+  // Resolve parent/quoted posts beyond the rendered page (profile tabs, search, etc.
+  // render a subset, so a reply's parent often isn't in `posts`).
+  lookup?: Map<string, TimelinePost>;
 }) {
   const { address } = useAccount();
   const { data: engagement } = useEngagement(
@@ -53,6 +57,9 @@ export function Feed({
     address,
   );
   const byId = new Map(posts.map((p) => [p.id, p]));
+  // Resolve a referenced post (quoted / reply parent) from the optional global lookup
+  // first, then the rendered page.
+  const find = (id: string) => lookup?.get(id) ?? byId.get(id) ?? null;
 
   // Whether the viewer can moderate (president or a custodian). Reads dedupe across cards.
   const mod = { address: bitchanAddress, abi: bitchanAbi, chainId: chain.id } as const;
@@ -101,8 +108,8 @@ export function Feed({
           canModerate={canModerate}
           eng={engagement?.[p.id]}
           handles={handles}
-          quotedPost={p.quotedId !== "0" ? (byId.get(p.quotedId) ?? null) : null}
-          parentPost={showReplyContext && p.parentId !== "0" ? (byId.get(p.parentId) ?? null) : null}
+          quotedPost={p.quotedId !== "0" ? find(p.quotedId) : null}
+          parentPost={showReplyContext && p.parentId !== "0" ? find(p.parentId) : null}
           showReplyContext={showReplyContext}
           depth={depths?.get(p.id) ?? 0}
           pinned={p.id === pinnedId}

@@ -34,6 +34,8 @@ export function SearchView({
       )
     : posts;
   const trends = useMemo(() => topHashtags(posts.map((p) => p.text)), [posts]);
+  // So a reply in the results shows the original it answers (parent may be outside results).
+  const postsById = useMemo(() => new Map(posts.map((p) => [p.id, p])), [posts]);
 
   return (
     <div>
@@ -71,6 +73,8 @@ export function SearchView({
       )}
       <Feed
         posts={results}
+        showReplyContext
+        lookup={postsById}
         handles={handles}
         onReply={onReply}
         onOpenProfile={onOpenProfile}
