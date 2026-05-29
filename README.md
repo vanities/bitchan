@@ -66,3 +66,7 @@ bun run test          # vitest
 
 Commits run a pre-commit hook (Prettier + ESLint + typecheck + Vitest on staged
 web files; `forge test` when Solidity changes).
+
+## License
+
+[GNU General Public License v3.0](LICENSE)
