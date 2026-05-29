@@ -1,11 +1,12 @@
 import { useMemo, useState } from "react";
-import type { TimelinePost, Handles } from "../lib/useTimeline";
+import type { TimelinePost, Handles, Avatars } from "../lib/useTimeline";
 import { topHashtags } from "../lib/links";
 import { Feed, Notice } from "./Feed";
 
 export function SearchView({
   posts,
   handles,
+  avatars,
   onReply,
   onOpenProfile,
   onOpenPost,
@@ -16,6 +17,7 @@ export function SearchView({
 }: {
   posts: TimelinePost[];
   handles: Handles;
+  avatars?: Avatars;
   onReply?: (post: TimelinePost) => void;
   onOpenProfile?: (address: `0x${string}`) => void;
   onOpenPost?: (post: TimelinePost) => void;
@@ -76,6 +78,7 @@ export function SearchView({
         showReplyContext
         lookup={postsById}
         handles={handles}
+        avatars={avatars}
         onReply={onReply}
         onOpenProfile={onOpenProfile}
         onOpenPost={onOpenPost}

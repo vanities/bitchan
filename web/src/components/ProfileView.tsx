@@ -327,6 +327,7 @@ export function ProfileView({
         showReplyContext
         lookup={postsById}
         handles={handles}
+        avatars={avatars}
         pinnedId={tab === "posts" ? (profile?.pinnedPostId ?? undefined) : undefined}
         onReply={onReply}
         onOpenProfile={onOpenProfile}

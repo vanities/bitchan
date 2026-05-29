@@ -14,6 +14,7 @@ import { setPin } from "../lib/profile";
 import { Embed } from "./Embed";
 import { PostMenu } from "./PostMenu";
 import { AccountList } from "./AccountList";
+import { Avatar } from "./Avatar";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 // The whole post card is clickable (opens the thread). Clicks landing on these
@@ -23,6 +24,7 @@ const INTERACTIVE = 'a, button, input, textarea, select, video, label, [role="di
 export function PostCard({
   post,
   handle,
+  avatar,
   index = 0,
   onReply,
   onOpenProfile,
@@ -41,6 +43,7 @@ export function PostCard({
 }: {
   post: TimelinePost;
   handle: string | null;
+  avatar?: string | null; // the author's avatar media hash (monogram fallback if absent)
   index?: number;
   onReply?: (post: TimelinePost) => void;
   onOpenProfile?: (address: `0x${string}`) => void;
@@ -158,13 +161,9 @@ export function PostCard({
       }
       className={`animate-fade-up py-3.5 pr-4 transition-colors hover:bg-ink-soft/40 ${
         connectedBelow ? "" : "border-b border-line"
-      } ${
-        depth > 0
-          ? "border-l-2 border-l-brass/40"
-          : connectedAbove || connectedBelow
-            ? "border-l-2 border-l-brass/30"
-            : ""
-      }${focused ? " bg-brass/[0.07]" : ""}${onOpenPost ? " cursor-pointer" : ""}`}
+      } ${depth > 0 ? "border-l-2 border-l-brass/40" : ""}${focused ? " bg-brass/[0.07]" : ""}${
+        onOpenPost ? " cursor-pointer" : ""
+      }`}
       style={{ animationDelay: `${Math.min(index, 12) * 40}ms`, paddingLeft: 16 + indent * 18 }}
     >
       {pinned && (
@@ -172,172 +171,205 @@ export function PostCard({
           <Pin size={11} /> Pinned
         </p>
       )}
-      <div className="flex items-baseline gap-2">
-        <button
-          onClick={() => onOpenProfile?.(post.author)}
-          className="group flex min-w-0 items-baseline gap-2"
-        >
-          <span className="truncate font-semibold text-bone group-hover:underline">
-            {handle ?? ensName ?? "anon"}
-          </span>
-          <span className="font-mono text-xs text-bone-dim">{short(post.author)}</span>
-        </button>
-        <span className="text-bone-dim">·</span>
-        <span className="font-mono text-xs text-bone-dim">{timeAgo(post.createdAt)}</span>
-        {isReply && !connectedAbove && (
-          <span className="font-mono text-[10px] text-bone-dim">↳ re #{post.parentId}</span>
-        )}
-        <div className="ml-auto flex items-center gap-1.5">
-          <span className="font-mono text-[10px] text-bone-dim/60">#{post.id}</span>
-          <PostMenu
-            postId={post.id}
-            author={post.author}
-            handle={handle}
-            onPin={isOwn ? pin : undefined}
-            pinned={pinned}
+      <div className="flex gap-2.5">
+        {/* Avatar gutter — holds the thread line that connects a reply to the original above it. */}
+        <div className="flex shrink-0 flex-col items-center" style={{ width: 40 }}>
+          {connectedAbove && (
+            <span aria-hidden className="w-0.5 bg-bone-dim/60" style={{ height: 14, marginTop: -14 }} />
+          )}
+          <Avatar
+            address={post.author}
+            label={handle ?? ensName}
+            avatar={avatar}
+            size={40}
+            onClick={onOpenProfile ? () => onOpenProfile(post.author) : undefined}
+            title="view profile"
           />
+          {connectedBelow && (
+            <span
+              aria-hidden
+              className="w-0.5 flex-1 bg-bone-dim/60"
+              style={{ minHeight: 14, marginTop: 4, marginBottom: -14 }}
+            />
+          )}
         </div>
-      </div>
-
-      {muted && !mutedShown ? (
-        <div className="mt-1.5 flex items-center gap-2 rounded-lg border border-line/70 bg-ink-soft/40 px-3 py-2.5 text-xs text-bone-dim">
-          <EyeOff size={14} className="shrink-0" />
-          <span className="min-w-0 flex-1 truncate">Muted{handle ? ` · @${handle}` : ""}</span>
-          <button
-            onClick={() => setMutedShown(true)}
-            className="shrink-0 font-semibold text-brass hover:underline"
-          >
-            show
-          </button>
-        </div>
-      ) : (
-        <>
-          {post.hidden && !revealed ? (
-            <div className="mt-1.5 flex items-center gap-2 rounded-lg border border-line/70 bg-ink-soft/50 px-3 py-2.5 text-xs text-bone-dim">
-              <EyeOff size={14} className="shrink-0" />
-              <span className="min-w-0 flex-1 truncate">
-                hidden{post.hiddenBy ? ` by ${short(post.hiddenBy)}` : ""}
-                {post.hiddenReason ? ` · ${post.hiddenReason}` : ""}
+        <div className="min-w-0 flex-1">
+          <div className="flex items-baseline gap-2">
+            <button
+              onClick={() => onOpenProfile?.(post.author)}
+              className="group flex min-w-0 items-baseline gap-2"
+            >
+              <span className="truncate font-semibold text-bone group-hover:underline">
+                {handle ?? ensName ?? "anon"}
               </span>
+              <span className="font-mono text-xs text-bone-dim">{short(post.author)}</span>
+            </button>
+            <span className="text-bone-dim">·</span>
+            <span className="font-mono text-xs text-bone-dim">{timeAgo(post.createdAt)}</span>
+            {isReply && !connectedAbove && (
+              <span className="font-mono text-[10px] text-bone-dim">↳ re #{post.parentId}</span>
+            )}
+            <div className="ml-auto flex items-center gap-1.5">
+              <span className="font-mono text-[10px] text-bone-dim/60">#{post.id}</span>
+              <PostMenu
+                postId={post.id}
+                author={post.author}
+                handle={handle}
+                onPin={isOwn ? pin : undefined}
+                pinned={pinned}
+              />
+            </div>
+          </div>
+
+          {muted && !mutedShown ? (
+            <div className="mt-1.5 flex items-center gap-2 rounded-lg border border-line/70 bg-ink-soft/40 px-3 py-2.5 text-xs text-bone-dim">
+              <EyeOff size={14} className="shrink-0" />
+              <span className="min-w-0 flex-1 truncate">Muted{handle ? ` · @${handle}` : ""}</span>
               <button
-                onClick={() => setRevealed(true)}
+                onClick={() => setMutedShown(true)}
                 className="shrink-0 font-semibold text-brass hover:underline"
               >
-                view anyway
+                show
               </button>
             </div>
           ) : (
             <>
-              {post.hidden && (
-                <p className="mt-1 flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-seal">
-                  <EyeOff size={11} /> hidden by a moderator · shown via your right to fork
-                </p>
+              {post.hidden && !revealed ? (
+                <div className="mt-1.5 flex items-center gap-2 rounded-lg border border-line/70 bg-ink-soft/50 px-3 py-2.5 text-xs text-bone-dim">
+                  <EyeOff size={14} className="shrink-0" />
+                  <span className="min-w-0 flex-1 truncate">
+                    hidden{post.hiddenBy ? ` by ${short(post.hiddenBy)}` : ""}
+                    {post.hiddenReason ? ` · ${post.hiddenReason}` : ""}
+                  </span>
+                  <button
+                    onClick={() => setRevealed(true)}
+                    className="shrink-0 font-semibold text-brass hover:underline"
+                  >
+                    view anyway
+                  </button>
+                </div>
+              ) : (
+                <>
+                  {post.hidden && (
+                    <p className="mt-1 flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-seal">
+                      <EyeOff size={11} /> hidden by a moderator · shown via your right to fork
+                    </p>
+                  )}
+                  {post.text && (
+                    <p className="mt-1 whitespace-pre-wrap break-words text-[15px] leading-normal text-bone">
+                      {renderText(post.text, handles, onOpenProfile, onOpenTag)}
+                    </p>
+                  )}
+                  {quotedPost && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onOpenPost?.(quotedPost);
+                      }}
+                      className="mt-2 block w-full rounded-xl border border-line bg-ink-soft/40 px-3 py-2 text-left transition hover:border-brass/50"
+                    >
+                      <div className="flex items-baseline gap-1.5 text-xs">
+                        <span className="font-semibold text-bone">
+                          {handles?.get(quotedPost.author.toLowerCase()) ?? "anon"}
+                        </span>
+                        <span className="font-mono text-bone-dim">{short(quotedPost.author)}</span>
+                      </div>
+                      <p className="mt-0.5 line-clamp-3 text-sm text-bone-dim">
+                        {quotedPost.text || "↳ media"}
+                      </p>
+                    </button>
+                  )}
+                  {hasMedia(post.mediaHash) && <MediaView hash={post.mediaHash} />}
+                  {embed && <Embed embed={embed} />}
+                </>
               )}
-              {post.text && (
-                <p className="mt-1 whitespace-pre-wrap break-words text-[15px] leading-normal text-bone">
-                  {renderText(post.text, handles, onOpenProfile, onOpenTag)}
-                </p>
+
+              <div className="mt-2.5 flex items-center gap-7">
+                <Action
+                  icon={MessageCircle}
+                  label={post.replyCount}
+                  alwaysShowCount
+                  onClick={onReply ? () => onReply(post) : undefined}
+                  disabled={!isConnected || !onReply}
+                  color="bone"
+                />
+                <Action
+                  icon={Repeat2}
+                  label={reposts}
+                  alwaysShowCount
+                  onClick={() => react("repost")}
+                  onCountClick={reposts > 0 ? () => setReactorList("repost") : undefined}
+                  disabled={!isConnected || busy !== null}
+                  active={reposted}
+                  color="brass"
+                />
+                <Action
+                  icon={Heart}
+                  label={likes}
+                  alwaysShowCount
+                  onClick={() => react("like")}
+                  onCountClick={likes > 0 ? () => setReactorList("like") : undefined}
+                  disabled={!isConnected || busy !== null}
+                  active={liked}
+                  filled={liked}
+                  color="seal"
+                />
+                <Action
+                  icon={Quote}
+                  label={0}
+                  onClick={onQuote ? () => onQuote(post) : undefined}
+                  disabled={!isConnected || !onQuote}
+                  color="bone"
+                />
+                {canModerate && !post.hidden && (
+                  <button
+                    onClick={() => setHiding((v) => !v)}
+                    title="hide (moderator)"
+                    className="ml-auto flex items-center gap-1 text-xs text-bone-dim transition hover:text-seal"
+                  >
+                    <EyeOff size={15} /> hide
+                  </button>
+                )}
+              </div>
+
+              {hiding && (
+                <div className="mt-2 flex gap-1.5">
+                  <input
+                    value={reason}
+                    onChange={(e) => setReason(e.target.value)}
+                    placeholder="reason (logged on-chain)"
+                    className="min-w-0 flex-1 rounded-md border border-line bg-ink-soft px-2 py-1.5 text-xs focus:border-seal focus:outline-none"
+                  />
+                  <button
+                    onClick={confirmHide}
+                    className="rounded-md bg-seal px-3 text-xs font-bold text-white transition hover:bg-seal-bright"
+                  >
+                    hide
+                  </button>
+                  <button
+                    onClick={() => setHiding(false)}
+                    className="px-2 text-xs text-bone-dim hover:text-bone"
+                  >
+                    cancel
+                  </button>
+                </div>
               )}
-              {quotedPost && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onOpenPost?.(quotedPost);
-                  }}
-                  className="mt-2 block w-full rounded-xl border border-line bg-ink-soft/40 px-3 py-2 text-left transition hover:border-brass/50"
-                >
-                  <div className="flex items-baseline gap-1.5 text-xs">
-                    <span className="font-semibold text-bone">
-                      {handles?.get(quotedPost.author.toLowerCase()) ?? "anon"}
-                    </span>
-                    <span className="font-mono text-bone-dim">{short(quotedPost.author)}</span>
-                  </div>
-                  <p className="mt-0.5 line-clamp-3 text-sm text-bone-dim">{quotedPost.text || "↳ media"}</p>
-                </button>
-              )}
-              {hasMedia(post.mediaHash) && <MediaView hash={post.mediaHash} />}
-              {embed && <Embed embed={embed} />}
             </>
           )}
-
-          <div className="mt-2.5 flex items-center gap-7">
-            <Action
-              icon={MessageCircle}
-              label={post.replyCount}
-              onClick={onReply ? () => onReply(post) : undefined}
-              disabled={!isConnected || !onReply}
-              color="bone"
+          {reactorList && (
+            <AccountList
+              title={reactorList === "like" ? "Liked by" : "Reposted by"}
+              addresses={reactorAddrs}
+              handles={handles ?? new Map()}
+              onOpenProfile={(a) => {
+                setReactorList(null);
+                onOpenProfile?.(a);
+              }}
+              onClose={() => setReactorList(null)}
             />
-            <Action
-              icon={Repeat2}
-              label={reposts}
-              onClick={() => react("repost")}
-              onCountClick={reposts > 0 ? () => setReactorList("repost") : undefined}
-              disabled={!isConnected || busy !== null}
-              active={reposted}
-              color="brass"
-            />
-            <Action
-              icon={Heart}
-              label={likes}
-              onClick={() => react("like")}
-              onCountClick={likes > 0 ? () => setReactorList("like") : undefined}
-              disabled={!isConnected || busy !== null}
-              active={liked}
-              filled={liked}
-              color="seal"
-            />
-            <Action
-              icon={Quote}
-              label={0}
-              onClick={onQuote ? () => onQuote(post) : undefined}
-              disabled={!isConnected || !onQuote}
-              color="bone"
-            />
-            {canModerate && !post.hidden && (
-              <button
-                onClick={() => setHiding((v) => !v)}
-                title="hide (moderator)"
-                className="ml-auto flex items-center gap-1 text-xs text-bone-dim transition hover:text-seal"
-              >
-                <EyeOff size={15} /> hide
-              </button>
-            )}
-          </div>
-
-          {hiding && (
-            <div className="mt-2 flex gap-1.5">
-              <input
-                value={reason}
-                onChange={(e) => setReason(e.target.value)}
-                placeholder="reason (logged on-chain)"
-                className="min-w-0 flex-1 rounded-md border border-line bg-ink-soft px-2 py-1.5 text-xs focus:border-seal focus:outline-none"
-              />
-              <button
-                onClick={confirmHide}
-                className="rounded-md bg-seal px-3 text-xs font-bold text-white transition hover:bg-seal-bright"
-              >
-                hide
-              </button>
-              <button onClick={() => setHiding(false)} className="px-2 text-xs text-bone-dim hover:text-bone">
-                cancel
-              </button>
-            </div>
           )}
-        </>
-      )}
-      {reactorList && (
-        <AccountList
-          title={reactorList === "like" ? "Liked by" : "Reposted by"}
-          addresses={reactorAddrs}
-          handles={handles ?? new Map()}
-          onOpenProfile={(a) => {
-            setReactorList(null);
-            onOpenProfile?.(a);
-          }}
-          onClose={() => setReactorList(null)}
-        />
-      )}
+        </div>
+      </div>
     </li>
   );
 }
@@ -435,6 +467,7 @@ function Action({
   active,
   filled,
   color = "bone",
+  alwaysShowCount,
 }: {
   icon: LucideIcon;
   label: number;
@@ -444,6 +477,7 @@ function Action({
   active?: boolean;
   filled?: boolean;
   color?: "seal" | "brass" | "bone";
+  alwaysShowCount?: boolean; // render the number even when it's 0 (timeline reply/like/repost)
 }) {
   const hover =
     color === "seal" ? "hover:text-seal" : color === "brass" ? "hover:text-brass" : "hover:text-bone";
@@ -459,8 +493,8 @@ function Action({
       <button onClick={onClick} disabled={disabled} className={`transition disabled:opacity-50 ${hover}`}>
         <Icon size={17} strokeWidth={2} fill={filled ? "currentColor" : "none"} />
       </button>
-      {label > 0 &&
-        (onCountClick ? (
+      {(alwaysShowCount || label > 0) &&
+        (onCountClick && label > 0 ? (
           <button
             onClick={(e) => {
               e.stopPropagation();

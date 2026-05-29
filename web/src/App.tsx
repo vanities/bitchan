@@ -322,6 +322,7 @@ export default function App() {
                 />
                 <Feed
                   posts={homePosts}
+                  avatars={avatars}
                   showReplyContext
                   lookup={postsById}
                   handles={handles}
@@ -356,6 +357,7 @@ export default function App() {
               <SearchView
                 posts={posts}
                 handles={handles}
+                avatars={avatars}
                 onReply={startReply}
                 onOpenProfile={openProfile}
                 onOpenPost={openPost}
@@ -398,6 +400,7 @@ export default function App() {
                   depths={thread.depths}
                   focusId={focalPost?.id}
                   handles={handles}
+                  avatars={avatars}
                   onReply={startReply}
                   onOpenProfile={openProfile}
                   onOpenPost={openPost}
@@ -424,6 +427,7 @@ export default function App() {
             {view === "bookmarks" && (
               <Feed
                 posts={bookmarkedPosts}
+                avatars={avatars}
                 showReplyContext
                 lookup={postsById}
                 handles={handles}
@@ -441,6 +445,7 @@ export default function App() {
             {view === "tag" && (
               <Feed
                 posts={tagPosts}
+                avatars={avatars}
                 showReplyContext
                 lookup={postsById}
                 handles={handles}

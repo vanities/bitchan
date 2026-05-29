@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useRef, type ReactNode } from "react";
 import { useAccount, useReadContract } from "wagmi";
-import type { TimelinePost, Handles } from "../lib/useTimeline";
+import type { TimelinePost, Handles, Avatars } from "../lib/useTimeline";
 import { useEngagement } from "../lib/engagement";
 import { bitchanAbi, bitchanAddress, chain, ZERO_BYTES32 } from "../lib/contract";
 import { PostCard } from "./PostCard";
@@ -25,9 +25,11 @@ export function Feed({
   focusId,
   showReplyContext,
   lookup,
+  avatars,
 }: {
   posts: TimelinePost[];
   handles: Handles;
+  avatars?: Avatars;
   onReply?: (post: TimelinePost) => void;
   onOpenProfile?: (address: `0x${string}`) => void;
   onOpenPost?: (post: TimelinePost) => void;
@@ -110,6 +112,7 @@ export function Feed({
               <PostCard
                 post={parent}
                 handle={handles.get(parent.author.toLowerCase()) ?? null}
+                avatar={avatars?.get(parent.author.toLowerCase()) ?? null}
                 index={i}
                 onReply={onReply}
                 onOpenProfile={onOpenProfile}
@@ -126,6 +129,7 @@ export function Feed({
             <PostCard
               post={p}
               handle={handles.get(p.author.toLowerCase()) ?? null}
+              avatar={avatars?.get(p.author.toLowerCase()) ?? null}
               index={i}
               onReply={onReply}
               onOpenProfile={onOpenProfile}
